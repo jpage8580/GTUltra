@@ -1,0 +1,52 @@
+# common makefile directives for linux and win32 build
+
+CC?=gcc
+CXX?=g++
+CFLAGS+=-Ibme -Iasm -O3 -fpermissive
+CXXFLAGS+=$(CFLAGS)
+
+EXE=	$(PREFIX)gt2stereo$(SUFFIX) \
+	$(PREFIX)ins2snd2$(SUFFIX) \
+	$(PREFIX)ss2stereo$(SUFFIX) \
+	$(PREFIX)mod2sng2$(SUFFIX)
+
+all: $(EXE)
+
+$(PREFIX)gt2stereo$(SUFFIX): goatdata.o gt2stereo.o gsong.o gorder.o gpattern.o ginstr.o gtable.o gplay.o gdisplay.o \
+gfile.o greloc.o ghelp.o gsound.o gconsole.o gsid.o \
+resid/envelope.o resid/extfilt.o resid/filter.o resid/pot.o resid/sid.o resid/wave.o resid/wave6581__ST.o \
+resid/wave6581_P_T.o resid/wave6581_PS_.o resid/wave6581_PST.o resid/wave8580__ST.o resid/wave8580_P_T.o \
+resid/wave8580_PS_.o resid/wave8580_PST.o resid/voice.o \
+resid-fp/envelopefp.o resid-fp/extfiltfp.o resid-fp/filterfp.o resid-fp/potfp.o resid-fp/sidfp.o \
+resid-fp/wavefp.o resid-fp/voicefp.o \
+asm/asmtab.o asm/chnkpool.o asm/expr.o asm/lexyy.o asm/log.o asm/membuf.o asm/membufio.o asm/namedbuf.o asm/parse.o \
+asm/pc.o asm/vec.o \
+bme/bme_gfx.o bme/bme_snd.o bme/bme_win.o bme/bme_mou.o bme/bme_kbd.o bme/bme_io.o bme/bme_end.o bme/bme.o
+	$(CXX) -o $@ $^ $(LIBS)
+	strip $@
+
+$(PREFIX)mod2sng2$(SUFFIX): mod2sng2.o bme/bme_end.o
+	$(CC) -o $@ $^
+	strip $@
+
+$(PREFIX)ins2snd2$(SUFFIX): ins2snd2.o bme/bme_end.o
+	$(CC) -o $@ $^
+	strip $@
+
+$(PREFIX)ss2stereo$(SUFFIX): ss2stereo.o bme/bme_end.o
+	$(CC) -o $@ $^
+	strip $@
+
+gt2stereo.dat: player.s altplayer.s player3.s altplayer3.s gtskins.bin chargen.bin palette.bin cursor.bin bcursor.bin goattrk2.bmp gt2stereo.seq
+	./bme/datafile $@ gt2stereo.seq
+
+goatdata.c: gt2stereo.dat
+	./bme/dat2inc $< $@
+
+clean:
+	$(RM) *.o *~
+	$(RM) asm/*.o
+	$(RM) bme/*.o
+	$(RM) resid/*.o
+	$(RM) resid-fp/*.o
+	$(RM) $(EXE)

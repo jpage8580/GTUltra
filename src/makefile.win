@@ -1,0 +1,27 @@
+#
+# Win32 makefile
+#
+
+CC:=gcc
+CXX:=g++
+PREFIX=../win32/
+SUFFIX=.exe
+LIBS=-lmingw32 -lSDLmain -lSDL.dll -lwinmm -mwindows -static-libstdc++ -static-libgcc -static
+RM=	-del
+
+include makefile.common
+
+$(PREFIX)gt2stereo$(SUFFIX): goatdata.o gt2stereo.o gsong.o gorder.o gpattern.o ginstr.o gtable.o gplay.o gdisplay.o gmidi.o gundo.o ginfo.o gchareditor.o gtabledisplay.o\
+gfile.o greloc.o ghelp.o gsound.o gconsole.o gsid.o \
+resid/envelope.o resid/extfilt.o resid/filter.o resid/pot.o resid/sid.o resid/wave.o resid/wave6581__ST.o \
+resid/wave6581_P_T.o resid/wave6581_PS_.o resid/wave6581_PST.o resid/wave8580__ST.o resid/wave8580_P_T.o \
+resid/wave8580_PS_.o resid/wave8580_PST.o resid/voice.o \
+resid-fp/envelopefp.o resid-fp/extfiltfp.o resid-fp/filterfp.o resid-fp/potfp.o resid-fp/sidfp.o \
+resid-fp/wavefp.o resid-fp/voicefp.o \
+RtMidi.o \
+asm/asmtab.o asm/chnkpool.o asm/expr.o asm/lexyy.o asm/log.o asm/membuf.o asm/membufio.o asm/namedbuf.o asm/parse.o \
+asm/pc.o asm/vec.o \
+bme/bme_gfx.o bme/bme_snd.o bme/bme_win.o bme/bme_mou.o bme/bme_kbd.o bme/bme_io.o bme/bme_end.o bme/bme.o
+	windres gt2stereo.rc goaticon.o
+	$(CXX) -o $@ $^ goaticon.o $(LIBS)
+	strip $@
