@@ -203,6 +203,36 @@ int loadsong(GTOBJECT *gt)
 	FILE *handle;
 	int channelstoload = MAX_CHN;
 
+
+	if (strlen(songfilename) > 2)
+	{
+		int chCount = 0;
+		if (songfilename[0] == '$')
+		{
+			sprintf(textbuffer, "found $");
+			printtext(70, 36, 0xe, textbuffer);
+
+			for (int i = 0;i < 2;i++)
+			{
+				char c = songfilename[1 + i];
+				if (c >= '0' && c <= '9')
+				{
+					chCount *= 10;
+					c -= '0';
+					chCount += c;
+				}					
+			}
+		}
+		sprintf(textbuffer, "found $ %d", chCount);
+		printtext(70, 36, 0xe, textbuffer);
+
+		if (chCount == 3 || chCount == 6 || chCount == 9 || chCount == 12)
+		{
+			handleSIDChannelCountChange(&gtObject);
+			maxSIDChannels = chCount;
+		}
+
+	}
 	handle = fopen(songfilename, "rb");
 
 	if (handle)
