@@ -1,7 +1,8 @@
-GoatTracker v2.76 Stereo
+GTUltra 1.00
+Based on GoatTracker v2.76 Stereo
 ------------------------
 
-Editor by Lasse Öörni (loorni@gmail.com)
+Original Editor by Lasse Öörni (loorni@gmail.com)
 HardSID 4U support by Téli Sándor.
 Uses reSID engine by Dag Lem.
 Uses reSID distortion / nonlinearity by Antti Lankila.
@@ -12,6 +13,9 @@ Command quick reference by Simon Bennett.
 Patches by Stefan A. Haubenthal, Valerio Cannone, Raine M. Ekman and Tero Lindeman.
 Microtonal support by Birgit Jauernig.
 
+GTUltra:
+Editor + 6510 code changes: Jason Page
+Uses RtMidi library
 
 Distributed under GNU General Public License
 (see the file COPYING for details)
@@ -21,6 +25,19 @@ http://covertbitops.c64.org
 
 GoatTracker 2 SourceForge.net page:
 http://sourceforge.net/projects/goattracker2
+
+GTUltra project page (inc. source code):
+https://github.com/jpage8580/GTUltra
+
+- GTUltra Command line differences:
+
+  -cxx Max SID channels (3,6,9,12).
+  -px  UI palette preset (0-3)
+  -vff.f master volume (floating point value)
+  -dff.f detune (floating point-1 > 1)
+
+- See GTUltra.PDF for full list of changes
+
 
 
 Differences to normal version: (refer to normal GT2 for full documentation)
