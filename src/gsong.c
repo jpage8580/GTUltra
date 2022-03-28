@@ -209,8 +209,8 @@ int loadsong(GTOBJECT *gt)
 		int chCount = 0;
 		if (songfilename[0] == '$')
 		{
-			sprintf(textbuffer, "found $");
-			printtext(70, 36, 0xe, textbuffer);
+//			sprintf(textbuffer, "found $");
+//			printtext(70, 36, 0xe, textbuffer);
 
 			for (int i = 0;i < 2;i++)
 			{
@@ -223,8 +223,8 @@ int loadsong(GTOBJECT *gt)
 				}					
 			}
 		}
-		sprintf(textbuffer, "found $ %d", chCount);
-		printtext(70, 36, 0xe, textbuffer);
+//		sprintf(textbuffer, "found $ %d", chCount);
+//		printtext(70, 36, 0xe, textbuffer);
 
 		if (chCount == 3 || chCount == 6 || chCount == 9 || chCount == 12)
 		{
