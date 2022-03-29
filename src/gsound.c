@@ -611,7 +611,7 @@ void JPSoundMixer(Sint32 *dest, unsigned samples)
 				dp++;
 				*dp = h;
 				dp++;
-			}
+			} 
 
 
 		}
