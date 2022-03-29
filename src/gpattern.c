@@ -385,14 +385,17 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 	switch (jrawkey)
 	{
 
-	case 0x5c:		// hash/tilde
+	case KEY_Y:	//0x5c:		// hash/tilde
+		if (shiftpressed)
+		{
 
-		undoAreaSetCheckForChange(UNDO_AREA_TABLES + STBL, 0, UNDO_AREA_DIRTY_CHECK);	// left table
-		undoAreaSetCheckForChange(UNDO_AREA_TABLES + STBL, 1, UNDO_AREA_DIRTY_CHECK);	// right table
+			undoAreaSetCheckForChange(UNDO_AREA_TABLES + STBL, 0, UNDO_AREA_DIRTY_CHECK);	// left table
+			undoAreaSetCheckForChange(UNDO_AREA_TABLES + STBL, 1, UNDO_AREA_DIRTY_CHECK);	// right table
 
-		autoPitchbendToNextNote(gt);
+			autoPitchbendToNextNote(gt);
 
-		refreshVariables();
+			refreshVariables();
+		}
 
 		break;
 

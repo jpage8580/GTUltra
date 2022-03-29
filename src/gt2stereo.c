@@ -90,7 +90,7 @@ char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.0.0";
+char *programname = "$VER: GTUltra V1.0.3";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -504,6 +504,8 @@ int main(int argc, char **argv)
 	editorInfo.esmarkchn = -1;
 	editorInfo.etlock = 0;		// was 1. changed to 0 for LMAN mode (tables unlocked)
 	editorInfo.etmarknum = -1;
+
+	editorInfo.einum = 1;	//jp
 
 	// JP - Init GTObject
 	gtObject.masterfader = 0xf;
