@@ -578,7 +578,7 @@ void JPSoundMixer(Sint32 *dest, unsigned samples)
 		Sint32 *dp = dest;
 		Sint32 v;
 
-		if (monomode)
+		if (monomode || maxSIDChannels==3)
 		{
 			for (c = 0; c < samples; c++)
 			{
