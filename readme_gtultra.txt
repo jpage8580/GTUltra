@@ -8,7 +8,7 @@ Beta testing:
 Thanks to Shogoon, Russell Hoy, Jani Väisänen and Egon Sander
 
 Example songs:
-Thanks to Jammar, Linus, LMan, Mibri and Shogoon
+Thanks to Jammer, Linus, LMan, Mibri and Shogoon
 
 GTUltra features:
 
