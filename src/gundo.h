@@ -59,7 +59,7 @@ extern int initAreaListFlag;
 extern int initUndoBufferFlag;
 extern int jcounter;
 extern int undoCounter;
-unsigned int undoBufferSize;
+extern unsigned int undoBufferSize;
 #endif
 
 void initUndoBuffer();

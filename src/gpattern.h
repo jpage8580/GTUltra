@@ -9,7 +9,7 @@ extern int playingChannelOnKey[KEYBOARD_POLYPHONY];
 
 extern int MIDINotesHeld;
 
-char keyOffsetText[100];
+extern char keyOffsetText[100];
 #endif
 
 typedef struct {
@@ -71,9 +71,9 @@ typedef struct {
 
 }EDITOR_INFO;
 
-EDITOR_INFO editorInfo;
-EDITOR_INFO editorInfoBackup;	// copy of editorInfo. Used when hitting enter to move to speed table entry from instrument / wavetable.
-int disableEnterToReturnToLastPos;	// if true, pressing enter wont return cursor to previous position
+extern EDITOR_INFO editorInfo;
+extern EDITOR_INFO editorInfoBackup;	// copy of editorInfo. Used when hitting enter to move to speed table entry from instrument / wavetable.
+extern int disableEnterToReturnToLastPos;	// if true, pressing enter wont return cursor to previous position
 
 
 void patterncommands(GTOBJECT *gt, int midiNote);
