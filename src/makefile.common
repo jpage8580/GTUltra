@@ -13,7 +13,7 @@ EXE=	$(PREFIX)gt2stereo$(SUFFIX) \
 all: $(EXE)
 
 $(PREFIX)gt2stereo$(SUFFIX): goatdata.o gt2stereo.o gsong.o gorder.o gpattern.o ginstr.o gtable.o gplay.o gdisplay.o \
-gfile.o greloc.o ghelp.o gsound.o gconsole.o gsid.o \
++gfile.o greloc.o ghelp.o gsound.o gconsole.o gsid.o ginfo.o gmidi.o gundo.o gchareditor.o RtMidi.o \
 resid/envelope.o resid/extfilt.o resid/filter.o resid/pot.o resid/sid.o resid/wave.o resid/wave6581__ST.o \
 resid/wave6581_P_T.o resid/wave6581_PS_.o resid/wave6581_PST.o resid/wave8580__ST.o resid/wave8580_P_T.o \
 resid/wave8580_PS_.o resid/wave8580_PST.o resid/voice.o \

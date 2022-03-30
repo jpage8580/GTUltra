@@ -37,7 +37,7 @@
 */
 /**********************************************************************/
 
-#define __WINDOWS_MM__
+#define __WINDOWS_MM__	// Include this line for windows building. Remove to build Linux
 
 #include "RtMidi.h"
 
@@ -326,7 +326,12 @@ public:
 	std::string getPortName(unsigned int /*portNumber*/) { return ""; }
 
 protected:
+#if defined __WINDOWS_MM__
 	void initialize(const std::string& /*clientName*/) {}
+#else
+	unsigned int initialize(const std::string& /*clientName*/) {}
+#endif
+
 };
 
 class MidiOutDummy : public MidiOutApi
@@ -344,7 +349,11 @@ public:
 	void sendMessage(const unsigned char * /*message*/, size_t /*size*/) {}
 
 protected:
+#if defined __WINDOWS_MM__
 	void initialize(const std::string& /*clientName*/) {}
+#else
+unsigned int initialize(const std::string& /*clientName*/) {}
+#endif
 };
 
 #endif

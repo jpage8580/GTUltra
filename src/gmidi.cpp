@@ -4,10 +4,17 @@
 
 #define GMIDI_C
 
+#define __WINDOWS__
+//#define __LINUX__
+
 #include <iostream>
 #include <cstdlib>
 #include <signal.h>
+
+#ifdef __WINDOWS__
 #include <windows.h>
+#endif
+
 #include "RtMidi.h"
 
 #include "gmidi.h"
