@@ -672,7 +672,7 @@ void nextsong(GTOBJECT *gt)
 	{
 		editorInfo.esnum++;
 		if (editorInfo.esnum >= MAX_SONGS) editorInfo.esnum = MAX_SONGS - 1;
-		songchange(gt,0);
+		songchange(gt, 0);
 
 		setMasterLoopChannel(gt);
 	}
@@ -694,7 +694,7 @@ void prevsong(GTOBJECT *gt)
 	{
 		editorInfo.esnum--;
 		if (editorInfo.esnum < 0) editorInfo.esnum = 0;
-		songchange(gt,0);
+		songchange(gt, 0);
 		setMasterLoopChannel(gt);
 	}
 	else
@@ -763,14 +763,14 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 
 		if (gt->editorInfo[c2].espos >= songlen[songNum][c2 % 6] + 1)
 		{
-			gt->editorInfo[c2].espos = songlen[songNum][c2 % 6]-1;	//0;	//
+			gt->editorInfo[c2].espos = songlen[songNum][c2 % 6] - 1;	//0;	//
 			if (gt->editorInfo[c2].espos < 0)
 				gt->editorInfo[c2].espos = 0;
 		}
 
 		if (c2 == jc2 && editorInfo.eseditpos > songlen[songNum][c2 % 6] + 1)	// +1 as we have the RPT text 
 		{
-			editorInfo.eseditpos = songlen[songNum][c2 % 6]-1;	//0;
+			editorInfo.eseditpos = songlen[songNum][c2 % 6] - 1;	//0;
 			if (editorInfo.eseditpos < 0)
 				editorInfo.eseditpos = 0;
 		}
@@ -928,13 +928,13 @@ int calcStartofInterPatternLoop(int songNum, int channelNum, int startSongPos, G
 
 			editorInfo.highlightLoopStart = markStart;
 			editorInfo.highlightLoopEnd = markEnd;
-			editorInfo.highlightLoopPatternNumber = loopPatternNum;	
+			editorInfo.highlightLoopPatternNumber = loopPatternNum;
 			editorInfo.highlightLoopChannel = c3;
 
 			return 1;
 		}
 
-	} while (gtloop->chn[c2].songptr == sptr);	
+	} while (gtloop->chn[c2].songptr == sptr);
 
 	return 0;
 }
@@ -956,7 +956,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 	}
 
 
-	int c2 = channelNum;	
+	int c2 = channelNum;
 	int sng = songNum;
 
 	if (c2 >= maxSIDChannels)
@@ -992,12 +992,19 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 	// Now sync to end of pattern (info used for looping)
 	int sptr = gtloop->chn[c2].songptr;
 
+	int quitloop = 0;
 	do {
 		playroutine(gtloop);
 		if (gtloop->songinit == PLAY_STOPPED)	// Error in song data
 			return -1;
 
-	} while (gtloop->chn[c2].songptr == sptr);
+		
+		if (gtloop->chn[c2].loopCount)
+			quitloop++;
+		else if (gtloop->chn[c2].songptr != sptr)
+			quitloop++;
+
+	} while (!quitloop);	//gtloop->chn[c2].songptr == sptr);
 
 	memcpy((char*)&gtPlayer->loopEndChn[0], (char*)&gtloop->chn[0], sizeof(CHN)*MAX_PLAY_CH);
 
@@ -1132,7 +1139,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 				} while (ep != ep2);
 
 				gt->editorInfo[c2].epnum = songorder[sng][c2 % 6][ep];
-				gt->editorInfo[c2].espos = ep;	
+				gt->editorInfo[c2].espos = ep;
 			}
 		}
 		else
@@ -1284,7 +1291,7 @@ void paletteEditCommands()
 		if (editorInfo.escolumn > 1)
 		{
 			editorInfo.escolumn = 0;
-			if (editorInfo.eseditpos < MAX_PALETTE_ENTRIES)	
+			if (editorInfo.eseditpos < MAX_PALETTE_ENTRIES)
 			{
 				editorInfo.eseditpos++;
 

@@ -1139,6 +1139,7 @@ void playroutine(GTOBJECT *gt)
 		incrementtime(gt);
 
 
+
 	if (gtObject.interPatternLoopEnabledFlag)
 	{
 		int c3 = ((gtObject.interPatternLoopEnabledFlag>>8)&0xff) - 1;
@@ -1192,6 +1193,7 @@ void playroutine(GTOBJECT *gt)
 		}
 
 	}
+	
 
 	if (gt->noSIDWrites == 0 && gt->disableLoopSearch == 0)	// only the PLAYING GTObject should check for looping. Otherwise, we end up in recursive hell
 	{
@@ -1233,11 +1235,16 @@ void playroutine(GTOBJECT *gt)
 		{
 			gt->chn[gt->masterLoopChannel].songLoopPtr = gt->chn[gt->masterLoopChannel].songptr;
 
+		//	sprintf(textbuffer, "end song %x", gt->chn[gt->masterLoopChannel].songLoopPtr);
+		//	printtext(70, 36, 0xe, textbuffer);
 			calculateLoopInfo2(gt->psnum, gt->masterLoopChannel, gt->chn[gt->masterLoopChannel].songptr - 1, &gtLoopObject);
 			gtObject.loopEnabledFlag = 1;
 		}
 
+		
+
 	}
+
 }
 
 

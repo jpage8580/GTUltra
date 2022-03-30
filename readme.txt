@@ -1,4 +1,4 @@
-GTUltra 1.00
+GTUltra 1.0.4
 Based on GoatTracker v2.76 Stereo
 ------------------------
 
