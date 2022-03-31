@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <SDL/SDL.h>
+#include <SDL.h>
 #include "bme_main.h"
 #include "bme_cfg.h"
 #include "bme_win.h"
@@ -126,7 +126,7 @@ int kbd_waitkey(void)
     {
         win_checkmessages();
 
-        for (index = 0; index < MAX_KEYS; index++)
+        for (index = 0; index < SDL_NUM_SCANCODES; index++)
         {
             if (win_keytable[index])
             {
@@ -143,7 +143,7 @@ int kbd_getkey(void)
 {
     int index;
 
-    for (index = 0; index < MAX_KEYS; index++)
+    for (index = 0; index < SDL_NUM_SCANCODES; index++)
     {
         if (win_keytable[index])
         {
@@ -156,7 +156,7 @@ int kbd_getkey(void)
 
 int kbd_checkkey(int rawcode)
 {
-    if (rawcode >= MAX_KEYS) return 0;
+    if (rawcode >= SDL_NUM_SCANCODES) return 0;
     if (win_keytable[rawcode])
     {
         win_keytable[rawcode] = 0;

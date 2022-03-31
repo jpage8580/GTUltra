@@ -9,5 +9,3 @@
 #define DEFAULT_MAX_SPRFILES 256 // Default maximum of 256 spritefiles, though
                                  // this can be set during running of program
 
-#define MAX_KEYS 512
-

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 #include "bme_main.h"
 #include "bme_cfg.h"
@@ -53,6 +53,7 @@ int spr_yhotspot = 0;
 unsigned gfx_nblocks = 0;
 Uint8 gfx_palette[MAX_COLORS * 3] = {0};
 SDL_Surface *gfx_screen = NULL;
+SDL_Renderer *gfx_renderer = NULL;
 
 // Static variables
 
@@ -72,10 +73,11 @@ static Uint8 **gfx_spritedata = NULL;
 static unsigned *gfx_spriteamount = NULL;
 static SDL_Color gfx_sdlpalette[MAX_COLORS];
 static int gfx_locked = 0;
+static SDL_Texture *sdlTexture = NULL;
 
 int gfx_init(unsigned xsize, unsigned ysize, unsigned framerate, unsigned flags)
 {
-    int sdlflags = SDL_HWSURFACE;
+    int sdlflags = SDL_RENDERER_ACCELERATED;
 
     // Prevent re-entry (by window procedure)
     if (gfx_initexec) return BME_OK;
@@ -92,10 +94,7 @@ int gfx_init(unsigned xsize, unsigned ysize, unsigned framerate, unsigned flags)
 
     if (flags & GFX_NOSWITCHING) gfx_preventswitch = 1;
         else gfx_preventswitch = 0;
-    if (win_fullscreen) sdlflags |= SDL_FULLSCREEN;
-    if (flags & GFX_FULLSCREEN) sdlflags |= SDL_FULLSCREEN;
-    if (flags & GFX_WINDOW) sdlflags &= ~SDL_FULLSCREEN;
-    if (sdlflags & SDL_FULLSCREEN) gfx_fullscreen = 1;
+    if (win_fullscreen) gfx_fullscreen = 1;
         else gfx_fullscreen = 0;
 
     // Calculate virtual window size
@@ -130,13 +129,20 @@ int gfx_init(unsigned xsize, unsigned ysize, unsigned framerate, unsigned flags)
     gfx_sdlpalette[0].r = 0;
     gfx_sdlpalette[0].g = 0;
     gfx_sdlpalette[0].b = 0;
+    gfx_sdlpalette[0].a = 255;
     gfx_sdlpalette[255].r = 255;
     gfx_sdlpalette[255].g = 255;
     gfx_sdlpalette[255].b = 255;
+    gfx_sdlpalette[255].a = 255;
 
 
 
-    gfx_screen = SDL_SetVideoMode(gfx_windowxsize, gfx_windowysize, 8, sdlflags);
+    gfx_renderer = SDL_CreateRenderer(win_window, -1, sdlflags);
+    gfx_screen = SDL_CreateRGBSurfaceWithFormat(0, xsize, ysize, 8, SDL_PIXELFORMAT_INDEX8);
+    sdlTexture = SDL_CreateTexture(gfx_renderer,
+                                             SDL_PIXELFORMAT_RGBA32,
+                                             SDL_TEXTUREACCESS_STREAMING,
+                                             xsize, ysize);
     gfx_initexec = 0;
     if (gfx_screen)
     {
@@ -157,6 +163,9 @@ int gfx_reinit(void)
 
 void gfx_uninit(void)
 {
+    SDL_DestroyTexture(sdlTexture);
+    SDL_FreeSurface(gfx_screen);
+    SDL_DestroyRenderer(gfx_renderer);
     gfx_initted = 0;
     return;
 }
@@ -184,7 +193,12 @@ void gfx_unlock(void)
 
 void gfx_flip()
 {
-    SDL_Flip(gfx_screen);
+    SDL_Surface* surf = SDL_ConvertSurfaceFormat(gfx_screen, SDL_PIXELFORMAT_RGBA32, 0);
+    SDL_UpdateTexture(sdlTexture, NULL, surf->pixels, surf->pitch);
+    SDL_FreeSurface(surf);
+    SDL_RenderClear(gfx_renderer);
+    SDL_RenderCopy(gfx_renderer, sdlTexture, NULL, NULL);
+    SDL_RenderPresent(gfx_renderer);
     gfx_redraw = 0;
 }
 
@@ -253,6 +267,8 @@ void gfx_calcpalette(int fade, int radd, int gadd, int badd)
         if (cl < 0) cl = 0;
         gfx_sdlpalette[c].b = (cl << 2) | (cl & 3);
         sptr++;
+
+        gfx_sdlpalette[c].a = 255;
     }
 }
 
@@ -262,7 +278,7 @@ void gfx_setpalette(void)
 
 
 
-    SDL_SetColors(gfx_screen, &gfx_sdlpalette[0], 0, gfx_maxcolors);
+    SDL_SetPaletteColors(gfx_screen->format->palette, &gfx_sdlpalette[0], 0, gfx_maxcolors);
 }
 
 void gfx_setclipregion(unsigned left, unsigned top, unsigned right, unsigned bottom)

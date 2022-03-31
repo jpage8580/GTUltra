@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <SDL/SDL_types.h>
+#include <SDL_types.h>
 #include "bme_end.h"
 
 #define MAXFILES 16384

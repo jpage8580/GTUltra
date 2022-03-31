@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <SDL/SDL_types.h>
+#include <SDL_types.h>
 
 void fwrite8(FILE *file, unsigned data)
 {
