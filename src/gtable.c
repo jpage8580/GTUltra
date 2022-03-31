@@ -24,7 +24,8 @@ void tablecommands(GTOBJECT *gt)
 		win_enableKeyRepeat();
 		break;
 	default:
-		win_disableKeyRepeat();
+		if (!enablekeyrepeat)
+			win_disableKeyRepeat();
 	}
 
 
@@ -169,7 +170,7 @@ void tablecommands(GTOBJECT *gt)
 	case KEY_LEFT:
 		editorInfo.etcolumn--;
 
-		 maxC = 3;
+		maxC = 3;
 		if (editorInfo.editTableMode == EDIT_TABLE_PULSE && editorInfo.editmode == EDIT_TABLES)
 		{
 			maxC = 4;
@@ -499,6 +500,8 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_ENTER:
+
+
 		if (editorInfo.etnum == WTBL)
 		{
 			int table = -1;
@@ -533,6 +536,9 @@ void tablecommands(GTOBJECT *gt)
 			switch (table)
 			{
 			default:
+
+				editorInfo.editmode = EDIT_INSTRUMENT;	// move back to instrument view if there's no other table to jump to
+				editorInfo.eipos = editorInfo.etnum + 2;
 				return;
 
 			case STBL:
@@ -597,7 +603,6 @@ void tablecommands(GTOBJECT *gt)
 		{
 			if (!disableEnterToReturnToLastPos)
 				memcpy((char*)&editorInfo, (char*)&editorInfoBackup, sizeof(EDITOR_INFO));
-
 			return;
 		}
 		break;
@@ -1363,7 +1368,7 @@ void modifyPulseTableDetailed(int hexnybble)
 			break;
 		case 1:
 			v &= 0xf0f;
-			v |= hexnybble<<4;
+			v |= hexnybble << 4;
 			break;
 		case 2:
 			v &= 0xff0;
@@ -1371,12 +1376,12 @@ void modifyPulseTableDetailed(int hexnybble)
 			break;
 		}
 
-		ltable[PTBL][editorInfo.etpos] = ((v >> 8)&0xf) | 0x80;
+		ltable[PTBL][editorInfo.etpos] = ((v >> 8) & 0xf) | 0x80;
 		rtable[PTBL][editorInfo.etpos] = v & 0xff;
 	}
 	else if (editorInfo.etcolumn >= 3)
 		modifyPulseTableDetailedRight(hexnybble);
-	else 
+	else
 		modifyPulseTableDetailedLeft(hexnybble);
 
 }
@@ -1436,7 +1441,7 @@ void modifyPulseTableDetailedLeft(int hexnybble)
 	unsigned char v = detailedTableLValue[editorInfo.etpos];
 	unsigned char o = v;
 
-	switch (editorInfo.etcolumn-1)
+	switch (editorInfo.etcolumn - 1)
 	{
 	case 0:
 		v &= 0x0f;

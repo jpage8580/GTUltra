@@ -375,11 +375,13 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 	case KEY_Z:
 		if (ctrlpressed)
 			win_enableKeyRepeat();	// Undo works with key repeat
-		else
+		else if (!enablekeyrepeat)
 			win_disableKeyRepeat();
 		break;
 	default:
-		win_disableKeyRepeat();
+
+		if (!enablekeyrepeat)
+			win_disableKeyRepeat();
 	}
 
 	switch (jrawkey)
@@ -994,8 +996,8 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		if (!shiftpressed)
 		{
 			int maxCh = 6;
-			if (maxSIDChannels==3 || (maxSIDChannels==9 && (editorInfo.esnum&1)))
-				maxCh=3;
+			if (maxSIDChannels == 3 || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+				maxCh = 3;
 
 			editorInfo.epcolumn++;
 			if (editorInfo.epcolumn >= 6)
@@ -1655,7 +1657,7 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 
 		if (!noKeysPressed)
 		{
-			win_disableKeyRepeat();		// key pressed. So disable key repeat
+			win_disableKeyRepeat();		// key pressed. So disable key repeat for jam mode 
 
 		}
 	}
@@ -1974,7 +1976,6 @@ void autoPitchbendToNextNote(GTOBJECT *gt)
 				note2 -= FIRSTNOTE;
 
 				jcounter = note1;
-
 
 				getPlayStartPosition(gte, songNum, c2, ep, editorInfo.eppos);
 				int tickCount1 = gte->chn[c2].portCounter;

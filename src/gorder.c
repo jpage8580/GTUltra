@@ -110,7 +110,8 @@ void orderlistcommands(GTOBJECT *gt)
 		win_enableKeyRepeat();
 		break;
 	default:
-		win_disableKeyRepeat();
+		if (!enablekeyrepeat)
+			win_disableKeyRepeat();
 	}
 
 	switch (key)
@@ -998,7 +999,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 		if (gtloop->songinit == PLAY_STOPPED)	// Error in song data
 			return -1;
 
-		
+
 		if (gtloop->chn[c2].loopCount)
 			quitloop++;
 		else if (gtloop->chn[c2].songptr != sptr)
@@ -1314,7 +1315,8 @@ void paletteEditCommands()
 		win_enableKeyRepeat();
 		break;
 	default:
-		win_disableKeyRepeat();
+		if (!enablekeyrepeat)
+			win_disableKeyRepeat();
 	}
 
 	switch (rawkey)

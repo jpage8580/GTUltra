@@ -74,6 +74,7 @@ extern unsigned bigwindow;
 int checkUndoFlag = 0;
 unsigned int lmanMode = 1;
 unsigned int editPaletteMode = 0;
+unsigned int enablekeyrepeat = 0;
 
 float masterVolume = 1.0f;
 float detuneCent = 0;
@@ -215,6 +216,7 @@ int main(int argc, char **argv)
 		getparam(configfile, &currentPalettePreset);
 		getfloatparam(configfile, &masterVolume);
 		getfloatparam(configfile, &detuneCent);
+		getparam(configfile, &enablekeyrepeat);
 		fclose(configfile);
 	}
 
@@ -275,6 +277,7 @@ int main(int argc, char **argv)
 				printtext(0, y++, getColor(15, 0), "-pxx set UI Skin (0-3) DEFAULT=0");
 				printtext(0, y++, getColor(15, 0), "-vxx Master Volume (floating point) DEFAULT=1(large values may cause clipping / distortion)");
 				printtext(0, y++, getColor(15, 0), "-dxxx Detune Pitchtable (-1 > 1 0 = no detune. -1 = -1 semitone 1 = +1 semitone");
+				printtext(0, y++, getColor(15, 0), "-kx   Enable key repeat (0=only on selected keys. 1= on everything (DEFAULT 0)");
 				printtext(0, y++, getColor(15, 0), "-?   Show this info again");
 				printtext(0, y++, getColor(15, 0), "-??  Standalone online help window");
 				waitkeynoupdate();
@@ -401,6 +404,9 @@ int main(int argc, char **argv)
 
 			case 'd':
 				sscanf(&argv[c][2], "%f", &detuneCent);
+
+			case 'k':
+				sscanf(&argv[c][2], "%d", &enablekeyrepeat);
 			}
 		}
 		else
@@ -450,6 +456,9 @@ int main(int argc, char **argv)
 	{
 		detuneCent = 0;
 	}
+
+	if (enablekeyrepeat > 1)
+		enablekeyrepeat = 0;
 
 	// Read Scala tuning file
 	if (scalatuningfilepath[0] != '0' && scalatuningfilepath[1] != '\0')
@@ -555,157 +564,159 @@ int main(int argc, char **argv)
 
 #endif
 
-playUntilEnd();	// Get length of time of loaded or empty song
+	playUntilEnd();	// Get length of time of loaded or empty song
 
-// Start editor mainloop
-printmainscreen(&gtObject);
-while (!exitprogram)
-{
-	waitkeymouse(&gtObject);
-	docommand();
-}
+	// Start editor mainloop
+	printmainscreen(&gtObject);
+	while (!exitprogram)
+	{
+		waitkeymouse(&gtObject);
+		docommand();
+	}
 
-// Shutdown sound output now
-sound_uninit();
+	// Shutdown sound output now
+	sound_uninit();
 
 
 #ifndef __WIN32__
 #ifdef __amigaos__
-strcpy(filename, "PROGDIR:gtskins.bin");
+	strcpy(filename, "PROGDIR:gtskins.bin");
 #else
-strcpy(filename, getenv("HOME"));
-strcat(filename, "/.goattrk");
-mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
-strcat(filename, "/gtskins.bin");
+	strcpy(filename, getenv("HOME"));
+	strcat(filename, "/.goattrk");
+	mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
+	strcat(filename, "/gtskins.bin");
 #endif
 #endif
 
-if (paletteChanged)
-{
-	configfile = fopen("gtskins.bin", "wb");		// wb write binary. wt = write text
+	if (paletteChanged)
+	{
+		configfile = fopen("gtskins.bin", "wb");		// wb write binary. wt = write text
+		if (configfile)
+		{
+			fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
+			fclose(configfile);
+		}
+	}
+
+
+	// Save configuration
+#ifndef __WIN32__
+#ifdef __amigaos__
+	strcpy(filename, "PROGDIR:goattrk2.cfg");
+#else
+	strcpy(filename, getenv("HOME"));
+	strcat(filename, "/.goattrk");
+	mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
+	strcat(filename, "/gt2stereo.cfg");
+#endif
+#endif
+	configfile = fopen(filename, "wt");
 	if (configfile)
 	{
-		fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
+		fprintf(configfile, ";------------------------------------------------------------------------------\n"
+			";GT2 config file. Rows starting with ; are comments. Hexadecimal parameters are\n"
+			";to be preceded with $ and decimal parameters with nothing.                    \n"
+			";------------------------------------------------------------------------------\n"
+			"\n"
+			";reSID buffer length (in milliseconds)\n%d\n\n"
+			";reSID mixing rate (in Hz)\n%d\n\n"
+			";Hardsid device number (0 = off)\n%d\n\n"
+			";reSID model (0 = 6581, 1 = 8580)\n%d\n\n"
+			";Timing mode (0 = PAL, 1 = NTSC)\n%d\n\n"
+			";Packer/relocator fileformat (0 = SID, 1 = PRG, 2 = BIN)\n%d\n\n"
+			";Packer/relocator player address\n$%04x\n\n"
+			";Packer/relocator zeropage baseaddress\n$%02x\n\n"
+			";Packer/relocator player type (0 = standard ... 3 = minimal)\n%d\n\n"
+			";Key entry mode (0 = Protracker, 1 = DMC, 2 = Janko)\n%d\n\n"
+			";Pattern highlight step size\n%d\n\n"
+			";Speed multiplier (0 = 25Hz, 1 = 1X, 2 = 2X etc.)\n%d\n\n"
+			";Use CatWeasel SID (0 = off, 1 = on)\n%d\n\n"
+			";Hardrestart ADSR parameter\n$%04x\n\n"
+			";reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on)\n%d\n\n"
+			";Pattern display mode (0 = decimal, 1 = hex, 2 = decimal w/dots, 3 = hex w/dots)\n%d\n\n"
+			";SID baseaddresses\n$%08x\n\n"
+			";Finevibrato mode (0 = off, 1 = on)\n%d\n\n"
+			";Pulseskipping (0 = off, 1 = on)\n%d\n\n"
+			";Realtime effect skipping (0 = off, 1 = on)\n%d\n\n"
+			";Random reSID write delay in cycles (0 = off)\n%d\n\n"
+			";Custom SID clock cycles per second (0 = use PAL/NTSC default)\n%d\n\n"
+			";HardSID interactive mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
+			";HardSID playback mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
+			";reSID-fp distortion rate\n%f\n\n"
+			";reSID-fp distortion point\n%f\n\n"
+			";reSID-fp distortion CF threshold\n%f\n\n"
+			";reSID-fp type 3 base resistance\n%f\n\n"
+			";reSID-fp type 3 base offset\n%f\n\n"
+			";reSID-fp type 3 base steepness\n%f\n\n"
+			";reSID-fp type 3 minimum FET resistance\n%f\n\n"
+			";reSID-fp type 4 k\n%f\n\n"
+			";reSID-fp type 4 b\n%f\n\n"
+			";reSID-fp voice nonlinearity\n%f\n\n"
+			";Window type (0 = window, 1 = fullscreen)\n%d\n\n"
+			";window scale factor (1 = no scaling, 2 to 4 = 2 to 4 times bigger window)\n%d\n\n"
+			";Base pitch of A-4 in Hz (0 = use default frequencytable)\n%f\n\n"
+			";Equal divisions per octave (12 = default, 8.2019143 = Bohlen-Pierce)\n%f\n\n"
+			";Special note names (2 chars for every note in an octave/cycle)\n%s\n\n"
+			";Path to a Scala tuning file .scl\n%s\n\n"
+			";Default SID channel playback\n%d\n\n"
+			";UI Skin\n%d\n\n"
+			";Master Volume scaler (1 = normal volume. 2 = twice as loud 0.5 = half volume..)\n%f\n\n"
+			";Detune Cent (0-2... 1 = no detune. 0 =-100 cents. 2=+100 cents)\n%f\n\n"
+			";Enable Key repeat (0-1... 0=only on specific keys. 1=on all keys)\n%d\n\n",
+			b,
+			mr,
+			hardsid,
+			sidmodel,
+			ntsc,
+			fileformat,
+			playeradr,
+			zeropageadr,
+			playerversion,
+			keypreset,
+			stepsize,
+			multiplier,
+			catweasel,
+			adparam,
+			interpolate,
+			patterndispmode,
+			sidaddress,
+			finevibrato,
+			optimizepulse,
+			optimizerealtime,
+			residdelay,
+			customclockrate,
+			hardsidbufinteractive,
+			hardsidbufplayback,
+			filterparams.distortionrate,
+			filterparams.distortionpoint,
+			filterparams.distortioncfthreshold,
+			filterparams.type3baseresistance,
+			filterparams.type3offset,
+			filterparams.type3steepness,
+			filterparams.type3minimumfetresistance,
+			filterparams.type4k,
+			filterparams.type4b,
+			filterparams.voicenonlinearity,
+			win_fullscreen,
+			bigwindow,
+			basepitch,
+			equaldivisionsperoctave,
+			specialnotenames,
+			scalatuningfilepath,
+			maxSIDChannels,
+			currentPalettePreset,
+			masterVolume,
+			detuneCent,
+			enablekeyrepeat);
+
 		fclose(configfile);
 	}
-}
-
-
-// Save configuration
-#ifndef __WIN32__
-#ifdef __amigaos__
-strcpy(filename, "PROGDIR:goattrk2.cfg");
-#else
-strcpy(filename, getenv("HOME"));
-strcat(filename, "/.goattrk");
-mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
-strcat(filename, "/gt2stereo.cfg");
-#endif
-#endif
-configfile = fopen(filename, "wt");
-if (configfile)
-{
-	fprintf(configfile, ";------------------------------------------------------------------------------\n"
-		";GT2 config file. Rows starting with ; are comments. Hexadecimal parameters are\n"
-		";to be preceded with $ and decimal parameters with nothing.                    \n"
-		";------------------------------------------------------------------------------\n"
-		"\n"
-		";reSID buffer length (in milliseconds)\n%d\n\n"
-		";reSID mixing rate (in Hz)\n%d\n\n"
-		";Hardsid device number (0 = off)\n%d\n\n"
-		";reSID model (0 = 6581, 1 = 8580)\n%d\n\n"
-		";Timing mode (0 = PAL, 1 = NTSC)\n%d\n\n"
-		";Packer/relocator fileformat (0 = SID, 1 = PRG, 2 = BIN)\n%d\n\n"
-		";Packer/relocator player address\n$%04x\n\n"
-		";Packer/relocator zeropage baseaddress\n$%02x\n\n"
-		";Packer/relocator player type (0 = standard ... 3 = minimal)\n%d\n\n"
-		";Key entry mode (0 = Protracker, 1 = DMC, 2 = Janko)\n%d\n\n"
-		";Pattern highlight step size\n%d\n\n"
-		";Speed multiplier (0 = 25Hz, 1 = 1X, 2 = 2X etc.)\n%d\n\n"
-		";Use CatWeasel SID (0 = off, 1 = on)\n%d\n\n"
-		";Hardrestart ADSR parameter\n$%04x\n\n"
-		";reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on)\n%d\n\n"
-		";Pattern display mode (0 = decimal, 1 = hex, 2 = decimal w/dots, 3 = hex w/dots)\n%d\n\n"
-		";SID baseaddresses\n$%08x\n\n"
-		";Finevibrato mode (0 = off, 1 = on)\n%d\n\n"
-		";Pulseskipping (0 = off, 1 = on)\n%d\n\n"
-		";Realtime effect skipping (0 = off, 1 = on)\n%d\n\n"
-		";Random reSID write delay in cycles (0 = off)\n%d\n\n"
-		";Custom SID clock cycles per second (0 = use PAL/NTSC default)\n%d\n\n"
-		";HardSID interactive mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
-		";HardSID playback mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
-		";reSID-fp distortion rate\n%f\n\n"
-		";reSID-fp distortion point\n%f\n\n"
-		";reSID-fp distortion CF threshold\n%f\n\n"
-		";reSID-fp type 3 base resistance\n%f\n\n"
-		";reSID-fp type 3 base offset\n%f\n\n"
-		";reSID-fp type 3 base steepness\n%f\n\n"
-		";reSID-fp type 3 minimum FET resistance\n%f\n\n"
-		";reSID-fp type 4 k\n%f\n\n"
-		";reSID-fp type 4 b\n%f\n\n"
-		";reSID-fp voice nonlinearity\n%f\n\n"
-		";Window type (0 = window, 1 = fullscreen)\n%d\n\n"
-		";window scale factor (1 = no scaling, 2 to 4 = 2 to 4 times bigger window)\n%d\n\n"
-		";Base pitch of A-4 in Hz (0 = use default frequencytable)\n%f\n\n"
-		";Equal divisions per octave (12 = default, 8.2019143 = Bohlen-Pierce)\n%f\n\n"
-		";Special note names (2 chars for every note in an octave/cycle)\n%s\n\n"
-		";Path to a Scala tuning file .scl\n%s\n\n"
-		";Default SID channel playback\n%d\n\n"
-		";UI Skin\n%d\n\n"
-		";Master Volume scaler (1 = normal volume. 2 = twice as loud 0.5 = half volume..)\n%f\n\n"
-		";Detune Cent (0-2... 1 = no detune. 0 =-100 cents. 2=+100 cents)\n%f\n\n",
-		b,
-		mr,
-		hardsid,
-		sidmodel,
-		ntsc,
-		fileformat,
-		playeradr,
-		zeropageadr,
-		playerversion,
-		keypreset,
-		stepsize,
-		multiplier,
-		catweasel,
-		adparam,
-		interpolate,
-		patterndispmode,
-		sidaddress,
-		finevibrato,
-		optimizepulse,
-		optimizerealtime,
-		residdelay,
-		customclockrate,
-		hardsidbufinteractive,
-		hardsidbufplayback,
-		filterparams.distortionrate,
-		filterparams.distortionpoint,
-		filterparams.distortioncfthreshold,
-		filterparams.type3baseresistance,
-		filterparams.type3offset,
-		filterparams.type3steepness,
-		filterparams.type3minimumfetresistance,
-		filterparams.type4k,
-		filterparams.type4b,
-		filterparams.voicenonlinearity,
-		win_fullscreen,
-		bigwindow,
-		basepitch,
-		equaldivisionsperoctave,
-		specialnotenames,
-		scalatuningfilepath,
-		maxSIDChannels,
-		currentPalettePreset,
-		masterVolume,
-		detuneCent);
-
-	fclose(configfile);
-}
 
 
 
-// Exit
-return 0;
+	// Exit
+	return 0;
 }
 
 void waitkey(GTOBJECT *gt)
@@ -962,6 +973,11 @@ void docommand(void)
 		c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);
 		undoAreaSetCheckForChange(UNDO_AREA_PATTERN, gt->editorInfo[c2].epnum, UNDO_AREA_DIRTY_CHECK);
 		undoAreaSetCheckForChange(UNDO_AREA_PATTERN_LEN, 0, UNDO_AREA_DIRTY_CHECK);
+
+		for (int i = 0;i < MAX_CHN;i++)
+		{
+			undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
+		}
 
 		// JP REMOVED THIS. SEEMS TO CAUSE PROBLEMS..
 	//	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, c2, UNDO_AREA_DIRTY_CHECK);
@@ -1534,8 +1550,10 @@ void generalcommands(GTOBJECT *gt)
 	case KEY_S:
 		if (!ctrlpressed) break;
 		int s = quickSave();
-
-		sprintf(infoTextBuffer, "quick save: %d", s);
+		if (s)
+			sprintf(infoTextBuffer, "quick save: %d", s);
+		else
+			save(gt);
 		return;
 
 	case KEY_Z:
@@ -1841,6 +1859,9 @@ void clear(GTOBJECT *gt)
 		printtext(60, 36, getColor(15, CGENERAL_BACKGROUND), "Pattern length:");
 		while (!selectdone)
 		{
+			sprintf(textbuffer, "%02d ", defaultpatternlength);
+			printtext(60 + 15, 36, getColor(15, CGENERAL_BACKGROUND), textbuffer);
+
 			waitkey(gt);
 			switch (rawkey)
 			{
@@ -1872,7 +1893,10 @@ void clear(GTOBJECT *gt)
 	}
 
 	if (cs | cp | ci | ct | cn)
+	{
+		loadedSongFlag = 0;
 		memset(songfilename, 0, sizeof songfilename);
+	}
 	clearsong(cs, cp, ci, ct, cn, &gtObject);
 
 	key = 0;

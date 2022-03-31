@@ -137,6 +137,8 @@ extern char transportPlay;
 extern char transportFollowPlay;
 extern char transportShowKeyboard;
 
+extern unsigned int enablekeyrepeat;
+
 extern char paletteChanged;
 extern WAVEFORM_INFO waveformDisplayInfo;
 

@@ -21,7 +21,8 @@ void instrumentcommands(GTOBJECT *gt)
 		win_enableKeyRepeat();
 		break;
 	default:
-		win_disableKeyRepeat();
+		if (enablekeyrepeat)
+			win_disableKeyRepeat();
 	}
 
 	switch (rawkey)
@@ -164,12 +165,12 @@ void instrumentcommands(GTOBJECT *gt)
 					break;
 				}
 				pos = instr[editorInfo.einum].ptr[editorInfo.eipos - 2] - 1;
-				
+
 			}
 			else
 			{
 				pos = gettablelen(editorInfo.eipos - 2);
-		
+
 				if (pos >= MAX_TABLELEN - 1) pos = MAX_TABLELEN - 1;
 				if (shiftpressed) instr[editorInfo.einum].ptr[editorInfo.eipos - 2] = pos + 1;
 			}
@@ -183,7 +184,7 @@ void instrumentcommands(GTOBJECT *gt)
 
 			}
 			editorInfo.etpos = e;
-			
+
 
 		}
 		return;
@@ -259,7 +260,7 @@ void gotoinstr(int i)
 void nextinstr(void)
 {
 	editorInfo.einum++;
-	
+
 	sprintf(infoTextBuffer, "instr:%d", editorInfo.einum);
 
 	if (editorInfo.einum >= MAX_INSTR) editorInfo.einum = MAX_INSTR - 1;

@@ -199,6 +199,10 @@ void relocator(GTOBJECT *gt)
 	playerversion &= ~PLAYER_ZPGHOSTREGS;
 
 	selectdone = 0;
+
+
+	int test = 0;
+
 	while (!selectdone)
 	{
 		for (c = 0; c < maxOptions; c++)
@@ -212,6 +216,10 @@ void relocator(GTOBJECT *gt)
 			else
 				printtext(24, 3 + c, getColor(color, 0), "No ");
 		}
+
+		sprintf(textbuffer, "test %d", test);
+		printtext(24, 20, 0xe, textbuffer);
+
 		fliptoscreen();
 		waitkeynoupdate();
 
@@ -230,7 +238,10 @@ void relocator(GTOBJECT *gt)
 			if (opt)
 			{
 				if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS) || (playerversion & PLAYER_FULLBUFFERED))
+				{
+					test++;
 					playerversion |= PLAYER_BUFFERED;
+				}
 			}
 			else
 			{
@@ -262,8 +273,11 @@ void relocator(GTOBJECT *gt)
 			break;
 		}
 
-		playerversion |= PLAYER_BUFFERED;
-		playerversion &= ~PLAYER_ZPGHOSTREGS;
+		if (maxSIDChannels != 3)
+		{
+			playerversion |= PLAYER_BUFFERED;
+			playerversion &= ~PLAYER_ZPGHOSTREGS;
+		}
 	}
 	if (selectdone == -1) goto PRCLEANUP;
 
@@ -1449,6 +1463,26 @@ void relocator(GTOBJECT *gt)
 			goto PRCLEANUP;
 		}
 
+		// JP Added this (copied from 3channel GoatTracker) 31st March 2022
+		// Modify ghostregs to not be zeropage if needed
+		//----
+		if ((playerversion & PLAYER_FULLBUFFERED) && (playerversion & PLAYER_ZPGHOSTREGS) == 0)
+		{
+			int bufsize = membuf_get_size(&src);
+			char* bufdata = (char*)membuf_get(&src);
+			int c;
+			for (c = 0; c < bufsize; c++)
+			{
+				if (bufdata[c] == '<')
+				{
+					if (memcmp(bufdata + c + 1, "ghost", 5) == 0)
+						bufdata[c] = ' ';
+				}
+			}
+		}
+		//------
+
+
 		// Insert frequencytable
 		insertlabel("mt_freqtbllo");
 		insertbytes(&freqtbllo[firstnote], lastnote - firstnote + 1);
@@ -1666,15 +1700,14 @@ void relocator(GTOBJECT *gt)
 			insertbytes(&pattwork[pattoffset[c]], pattsize[c]);
 		}
 
+/*
 		if (jp == 0)
 		{
 			FILE *handle = fopen("debug.s", "wt");
 			fwrite(membuf_get(&src), membuf_memlen(&src), 1, handle);
 			fclose(handle);
 		}
-
-
-
+*/
 
 		// Assemble; on error fail in a rude way (the parser does so too)
 		if (assemble(&src, &dest)) exit(1);
