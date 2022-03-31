@@ -27,6 +27,9 @@ unsigned char cmdcopybuffer[MAX_PATTROWS * 4 + 4];
 int patterncopyrows = 0;
 int cmdcopyrows = 0;
 
+EDITOR_INFO editorInfo;
+EDITOR_INFO editorInfoBackup;
+int disableEnterToReturnToLastPos;
 
 
 void patterncommands(GTOBJECT *gt, int midiNote)

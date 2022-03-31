@@ -3,7 +3,7 @@
 
 #ifndef GORDER_C
 
-int instrumentCount[MAX_INSTR];
+extern int instrumentCount[MAX_INSTR];
 #endif
 
 int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *gtloop);
