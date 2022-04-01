@@ -37,7 +37,11 @@
 */
 /**********************************************************************/
 
-#define __WINDOWS_MM__	// Include this line for windows building. Remove to build Linux
+#ifdef _WIN32
+#define __WINDOWS_MM__ // Include this line for windows building. 
+#elif __linux__
+#define __LINUX_ALSA__	// Include this line for Linux
+#endif
 
 #include "RtMidi.h"
 

@@ -1,7 +1,7 @@
-GTUltra v1.0.4
+GTUltra v1.1.0
 ------------------
 Release: 29th March 2022
-Last Update: 30th March 2022
+Last Update: 1st April 2022
 Editor and C64 GT player enhancements - Jason Page / MultiStyle Labs
 
 Beta testing:

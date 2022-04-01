@@ -2,9 +2,9 @@
 # Linux makefile
 #
 
-CFLAGS+=`sdl-config --cflags`
+CFLAGS+=`sdl2-config --cflags` `pkg-config --cflags alsa`
 PREFIX=../linux/
 SUFFIX=
-LIBS+=`sdl-config --libs`
+LIBS+=`sdl2-config --libs` `pkg-config --libs alsa`
 
 include makefile.common

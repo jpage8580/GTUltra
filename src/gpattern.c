@@ -1562,8 +1562,8 @@ void handleShiftSpace(GTOBJECT *gt, int c2, int startPatternPos, int follow, int
 	followplay = follow;
 }
 
-unsigned char keyStillDown[MAX_KEYS] = { 0 };
-unsigned char keyNoteDown[MAX_KEYS] = { 0 };
+unsigned char keyStillDown[SDL_NUM_SCANCODES] = { 0 };
+unsigned char keyNoteDown[SDL_NUM_SCANCODES] = { 0 };
 int polyChannelOffset = 0;
 
 
@@ -1631,7 +1631,7 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 
 	if (editorInfo.editmode == EDIT_PATTERN)
 	{
-		for (c = 0; c < MAX_KEYS; c++)
+		for (c = 0; c < SDL_NUM_SCANCODES; c++)
 		{
 			newnote = -1;
 			if (win_keystate[c])

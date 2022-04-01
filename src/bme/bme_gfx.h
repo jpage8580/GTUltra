@@ -41,3 +41,4 @@ extern Uint8 *gfx_vscreen;
 extern Uint8 *gfx_blocks;
 extern Uint8 gfx_palette[];
 extern SDL_Surface *gfx_screen;
+extern SDL_Renderer *gfx_renderer;

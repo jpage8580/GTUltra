@@ -1,4 +1,4 @@
-# GTUltra 1.0.3 - Based on GoatTracker v2.76 Stereo
+# GTUltra 1.1.0 - Based on GoatTracker v2.76 Stereo
 ------------------------
 ## Attribution
  - Original Editor by Lasse Öörni (loorni@gmail.com)

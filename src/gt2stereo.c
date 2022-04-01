@@ -24,7 +24,7 @@
 #endif
 
 #include "goattrk2.h"
-#include "bme.h"
+#include "bme\bme.h"
 
 int menu = 0;
 int recordmode = 1;
@@ -91,7 +91,7 @@ char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.0.4";
+char *programname = "$VER: GTUltra V1.1.0";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -134,6 +134,11 @@ int main(int argc, char **argv)
 
 	FILE *configfile;
 	int c, d;
+
+// JP: SDL2 produces no audio for Windows32 without explicitly setting this (otherwise, it's set to "dummy sound" as the output)
+#ifdef __WIN32__
+	SDL_setenv("SDL_AUDIODRIVER", "directsound", 1);
+#endif
 
 	// JP - Init MIDI (yes. MIDI)
 	int ports = initMidi();
@@ -910,6 +915,13 @@ void converthex()
 
 void docommand(void)
 {
+
+	int i = 0;
+//	for (int i = 0; i < SDL_GetNumAudioDrivers(); ++i) {
+//		sprintf(textbuffer, "Audio driver %d: %s\n", i,  SDL_GetAudioDriver(0));
+//		printtext(70, 36, 0xe, textbuffer);
+//	}
+
 	int c2;
 	GTOBJECT *gt;
 

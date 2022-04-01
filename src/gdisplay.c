@@ -78,7 +78,7 @@ int UIUnderline = 0;
 
 char debugtext[256];
 
-int jdebug[16];
+extern int jdebug[16];
 
 int getPaletteTextArraySize()
 {
