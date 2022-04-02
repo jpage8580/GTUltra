@@ -24,7 +24,7 @@
 #endif
 
 #include "goattrk2.h"
-#include "bme\bme.h"
+#include "bme.h"
 
 int menu = 0;
 int recordmode = 1;
