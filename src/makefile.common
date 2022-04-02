@@ -2,8 +2,8 @@
 
 CC?=gcc
 CXX?=g++
-CFLAGS+=-Ibme -Iasm -O3 -fpermissive
-CXXFLAGS+=$(CFLAGS)
+CFLAGS+=-Ibme -Iasm -O3
+CXXFLAGS+=$(CFLAGS) -fpermissive
 
 EXE=	$(PREFIX)gt2stereo$(SUFFIX) \
 	$(PREFIX)ins2snd2$(SUFFIX) \

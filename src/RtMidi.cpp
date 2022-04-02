@@ -331,9 +331,9 @@ public:
 
 protected:
 #if defined __WINDOWS_MM__
-	void initialize(const std::string& /*clientName*/) {}
-#else
 	unsigned int initialize(const std::string& /*clientName*/) {}
+#else
+	void initialize(const std::string& /*clientName*/) {}
 #endif
 
 };
