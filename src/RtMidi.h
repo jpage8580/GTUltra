@@ -548,7 +548,11 @@ extern "C" {
 		void error(RtMidiError::Type type, std::string errorString);
 
 	protected:
+#if defined __WINDOWS_MM__
 		virtual unsigned int initialize(const std::string& clientName) = 0;
+#else
+        virtual void initialize(const std::string& clientName) = 0;
+#endif
 
 		void *apiData_;
 		bool connected_;
