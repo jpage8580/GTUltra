@@ -15,6 +15,7 @@
 #include "RtMidi.h"
 
 #include "gmidi.h"
+#include "gmidiselect.h"
 
 
 bool done;
@@ -23,29 +24,30 @@ RtMidiIn *midiin;
 
 bool portOpen = false;
 
-int initMidi()
+int initMidi(int midiPort)
 {
 	midiin = new RtMidiIn();
 	portOpen = false;
 
 	// Check available ports.
 	unsigned int nPorts = midiin->getPortCount();
-	if (nPorts > 0)
-	{
-		midiin->openPort(0);
-		// Don't ignore sysex, timing, or active sensing messages.
-		midiin->ignoreTypes(false, false, false);
-		portOpen = true;
-	}
+	if (nPorts <= midiPort)
+		midiPort = 0;
 
-	return nPorts;
+	midiin->openPort(midiPort);
+	// Don't ignore sysex, timing, or active sensing messages.
+	midiin->ignoreTypes(false, false, false);
+	portOpen = true;
+
+
+	return midiPort;
 
 }
 
 char unsigned msg[4096];
 
 int test = 0;
-int checkForMidiInput(MIDI_MESSAGE *m)
+int checkForMidiInput(MIDI_MESSAGE *m,int midiPort)
 {
 	m->size = 0;
 	if (portOpen)
@@ -53,7 +55,7 @@ int checkForMidiInput(MIDI_MESSAGE *m)
 		int nDevices = midiin->getPortCount();
 		if (nDevices)
 		{
-		
+
 			std::vector<unsigned char> message;
 			int nBytes, i;
 			double stamp;
@@ -81,7 +83,7 @@ int checkForMidiInput(MIDI_MESSAGE *m)
 		unsigned int nPorts = midiin->getPortCount();
 		if (nPorts > 0)
 		{
-			midiin->openPort(0);
+			midiin->openPort(midiPort);
 			// Don't ignore sysex, timing, or active sensing messages.
 			midiin->ignoreTypes(false, false, false);
 			return 1;
@@ -92,7 +94,25 @@ int checkForMidiInput(MIDI_MESSAGE *m)
 
 }
 
+unsigned int getPortCount()
+{
+	return  midiin->getPortCount();
+}
 
+char* getPortName(int portNumber)
+{
+	std::string str;
+	try {
+		str = midiin->getPortName(portNumber);
+	}
+	catch (RtMidiError &error) {
+		return NULL;
+	}
 
+	char * writable = new char[str.size() + 1];
+	std::copy(str.begin(), str.end(), writable);
+	writable[str.size()] = '\0'; // don't forget the terminating 0
+	return writable;
+}
 
 

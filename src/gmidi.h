@@ -10,8 +10,10 @@ extern "C" {
 		int size;
 	}MIDI_MESSAGE;
 
-	int initMidi();
-	int checkForMidiInput(MIDI_MESSAGE *m);
+	int initMidi(int midiPort);
+	int checkForMidiInput(MIDI_MESSAGE *m, int midiPort);
+	unsigned int getPortCount();
+	char* getPortName(int portNumber);
 
 #ifdef __cplusplus
 }

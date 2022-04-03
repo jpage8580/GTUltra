@@ -217,8 +217,8 @@ void relocator(GTOBJECT *gt)
 				printtext(24, 3 + c, getColor(color, 0), "No ");
 		}
 
-		sprintf(textbuffer, "test %d", test);
-		printtext(24, 20, 0xe, textbuffer);
+	//	sprintf(textbuffer, "test %d", test);
+	//	printtext(24, 20, 0xe, textbuffer);
 
 		fliptoscreen();
 		waitkeynoupdate();

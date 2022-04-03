@@ -13,6 +13,7 @@
 
 
 #include "gmidi.h"
+#include "gmidiselect.h"
 
 #include "gcommon.h"
 #include "gconsole.h"
@@ -141,6 +142,10 @@ extern unsigned int enablekeyrepeat;
 
 extern char paletteChanged;
 extern WAVEFORM_INFO waveformDisplayInfo;
+
+
+extern int selectedMIDIPort;
+
 
 extern float detuneCent;
 

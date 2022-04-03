@@ -106,6 +106,9 @@ char transportPlay = 1;
 char transportShowKeyboard = 0;
 char jdebugPlaying = 0;
 
+int selectedMIDIPort = 0;
+
+
 unsigned char hexkeytbl[] = { '0', '1', '2', '3', '4', '5', '6', '7',
   '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
@@ -135,13 +138,11 @@ int main(int argc, char **argv)
 	FILE *configfile;
 	int c, d;
 
-// JP: SDL2 produces no audio for Windows32 without explicitly setting this (otherwise, it's set to "dummy sound" as the output)
+	// JP: SDL2 produces no audio for Windows32 without explicitly setting this (otherwise, it's set to "dummy sound" as the output)
 #ifdef __WIN32__
 	SDL_setenv("SDL_AUDIODRIVER", "directsound", 1);
 #endif
 
-	// JP - Init MIDI (yes. MIDI)
-	int ports = initMidi();
 
 	programname += sizeof "$VER:";
 	// Open datafile
@@ -222,6 +223,7 @@ int main(int argc, char **argv)
 		getfloatparam(configfile, &masterVolume);
 		getfloatparam(configfile, &detuneCent);
 		getparam(configfile, &enablekeyrepeat);
+		getparam(configfile, &selectedMIDIPort);
 		fclose(configfile);
 	}
 
@@ -283,6 +285,7 @@ int main(int argc, char **argv)
 				printtext(0, y++, getColor(15, 0), "-vxx Master Volume (floating point) DEFAULT=1(large values may cause clipping / distortion)");
 				printtext(0, y++, getColor(15, 0), "-dxxx Detune Pitchtable (-1 > 1 0 = no detune. -1 = -1 semitone 1 = +1 semitone");
 				printtext(0, y++, getColor(15, 0), "-kx   Enable key repeat (0=only on selected keys. 1= on everything (DEFAULT 0)");
+				printtext(0, y++, getColor(15, 0), "-mxx  MIDI Port (DEFAULT 0)");
 				printtext(0, y++, getColor(15, 0), "-?   Show this info again");
 				printtext(0, y++, getColor(15, 0), "-??  Standalone online help window");
 				waitkeynoupdate();
@@ -412,6 +415,9 @@ int main(int argc, char **argv)
 
 			case 'k':
 				sscanf(&argv[c][2], "%d", &enablekeyrepeat);
+
+			case 'm':
+				sscanf(&argv[c][2], "%d", &selectedMIDIPort);
 			}
 		}
 		else
@@ -483,6 +489,8 @@ int main(int argc, char **argv)
 		setspecialnotenames();
 	}
 
+	// JP - Init MIDI (yes. MIDI)
+	selectedMIDIPort = initMidi(selectedMIDIPort);
 
 	// Set screenmode
 	if (!initscreen())
@@ -563,7 +571,7 @@ int main(int argc, char **argv)
 			// Shutdown sound output now
 			sound_uninit();
 			return 0;
-		}
+}
 
 	}
 
@@ -573,6 +581,8 @@ int main(int argc, char **argv)
 
 	// Start editor mainloop
 	printmainscreen(&gtObject);
+
+
 	while (!exitprogram)
 	{
 		waitkeymouse(&gtObject);
@@ -668,7 +678,8 @@ int main(int argc, char **argv)
 			";UI Skin\n%d\n\n"
 			";Master Volume scaler (1 = normal volume. 2 = twice as loud 0.5 = half volume..)\n%f\n\n"
 			";Detune Cent (0-2... 1 = no detune. 0 =-100 cents. 2=+100 cents)\n%f\n\n"
-			";Enable Key repeat (0-1... 0=only on specific keys. 1=on all keys)\n%d\n\n",
+			";Enable Key repeat (0-1... 0=only on specific keys. 1=on all keys)\n%d\n\n"
+			";MIDI Port\n%d\n\n",
 			b,
 			mr,
 			hardsid,
@@ -713,7 +724,8 @@ int main(int argc, char **argv)
 			currentPalettePreset,
 			masterVolume,
 			detuneCent,
-			enablekeyrepeat);
+			enablekeyrepeat,
+			selectedMIDIPort);
 
 		fclose(configfile);
 	}
@@ -798,7 +810,7 @@ void waitkeymouse(GTOBJECT *gt)
 		{
 			if (recordmode && editorInfo.editmode == EDIT_PATTERN)
 			{
-				portOpen = checkForMidiInput(&midiMessage);
+				portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
 				int i = 0;
 				for (int c = 0;c < midiMessage.size / 3;c++)
 				{
@@ -821,7 +833,7 @@ void waitkeymouse(GTOBJECT *gt)
 			{
 				do {
 
-					portOpen = checkForMidiInput(&midiMessage);
+					portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
 					handleMIDIPolykeyboard(&gtObject, midiMessage);
 
 				} while (midiMessage.size);
@@ -917,10 +929,10 @@ void docommand(void)
 {
 
 	int i = 0;
-//	for (int i = 0; i < SDL_GetNumAudioDrivers(); ++i) {
-//		sprintf(textbuffer, "Audio driver %d: %s\n", i,  SDL_GetAudioDriver(0));
-//		printtext(70, 36, 0xe, textbuffer);
-//	}
+	//	for (int i = 0; i < SDL_GetNumAudioDrivers(); ++i) {
+	//		sprintf(textbuffer, "Audio driver %d: %s\n", i,  SDL_GetAudioDriver(0));
+	//		printtext(70, 36, 0xe, textbuffer);
+	//	}
 
 	int c2;
 	GTOBJECT *gt;
@@ -2735,7 +2747,10 @@ int mouseTransportBar(GTOBJECT *gt)
 
 	if (checkMouseRange(TRANSPORT_BAR_X + 33, TRANSPORT_BAR_Y, 3, 2))
 	{
-		transportShowKeyboard = 1 - transportShowKeyboard;
+		if (shiftpressed)
+			displayMIDISelectWindow();
+		else
+			transportShowKeyboard = 1 - transportShowKeyboard;
 	}
 
 	return 0;
