@@ -126,7 +126,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 
 
 		if (newnote > LASTNOTE) newnote = -1;
-		if ((jrawkey == 0x08) && (!editorInfo.epcolumn)) newnote = REST;
+		if ((jrawkey == KEY_BACKSPACE) && (!editorInfo.epcolumn)) newnote = REST;
 		if ((jrawkey == 0x14) && (!editorInfo.epcolumn)) newnote = KEYOFF;
 		if (jrawkey == KEY_ENTER)
 		{
