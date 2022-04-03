@@ -2040,7 +2040,7 @@ void displayDetailedPulseTable(int cc)
 
 			// Will need to check ltable[p] to know how to set final value 
 			detailedTableLValue[p] = v2;			// current L value. Modify this with HexInput
-			detailedTableMaxLValue[p] = 0xeff;		// maximum possible value (min is always 0)
+			detailedTableMaxLValue[p] = 0x3ff;		// 0x3ff -- ignored anyway. maximum possible value (min is always 0)
 			detailedTableMinLValue[p] = 0;
 			detailedTableBaseLValue[p] = 0x0;		// base value to add to current to get new tableL[p] value (will need to check ltable[p] initially to see if we need to massage data further)
 

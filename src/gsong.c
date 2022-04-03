@@ -38,11 +38,104 @@ int highestusedpattern;
 int highestusedinstr;
 int determinechannels(FILE* handle);
 
+
+int checkFor3ChannelSong()
+{
+	int amount;
+
+	// Determine amount of songs to be saved
+	int c = MAX_SONGS - 1;
+	for (;;)
+	{
+		if ((songlen[c][0]) &&
+			(songlen[c][1]) &&
+			(songlen[c][2])) break;
+		if (c == 0) break;
+		c--;
+	}
+	amount = c + 1;
+
+	for (int d = 0; d < amount; d++)	// song
+	{
+		for (int c = 3; c < MAX_CHN; c++)	// channels
+		{
+			int length = songlen[d][c];
+			if (length)
+			{
+				for (int i = 0;i < length;i++)
+				{
+					if (songorder[d][c][i] == LOOPSONG)
+						break;
+
+					// Transpose
+					if ((songorder[d][c][i] >= TRANSDOWN) && (songorder[d][c][i] < LOOPSONG))
+					{
+						i++;
+					}
+					// Repeat
+					if ((songorder[d][c][i] >= REPEAT) && (songorder[d][c][i] < TRANSDOWN))
+					{
+						i++;
+					}
+					int p = songorder[d][c][i];
+
+			//		sprintf(textbuffer, "echeck. p:%d", p);
+			//		printtext(70, 36, 0xe, textbuffer);
+					if (patternContainsData(p))
+					{
+			//			sprintf(textbuffer, "not empty");
+			//			printtext(86, 36, 0xe, textbuffer);
+						return 6;				// found a pattern that contains data. Save as 6 channel SID
+					}
+				}
+			}
+		}
+	}
+
+//	sprintf(textbuffer, "empty");
+//	printtext(86, 36, 0xe, textbuffer);
+	return 3;	// no pattern data found 
+}
+
+int patternContainsData(int p)
+{
+	int patternLen = pattlen[p];
+	for (int i = 0;i < patternLen;i++)
+	{
+		if (pattern[p][(i * 4)] != REST)
+			return 1;	// pattern contains data
+
+		for (int j = 1;j < 4;j++)
+		{
+			if (pattern[p][(i * 4)+j] != 0)
+				return 1;	// pattern contains data
+		}
+	}
+	return 0;	// empty pattern
+
+}
+
+
 int savesong(void)
 {
 	int c;
 	char ident[] = { 'G', 'T', 'S', '5' };
 	FILE *handle;
+	int amount;
+
+	// Determine amount of songs to be saved
+	c = MAX_SONGS - 1;
+	for (;;)
+	{
+		if ((songlen[c][0]) &&
+			(songlen[c][1]) &&
+			(songlen[c][2])) break;
+		if (c == 0) break;
+		c--;
+	}
+	amount = c + 1;
+
+	int songChannelCount = checkFor3ChannelSong();
 
 	if (strlen(songfilename) < MAX_FILENAME - 4)
 	{
@@ -58,7 +151,7 @@ int savesong(void)
 	{
 		int d;
 		int length;
-		int amount;
+
 		int writebytes;
 		fwrite(ident, 4, 1, handle);
 
@@ -78,23 +171,11 @@ int savesong(void)
 		fwrite(authorname, sizeof authorname, 1, handle);
 		fwrite(copyrightname, sizeof copyrightname, 1, handle);
 
-		// Determine amount of songs to be saved
-		c = MAX_SONGS - 1;
-		for (;;)
-		{
-			if ((songlen[c][0]) &&
-				(songlen[c][1]) &&
-				(songlen[c][2])) break;
-			if (c == 0) break;
-			c--;
-		}
-		amount = c + 1;
-
 		fwrite8(handle, amount);
 		// Write songorderlists
 		for (d = 0; d < amount; d++)
 		{
-			for (c = 0; c < MAX_CHN; c++)
+			for (c = 0; c < songChannelCount; c++)
 			{
 				length = songlen[d][c] + 1;
 				fwrite8(handle, length);
@@ -209,8 +290,8 @@ int loadsong(GTOBJECT *gt)
 		int chCount = 0;
 		if (songfilename[0] == '$')
 		{
-//			sprintf(textbuffer, "found $");
-//			printtext(70, 36, 0xe, textbuffer);
+			//			sprintf(textbuffer, "found $");
+			//			printtext(70, 36, 0xe, textbuffer);
 
 			for (int i = 0;i < 2;i++)
 			{
@@ -220,11 +301,11 @@ int loadsong(GTOBJECT *gt)
 					chCount *= 10;
 					c -= '0';
 					chCount += c;
-				}					
+				}
 			}
 		}
-//		sprintf(textbuffer, "found $ %d", chCount);
-//		printtext(70, 36, 0xe, textbuffer);
+		//		sprintf(textbuffer, "found $ %d", chCount);
+		//		printtext(70, 36, 0xe, textbuffer);
 
 		if (chCount == 3 || chCount == 6 || chCount == 9 || chCount == 12)
 		{
@@ -246,7 +327,7 @@ int loadsong(GTOBJECT *gt)
 			int loadsize;
 			clearsong(1, 1, 1, 1, 1, gt);
 
-	
+
 
 			ok = 1;
 
@@ -298,7 +379,7 @@ int loadsong(GTOBJECT *gt)
 				fread(pattern[c], length, 1, handle);
 			}
 			countpatternlengths();
-			songchange(gt,1);
+			songchange(gt, 1);
 		}
 
 		// Goattracker v2.xx (3-table) import
@@ -381,7 +462,7 @@ int loadsong(GTOBJECT *gt)
 				}
 			}
 			countpatternlengths();
-			songchange(gt,1);
+			songchange(gt, 1);
 		}
 		// Goattracker 1.xx import
 		if (!memcmp(ident, "GTS!", 4))
@@ -654,7 +735,7 @@ int loadsong(GTOBJECT *gt)
 			}
 			countpatternlengths();
 			fi = highestusedinstr + 1;
-			songchange(gt,1);
+			songchange(gt, 1);
 
 			// Read filtertable
 			fread(filtertable, 256, 1, handle);
@@ -960,7 +1041,7 @@ int loadsong(GTOBJECT *gt)
 					}
 				}
 			}
-			songchange(gt,1);
+			songchange(gt, 1);
 		}
 	}
 
@@ -1929,7 +2010,7 @@ int mergesong(GTOBJECT *gt)
 ABORT:
 	fclose(handle);
 	countpatternlengths();
-	songchange(gt,1);
+	songchange(gt, 1);
 	return ok;
 }
 

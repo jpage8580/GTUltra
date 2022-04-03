@@ -31,6 +31,9 @@ int initMidi(int midiPort)
 
 	// Check available ports.
 	unsigned int nPorts = midiin->getPortCount();
+	if (nPorts == 0)
+		return 0;
+
 	if (nPorts <= midiPort)
 		midiPort = 0;
 

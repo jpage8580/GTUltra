@@ -585,6 +585,8 @@ int main(int argc, char **argv)
 
 	while (!exitprogram)
 	{
+		int ch = checkFor3ChannelSong();
+
 		waitkeymouse(&gtObject);
 		docommand();
 	}
