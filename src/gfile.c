@@ -501,20 +501,17 @@ void editstring(char *buffer, int maxlength)
 {
   int len = strlen(buffer);
 
-  if (key)
+  if ((key >= 32) && (key < 256))
   {
-    if ((key >= 32) && (key < 256))
+    if (len < maxlength-1)
     {
-      if (len < maxlength-1)
-      {
-        buffer[len] = key;
-        buffer[len+1] = 0;
-      }
+      buffer[len] = key;
+      buffer[len+1] = 0;
     }
-    if ((key == 8) && (len > 0))
-    {
-      buffer[len-1] = 0;
-    }
+  }
+  if ((rawkey == KEY_BACKSPACE) && (len > 0))
+  {
+    buffer[len-1] = 0;
   }
 }
 
