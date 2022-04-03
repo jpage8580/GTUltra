@@ -45,6 +45,8 @@ void optimizeeverything(int oi, int ot,GTOBJECT *gt);
 void initQuickPlay();
 void setQuickPlay(int song, int channel, int patternOffset, GTOBJECT *gt, int updateCounter);
 int getQuickPlayChannels(int song, int channel, int patternOffset, GTOBJECT *gt, int updateCounter);
+int checkFor3ChannelSong();
+int patternContainsData(int p);
 
 typedef struct
 {
