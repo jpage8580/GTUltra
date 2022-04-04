@@ -1744,6 +1744,8 @@ int clearPolyChannel(int i, GTOBJECT *gt)
 int cc;
 void calculateNoteOffsets()
 {
+	int noteList[12];
+	int noteIndex = 0;
 	int lowestNote = -1;
 	int note;
 	int firstNote = -1;
@@ -1767,13 +1769,35 @@ void calculateNoteOffsets()
 				sprintf(&keyOffsetText[c + 6], " %02X   ", noteOffsets[noteHeldLength]);
 			else
 				sprintf(&keyOffsetText[c + 6], ",%02X   ", noteOffsets[noteHeldLength]);
+
+			noteList[noteIndex++] = note - FIRSTNOTE;
 			c += 3;
 			noteHeldLength++;
+			if (noteIndex == 6)
+				break;
 		}
 	} while (note != -1);
 
+
+	if (noteIndex)
+	{
+		c++;
+		sprintf(&keyOffsetText[c + 6], "(");
+		c++;
+
+//		if (noteIndex > 6)
+//			noteIndex = 6;
+		for (int i = 0;i < noteIndex;i++)
+		{
+			sprintf(&keyOffsetText[c + 6], "%s,", notenameTableView[noteList[i]]);
+			c += 4;
+		}
+		c--;
+		sprintf(&keyOffsetText[c + 6], ")");
+	}
+
 	if (checkAnyPolyPlaying() == 1)	// only have one note pressed. So don't display chord
-		sprintf(&keyOffsetText[0], "Note: %02X                                             ", firstNote);
+		sprintf(&keyOffsetText[0], "Note: %02X (%s)                                         ", firstNote - FIRSTNOTE, notenameTableView[firstNote-FIRSTNOTE]);
 }
 
 
