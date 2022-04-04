@@ -65,8 +65,11 @@ char* paletteText[] = {
 	"Pattern Loop Marker Background",
 	"Pattern Loop Marker Foreground",
 	"Pattern: Instrument Foreground",
+	"Pattern: First Background 1",
+	"Pattern: First Foreground 1",
+	"Pattern: First Background 2",
+	"Pattern: First Foreground 2",
 	"hello"
-
 };
 
 
@@ -633,7 +636,14 @@ void displayPattern(GTOBJECT *gt)
 		int p = editorInfo.epview + d;
 		int color = getColor(CPATTERN_FOREGROUND1, CPATTERN_BACKGROUND1);
 		if ((p % (stepsize * 2)) < stepsize)
-			color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+		{
+			if ((p% stepsize) == 0)
+				color = getColor(CPATTERN_FIRST_FOREGROUND2, CPATTERN_FIRST_BACKGROUND2);
+			else
+				color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+		}
+		else if ((p% stepsize) == 0)
+			color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
 
 		color &= 0xff00;
 		color |= CPATTERN_DIVIDER_LINE;
@@ -687,8 +697,14 @@ void displayPattern(GTOBJECT *gt)
 
 			int color = getColor(CPATTERN_FOREGROUND1, CPATTERN_BACKGROUND1);
 			if ((p % (stepsize * 2)) < stepsize)
-				color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
-
+			{
+				if ((p% stepsize) == 0)
+					color = getColor(CPATTERN_FIRST_FOREGROUND2, CPATTERN_FIRST_BACKGROUND2);
+				else
+					color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+			}
+			else if ((p% stepsize) == 0)
+				color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
 
 			if ((p < 0) || (p > pattlen[gt->editorInfo[c2].epnum]) || c2 >= maxSIDChannels || c >= maxChan)
 			{
@@ -769,9 +785,16 @@ void displayPattern(GTOBJECT *gt)
 
 			int p = editorInfo.epview + d;
 
-			int color = getColor(CPATTERN_FOREGROUND1, CPATTERN_BACKGROUND1);	// paletteUIDisplay[0];	//CNORMAL;
+			int color = getColor(CPATTERN_FOREGROUND1, CPATTERN_BACKGROUND1);
 			if ((p % (stepsize * 2)) < stepsize)
-				color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+			{
+				if ((p% stepsize) == 0)
+					color = getColor(CPATTERN_FIRST_FOREGROUND2, CPATTERN_FIRST_BACKGROUND2);
+				else
+					color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+			}
+			else if ((p% stepsize) == 0)
+				color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
 
 			if (gt->chn[c2].lastpattptr == 0x7ffffffff)
 			{
@@ -1029,7 +1052,7 @@ void displayTransportBar(GTOBJECT *gt)
 	sprintf(textbuffer, "/ %02d:%02d:%02d ", gtEditorObject.totalMin, gtEditorObject.totalSec, gtEditorObject.totalFrame);
 	printtext(TRANSPORT_BAR_X + 5 + 10, TRANSPORT_BAR_Y - 1, getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND), textbuffer);
 
-	displayWaveformInfo(TRANSPORT_BAR_X-5, TRANSPORT_BAR_Y - 1);
+	displayWaveformInfo(TRANSPORT_BAR_X - 5, TRANSPORT_BAR_Y - 1);
 
 
 	printtext(0, TRANSPORT_BAR_Y + 2, getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND), "INFO:");
@@ -1173,7 +1196,7 @@ void displayTransportBarDetune(int x, int y)
 		printbyte(x + i, y, color, 0x9d + i);
 		printbyte(x + i, y + 1, color, 0xe9 + i);
 	}
-	sprintf(textbuffer, "%.1f", detuneCent+1);
+	sprintf(textbuffer, "%.1f", detuneCent + 1);
 	printtext(x + 0, y + 1, color, textbuffer);
 
 }
@@ -1803,7 +1826,7 @@ void displayDetailedFilterTable(int cc)
 			printtext(xpos, 15 + 3 + d, color, "FLT SET");
 
 
-		// Left side low nybble is not used.
+			// Left side low nybble is not used.
 			int filterType = (v >> 4) & 0xf;
 			int filterResonance = (r >> 4) & 0xf;
 			int filterOnOff = r & 0x7;
@@ -2212,7 +2235,7 @@ void displayTable(int c)
 
 
 		sprintf(textbuffer, "%02X:%02X %02X", p + 1, ltable[c][p], rtable[c][p]);
-		printtext(40 + 20 + 10 * c, 15 + 3 + d, color, textbuffer);	
+		printtext(40 + 20 + 10 * c, 15 + 3 + d, color, textbuffer);
 
 		if (c < 3)
 		{
@@ -2262,13 +2285,13 @@ void displayWaveformInfo(int x, int y)
 		printbyte(xs, y, cdivider, 0xff);
 	}
 
-	
+
 	for (int xp = 0;xp < 4;xp++)
 	{
 		int c = getWaveforumColour(0x80 >> xp, waveformDisplayInfo.value);
 
 		xs = x + (xp * 5);
-		printbyterow(xs+1, y, c, 0x18 + xp, 4);
+		printbyterow(xs + 1, y, c, 0x18 + xp, 4);
 	}
 	xs += 6;
 
