@@ -19,16 +19,18 @@ typedef struct
 
 
 
+#ifndef GINFO_C
+extern int lastInfoDisplayed;
+extern int clearInfoLine;
+
+extern int lastEditWindow;
+
 extern int lastInfoPatternCh;
 extern int lastInfoPattern;
 extern int lastInfoPatternPos;
 extern int infoWaitMS;
 extern int msDelta;
 extern int lastMS;
-
-#ifndef GINFO_C
-extern int lastInfoDisplayed;
-extern int clearInfoLine;
 
 #endif
 

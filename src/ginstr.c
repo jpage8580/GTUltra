@@ -221,7 +221,7 @@ void instrumentcommands(GTOBJECT *gt)
 			}
 			break;
 		}
-
+		lastEditWindow = -1;	// force redraw of Info bar with updated info
 		setTableBackgroundColours(editorInfo.einum);
 	}
 	// Validate instrument parameters
