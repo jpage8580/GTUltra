@@ -1390,10 +1390,10 @@ void mousecommands(GTOBJECT *gt)
 	}
 
 
-	if ((!prevmouseb) && (mousex <= 7) && (mousey == TRANSPORT_BAR_Y))
-	{
-		recordmode ^= 1;
-	}
+//	if ((!prevmouseb) && (mousex <= 7) && (mousey == TRANSPORT_BAR_Y))
+//	{
+//		recordmode ^= 1;
+//	}
 	for (c = 0; c < MAX_CHN; c++)
 	{
 		if ((!prevmouseb) && (mousey >= 23 + 3 + 10) && (mousex >= 59 + 7 * c) && (mousex <= 64 + 7 * c))
