@@ -2021,8 +2021,8 @@ std::string MidiInAlsa::getPortName(unsigned int portNumber)
 	}
 
 	// If we get here, we didn't find a match.
-	errorString_ = "MidiInAlsa::getPortName: error looking for port name!";
-	error(RtMidiError::WARNING, errorString_);
+//	errorString_ = "MidiInAlsa::getPortName: error looking for port name!";
+//	error(RtMidiError::WARNING, errorString_);
 	return stringName;
 }
 
@@ -2340,8 +2340,8 @@ std::string MidiOutAlsa::getPortName(unsigned int portNumber)
 	}
 
 	// If we get here, we didn't find a match.
-	errorString_ = "MidiOutAlsa::getPortName: error looking for port name!";
-	error(RtMidiError::WARNING, errorString_);
+//	errorString_ = "MidiOutAlsa::getPortName: error looking for port name!";
+//	error(RtMidiError::WARNING, errorString_);
 	return stringName;
 }
 

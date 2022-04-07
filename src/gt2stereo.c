@@ -91,7 +91,7 @@ char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.1.1";
+char *programname = "$VER: GTUltra V1.1.2";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];

@@ -1,4 +1,4 @@
-GTUltra 1.1.0
+GTUltra 1.12
 Based on GoatTracker v2.76 Stereo
 ------------------------
 
@@ -31,6 +31,9 @@ https://github.com/jpage8580/GTUltra
 
 - GTUltra Command line differences:
 
+  -dxxx Detune Pitchtable (-1 > 1 0 = no detune. -1 = -1 semitone 1 = +1 semitone
+  -mxx Midi Port (default 0. Press shift whilst clicking on keyboard icon in editor to change)
+  -kx  Enable keyboard report (0=only on selected keys. 1= on everything (DEFAULT 0)
   -cxx Max SID channels (3,6,9,12).
   -px  UI palette preset (0-3)
   -vff.f master volume (floating point value)
@@ -38,9 +41,9 @@ https://github.com/jpage8580/GTUltra
 
 - See GTUltra.PDF for full list of changes
 
+Refer to normal GT2 for full documentation (including file format description): readme - OriginalGT2 Documentation.txt
 
-
-Differences to normal version: (refer to normal GT2 for full documentation)
+GTStereo Differences to normal version:
 
 - Only buffered write playroutine without zeropage ghostreg support can be used.
 
