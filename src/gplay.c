@@ -1140,7 +1140,7 @@ void playroutine(GTOBJECT *gt)
 
 
 
-	if (gtObject.interPatternLoopEnabledFlag)
+	if (gt->noSIDWrites == 0 && gt->loopEnabledFlag  && gt->disableLoopSearch == 0 && gtObject.interPatternLoopEnabledFlag)
 	{
 		int c3 = ((gtObject.interPatternLoopEnabledFlag>>8)&0xff) - 1;
 		int markEnd = (gtObject.interPatternLoopEnabledFlag & 0xff);
@@ -1215,7 +1215,6 @@ void playroutine(GTOBJECT *gt)
 			int c3 = getActualChannel(gt->psnum, editorInfo.epmarkchn);
 			if (gt->chn[c3].pattptr == (markEnd + 0) * 4)
 			{
-
 				if (calcStartofInterPatternLoop(gt->psnum, c3, gt->chn[c3].songptr - 1, &gtLoopObject))
 				{
 					gtObject.interPatternLoopEnabledFlag = (markEnd) + ((c3+1) << 8);	// c3+1 - just to make sure we don't get a 0 flag value

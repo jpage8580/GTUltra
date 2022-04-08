@@ -23,11 +23,11 @@ void orderlistcommands(GTOBJECT *gt)
 {
 	int c, scrrep;
 
-//	if (editPaletteMode)
-//	{
-//		paletteEditCommands();
-//		return;
-//	}
+	//	if (editPaletteMode)
+	//	{
+	//		paletteEditCommands();
+	//		return;
+	//	}
 
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12
 
@@ -669,48 +669,48 @@ void orderright(void)
 
 void nextsong(GTOBJECT *gt)
 {
-//	if (!editPaletteMode)
-//	{
-		editorInfo.esnum++;
-		if (editorInfo.esnum >= MAX_SONGS) editorInfo.esnum = MAX_SONGS - 1;
-		songchange(gt, 0);
+	//	if (!editPaletteMode)
+	//	{
+	editorInfo.esnum++;
+	if (editorInfo.esnum >= MAX_SONGS) editorInfo.esnum = MAX_SONGS - 1;
+	songchange(gt, 0);
 
-		setMasterLoopChannel(gt);
-//	}
-//	else
-//	{
-/*
-		currentPalettePreset++;
-		if (currentPalettePreset >= MAX_PALETTE_PRESETS)
-			currentPalettePreset = MAX_PALETTE_PRESETS - 1;
+	setMasterLoopChannel(gt);
+	//	}
+	//	else
+	//	{
+	/*
+			currentPalettePreset++;
+			if (currentPalettePreset >= MAX_PALETTE_PRESETS)
+				currentPalettePreset = MAX_PALETTE_PRESETS - 1;
 
-		copyPaletteToOrderList(currentPalettePreset);
-		setSkin(currentPalettePreset);
-*/
-//	}
+			copyPaletteToOrderList(currentPalettePreset);
+			setSkin(currentPalettePreset);
+	*/
+	//	}
 
 }
 
 void prevsong(GTOBJECT *gt)
 {
-//	if (!editPaletteMode)
-//	{
-		editorInfo.esnum--;
-		if (editorInfo.esnum < 0) editorInfo.esnum = 0;
-		songchange(gt, 0);
-		setMasterLoopChannel(gt);
-//	}
-//	else
-/*
-	{
-		currentPalettePreset--;
-		if (currentPalettePreset < 0)
-			currentPalettePreset = 0;
+	//	if (!editPaletteMode)
+	//	{
+	editorInfo.esnum--;
+	if (editorInfo.esnum < 0) editorInfo.esnum = 0;
+	songchange(gt, 0);
+	setMasterLoopChannel(gt);
+	//	}
+	//	else
+	/*
+		{
+			currentPalettePreset--;
+			if (currentPalettePreset < 0)
+				currentPalettePreset = 0;
 
-		copyPaletteToOrderList(currentPalettePreset);
-		setSkin(currentPalettePreset);
-	}
-*/
+			copyPaletteToOrderList(currentPalettePreset);
+			setSkin(currentPalettePreset);
+		}
+	*/
 }
 
 int lastSong = -1;
@@ -739,7 +739,7 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 				gt->editorInfo[c].espos = 0;		// highlighted (green) position
 				gt->editorInfo[c].esend = 0;		// end position (length of song)
 	//			if (!editPaletteMode)
-					gt->editorInfo[c].epnum = c;
+				gt->editorInfo[c].epnum = c;
 			}
 
 			editorInfo.eseditpos = 0;		// Reset cursor position in order list
@@ -797,8 +797,8 @@ void updateviewtopos(GTOBJECT *gt)
 {
 	int c, d;
 
-//	if (editPaletteMode)
-//		return;
+	//	if (editPaletteMode)
+	//		return;
 
 	for (c = 0; c < maxSIDChannels; c++)
 	{
@@ -895,13 +895,15 @@ int calcStartofInterPatternLoop(int songNum, int channelNum, int startSongPos, G
 	gtloop->loopEnabledFlag = 0;
 	initsong(sng, PLAY_BEGINNING, gtloop);
 
+	gtloop->disableLoopSearch = 1;
+
 	do {
 		playroutine(gtloop);
 
 		if (gtloop->songinit == PLAY_STOPPED)	// Error in song data
 			return -1;
 
-	} while (gtloop->chn[c2].songptr <= startSongPos);
+	} while (gtloop->chn[c3].songptr <= startSongPos);
 
 	int tempMin = gtloop->timemin;
 	int tempSec = gtloop->timesec;
@@ -914,14 +916,20 @@ int calcStartofInterPatternLoop(int songNum, int channelNum, int startSongPos, G
 	int loopPatternNum = 0;
 
 	// Now sync to end of pattern (info used for looping)
-	int sptr = gtloop->chn[c2].songptr;
+	int sptr = gtloop->chn[c3].songptr;
 
 	do {
 		playroutine(gtloop);
 		if (gtloop->songinit == PLAY_STOPPED)	// Error in song data
 			return -1;
 
+		int lastpattptr = gtloop->chn[c3].pattptr;
+		int found = 0;
 		if (findPatternLoopStart == 0 && gtloop->chn[c3].pattptr == markStart * 4)
+			found = 1;
+		else if (gtloop->chn[c3].songptr != startSongPos+1 || gtloop->chn[c3].pattptr<lastpattptr)
+			found = 1;
+		if (found)
 		{
 			findPatternLoopStart = 1;
 			memcpy((char*)&gtPlayer->patternLoopStartChn[0], (char*)&gtloop->chn[0], sizeof(CHN)*MAX_PLAY_CH);
@@ -938,8 +946,9 @@ int calcStartofInterPatternLoop(int songNum, int channelNum, int startSongPos, G
 
 			return 1;
 		}
+		lastpattptr = gtloop->chn[c3].pattptr;
 
-	} while (gtloop->chn[c2].songptr == sptr);
+	} while (gtloop->chn[c3].songptr == sptr);
 
 	return 0;
 }
@@ -952,13 +961,14 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 
 	int c3 = getActualChannel(songNum, editorInfo.epmarkchn);
 
-	int markStart = editorInfo.epmarkstart;
-	int markEnd = editorInfo.epmarkend;
-	if (markEnd < markStart)
-	{
-		markStart = markEnd;
-		markEnd = editorInfo.epmarkstart;
-	}
+//	c3 = 0;
+//	int markStart = editorInfo.epmarkstart;
+//	int markEnd = editorInfo.epmarkend;
+//	if (markEnd < markStart)
+//	{
+//		markStart = markEnd;
+//		markEnd = editorInfo.epmarkstart;
+//	}
 
 
 	int c2 = channelNum;
@@ -969,6 +979,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 
 	gtloop->loopEnabledFlag = 0;
 	initsong(sng, PLAY_BEGINNING, gtloop);
+	gtloop->disableLoopSearch = 1;
 
 	do {
 		playroutine(gtloop);
@@ -976,7 +987,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 		if (gtloop->songinit == PLAY_STOPPED)	// Error in song data
 			return -1;
 
-	} while (gtloop->chn[c2].songptr <= startSongPos);
+	} while (gtloop->chn[c3].songptr <= startSongPos);
 
 
 	memcpy((char *)&gtPlayer->loopStartChn[0], (char*)&gtloop->chn[0], sizeof(CHN)*MAX_PLAY_CH);
@@ -995,7 +1006,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 	int loopPatternNum = 0;
 
 	// Now sync to end of pattern (info used for looping)
-	int sptr = gtloop->chn[c2].songptr;
+	int sptr = gtloop->chn[c3].songptr;
 
 	int quitloop = 0;
 	do {
@@ -1003,10 +1014,9 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 		if (gtloop->songinit == PLAY_STOPPED)	// Error in song data
 			return -1;
 
-
-		if (gtloop->chn[c2].loopCount)
+		if (gtloop->chn[c3].loopCount)		// reached end of song and looped?
 			quitloop++;
-		else if (gtloop->chn[c2].songptr != sptr)
+		else if (gtloop->chn[c3].songptr != sptr)
 			quitloop++;
 
 	} while (!quitloop);	//gtloop->chn[c2].songptr == sptr);
