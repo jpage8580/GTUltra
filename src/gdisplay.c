@@ -30,48 +30,6 @@ char *notenameTableView[] =
  "???", "???", "???", "???", "???", "???", "???", "???", "???", "???", "???", "???",
  "???", "???", "???", "???", "???", "???", "???", "???" };
 
-char* paletteText[] = {
-	"Pattern: Background 1",
-	"Pattern: Foreground 1",
-	"Pattern: Background 2",
-	"Pattern: Foreground 2",
-	"Pattern: Highlight Background",
-	"Pattern: Highlight Foreground",
-	"Pattern: Note Foreground",
-	"Pattern: Command Foreground",
-	"Pattern: Vertical Line",
-	"Pattern: Playing Line Background",
-	"Pattern: Playing Line Foreground",
-	"Pattern: Unused Background",
-	"Pattern: Unused Foreground",
-	"Select: Background",
-	"Select: Foreground",
-	"Table: Background 1",
-	"Table: Foreground 1",
-	"Table: Background 2",
-	"Table: Foreground 2",
-	"Table: Unused Background",
-	"Table: Unused Foreground",
-	"Table: Current Instr. Background",
-	"Table: Current Instr. Foreground",
-	"General: Background",
-	"General: Title",
-	"General: Info",
-	"General: Highlight",
-	"TransportBar: Background",
-	"TransportBar: Foreground",
-	"TransportBar: Enabled",
-	"RED (record / Filter Status)",
-	"Pattern Loop Marker Background",
-	"Pattern Loop Marker Foreground",
-	"Pattern: Instrument Foreground",
-	"Pattern: First Background 1",
-	"Pattern: First Foreground 1",
-	"Pattern: First Background 2",
-	"Pattern: First Foreground 2",
-	"hello"
-};
-
 
 
 char timechar[] = { ':', ' ' };
@@ -83,10 +41,6 @@ char debugtext[256];
 
 extern int jdebug[16];
 
-int getPaletteTextArraySize()
-{
-	return sizeof(paletteText) / sizeof(paletteText[0]);
-}
 
 void printmainscreen(GTOBJECT *gt)
 {
@@ -266,16 +220,16 @@ void printstatus(GTOBJECT *gt)
 	printtext(40 + 20 + 5, getColor(2, 0), lockPatternColor, textbuffer);
 
 
-	if (!editPaletteMode)
+//	if (!editPaletteMode)
 		sprintf(textbuffer, "(SUBTUNE % 02X, POS % 02X)   ", editorInfo.esnum, editorInfo.eseditpos);
-	else
-		sprintf(textbuffer, "(PALETTE % 02X, POS % 02X)   ", currentPalettePreset, editorInfo.eseditpos);
+//	else
+//		sprintf(textbuffer, "(PALETTE % 02X, POS % 02X)   ", currentPalettePreset, editorInfo.eseditpos);
 	printtext(40 + 20 + 15, getColor(2, 0), getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 
-	if (!editPaletteMode)
+//	if (!editPaletteMode)
 		displayOrderList(gt, cc);
-	else
-		displayPaletteInfo(cc);
+//	else
+//		displayPaletteInfo(cc);
 
 	sprintf(textbuffer, "                  ", instrumentCount[editorInfo.einum]);
 	printtext(60 + 20, 7 + 3 + 5, getColor(0xe, 0), textbuffer);
@@ -652,7 +606,10 @@ void displayPattern(GTOBJECT *gt)
 		printbyte(PATTERN_X + (MAX_CHN * 9) + 4, PATTERN_Y + 1 + d, colort, 0xff);
 
 		color &= 0xff00;
-		color |= CPATTERN_NOTE_FOREGROUND;
+//		if ((p% stepsize) == 0)
+//			color |= CPATTERN_INDEX_HIGHLIGHT;
+//		else
+			color |= CPATTERN_NOTE_FOREGROUND;
 
 		if ((p < 0) || (p > maxpattlen))
 		{
@@ -665,6 +622,13 @@ void displayPattern(GTOBJECT *gt)
 		{
 			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0xff);
 			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
+
+
+			color &= 0xff00;
+			if ((p% stepsize) == 0)
+				color |= CPATTERN_INDEX_HIGHLIGHT;
+			else
+				color |= CPATTERN_NOTE_FOREGROUND;
 
 			if (!(patterndispmode & 1))
 			{
@@ -1227,6 +1191,9 @@ void displayTransportBarSkinning(int x, int y)
 		printbyte(x + i, y, color, 0xed + i);
 		printbyte(x + i, y + 1, color, 0xf0 + i);
 	}
+
+	sprintf(textbuffer, "%1X", currentPalettePreset);
+	printtext(x + 2, y + 1, color, textbuffer);
 
 }
 

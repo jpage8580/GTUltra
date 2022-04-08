@@ -163,6 +163,9 @@ int main(int argc, char **argv)
 		io_close(handle);
 	}
 
+//	swapPalettes(1, 2);
+//	swapPalettes(1, 0);
+
 	// Load configuration
 #ifdef __WIN32__
 	GetModuleFileName(NULL, filename, MAX_PATHNAME);
@@ -606,15 +609,17 @@ int main(int argc, char **argv)
 #endif
 #endif
 
-	if (paletteChanged)
-	{
-		configfile = fopen("gtskins.bin", "wb");		// wb write binary. wt = write text
-		if (configfile)
-		{
-			fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
-			fclose(configfile);
-		}
-	}
+
+//	paletteChanged = 0;	// JP TEST TO REMOVE SAVE 
+//	if (paletteChanged)
+//	{
+//		configfile = fopen("gtskins.bin", "wb");		// wb write binary. wt = write text
+//		if (configfile)
+//		{
+//			fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
+//			fclose(configfile);
+//		}
+//	}
 
 
 	// Save configuration
@@ -2333,6 +2338,18 @@ int isMatchingRGB(int presetIndex, int color)
 	return 1;
 }
 
+void swapPalettes(int p1, int p2)
+{
+	for (int i = 0;i < MAX_PALETTE_ENTRIES;i++)
+	{
+		for (int j = 0;j < 3;j++)
+		{
+			int t = paletteRGB[p1][j][i];
+			paletteRGB[p1][j][i] = paletteRGB[p2][j][i];
+			paletteRGB[p2][j][i] = t;
+		}
+	}
+}
 
 void setGFXPaletteRGBFromPaletteRGB(int presetIndex, int paletteIndex)
 {
@@ -2613,15 +2630,18 @@ int mouseTransportBar(GTOBJECT *gt)
 			{
 				stopsong(gt);
 				displayCharWindow();
+				return 1;
 			}
 			else
 			{
-				editPaletteMode = 1 - editPaletteMode;
-				handlePaletteDisplay(gt, currentPalettePreset);
-				if (editPaletteMode)
-				{
-					stopsong(gt);
-				}
+		//		editPaletteMode = 1 - editPaletteMode;
+				displayPaletteEditorWindow(gt);
+				return 1;
+		//		handlePaletteDisplay(gt, currentPalettePreset);
+		//		if (editPaletteMode)
+		//		{
+		//			stopsong(gt);
+		//		}
 			}
 		}
 		else

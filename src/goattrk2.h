@@ -33,6 +33,7 @@
 #include "gundo.h"
 #include "gchareditor.h"
 #include "gtabledisplay.h"
+#include "gpaletteeditor.h"
 
 #define REMOVE_UNDO 0
 
@@ -212,6 +213,7 @@ int HzToSIDFreq(float hz);
 float noteToHz(int note);
 float centToHz(int cent);
 void detunePitchTable();
+void swapPalettes(int p1, int p2);
 
 
 #endif

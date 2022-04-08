@@ -65,7 +65,12 @@ void displayCharWindow()
 		}
 		if (mouseb)
 		{
-			
+
+			if ((mousey == boxY + 1) && (mousex < (boxX + 6)) && (mousex >= (boxX + 2)))
+			{
+				if (!prevmouseb)
+					saveCharset();
+			}
 
 			if ((mousey < boxY) || (mousey >= boxY + boxHeight) || (mousex < boxX) || (mousex >= boxX + boxWidth))
 			{
@@ -96,7 +101,7 @@ void displayCharWindow()
 			}
 			else if (mousex >= charSketchX && mousex < charSketchX + 10 && mousey >= charSketchY && mousey < charSketchY + 10)
 			{
-				sketchArray[((mousey- charSketchY) * 10) + (mousex- charSketchX)] = selectedCharIndex;
+				sketchArray[((mousey - charSketchY) * 10) + (mousex - charSketchX)] = selectedCharIndex;
 			}
 		}
 
@@ -164,12 +169,7 @@ void displayCharWindow()
 		case KEY_S:
 			if (ctrlpressed)
 			{
-				fileHandle = fopen("charset.bin", "wb");		// wb write binary. wt = write text
-				if (fileHandle)
-				{
-					fwrite(chardata, 4096, 1, fileHandle);
-					fclose(fileHandle);
-				}
+				saveCharset();
 			}
 			break;
 		}
@@ -186,6 +186,8 @@ void displayCharWindow()
 		drawbox(charSketchX - 1, charSketchY - 1, boxColor, 12, 12);
 
 		printtext(50 - (MAX_FILENAME + 10) / 2 + 1, 4, getColor(0, boxColor), "Char Editor");
+
+		printtext(boxX + 2, boxY + 1, getColor(0, boxColor), "SAVE");
 
 		int cx = selectedCharIndex % 32;
 		int cy = selectedCharIndex / 32;
@@ -294,6 +296,11 @@ int getPixel(int charToDisplay, int x, int y)
 
 void saveCharset()
 {
-
+	fileHandle = fopen("charset.bin", "wb");		// wb write binary. wt = write text
+	if (fileHandle)
+	{
+		fwrite(chardata, 4096, 1, fileHandle);
+		fclose(fileHandle);
+	}
 }
 

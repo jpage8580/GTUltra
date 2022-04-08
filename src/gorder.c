@@ -13,9 +13,9 @@ int trackcopyrpos;
 
 void orderlistcommands(GTOBJECT *gt);
 void namecommands(GTOBJECT *gt);
-void paletteEditCommands();
-void paletteLeft();
-void paletteRight();
+//void paletteEditCommands();
+//void paletteLeft();
+//void paletteRight();
 
 
 
@@ -23,11 +23,11 @@ void orderlistcommands(GTOBJECT *gt)
 {
 	int c, scrrep;
 
-	if (editPaletteMode)
-	{
-		paletteEditCommands();
-		return;
-	}
+//	if (editPaletteMode)
+//	{
+//		paletteEditCommands();
+//		return;
+//	}
 
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12
 
@@ -669,36 +669,39 @@ void orderright(void)
 
 void nextsong(GTOBJECT *gt)
 {
-	if (!editPaletteMode)
-	{
+//	if (!editPaletteMode)
+//	{
 		editorInfo.esnum++;
 		if (editorInfo.esnum >= MAX_SONGS) editorInfo.esnum = MAX_SONGS - 1;
 		songchange(gt, 0);
 
 		setMasterLoopChannel(gt);
-	}
-	else
-	{
+//	}
+//	else
+//	{
+/*
 		currentPalettePreset++;
 		if (currentPalettePreset >= MAX_PALETTE_PRESETS)
 			currentPalettePreset = MAX_PALETTE_PRESETS - 1;
 
 		copyPaletteToOrderList(currentPalettePreset);
 		setSkin(currentPalettePreset);
-	}
+*/
+//	}
 
 }
 
 void prevsong(GTOBJECT *gt)
 {
-	if (!editPaletteMode)
-	{
+//	if (!editPaletteMode)
+//	{
 		editorInfo.esnum--;
 		if (editorInfo.esnum < 0) editorInfo.esnum = 0;
 		songchange(gt, 0);
 		setMasterLoopChannel(gt);
-	}
-	else
+//	}
+//	else
+/*
 	{
 		currentPalettePreset--;
 		if (currentPalettePreset < 0)
@@ -707,6 +710,7 @@ void prevsong(GTOBJECT *gt)
 		copyPaletteToOrderList(currentPalettePreset);
 		setSkin(currentPalettePreset);
 	}
+*/
 }
 
 int lastSong = -1;
@@ -734,7 +738,7 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 			{
 				gt->editorInfo[c].espos = 0;		// highlighted (green) position
 				gt->editorInfo[c].esend = 0;		// end position (length of song)
-				if (!editPaletteMode)
+	//			if (!editPaletteMode)
 					gt->editorInfo[c].epnum = c;
 			}
 
@@ -793,8 +797,8 @@ void updateviewtopos(GTOBJECT *gt)
 {
 	int c, d;
 
-	if (editPaletteMode)
-		return;
+//	if (editPaletteMode)
+//		return;
 
 	for (c = 0; c < maxSIDChannels; c++)
 	{
@@ -1236,118 +1240,6 @@ void countInstrumentsInPattern(int pat)
 
 }
 
-
-void paletteLeft()
-{
-
-	editorInfo.escolumn--;
-	if (editorInfo.escolumn < 0)
-	{
-		editorInfo.escolumn = 1;
-		if (editorInfo.eseditpos > 0)
-		{
-			editorInfo.eseditpos--;
-		}
-		else editorInfo.escolumn = 0;
-	}
-}
-
-void paletteRight()
-{
-
-	int maxPaletteEntries = getPaletteTextArraySize();
-	editorInfo.escolumn++;
-	if (editorInfo.escolumn > 1)
-	{
-		editorInfo.escolumn = 0;
-		if (editorInfo.eseditpos < (maxPaletteEntries / 2) - 1)
-		{
-			editorInfo.eseditpos++;
-		}
-		else editorInfo.escolumn = 1;
-	}
-}
-
-
-void paletteEditCommands()
-{
-
-	if (hexnybble >= 0)
-	{
-		int lastEditPos = editorInfo.eseditpos;
-		switch (editorInfo.escolumn)
-		{
-		case 0:
-			songorder[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] &= 0x0f;
-			songorder[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] |= hexnybble << 4;
-			break;
-
-		case 1:
-			songorder[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] &= 0xf0;
-			songorder[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] |= hexnybble;
-			break;
-		}
-
-		editorInfo.escolumn++;
-		if (editorInfo.escolumn > 1)
-		{
-			editorInfo.escolumn = 0;
-			if (editorInfo.eseditpos < MAX_PALETTE_ENTRIES)
-			{
-				editorInfo.eseditpos++;
-
-			}
-		}
-
-		setPaletteRGB(currentPalettePreset, lastEditPos, songorder[editorInfo.esnum][0][lastEditPos], songorder[editorInfo.esnum][1][lastEditPos], songorder[editorInfo.esnum][2][lastEditPos]);
-
-		paletteChanged = 1;
-
-	}
-
-
-	switch (rawkey)
-	{
-	case KEY_UP:
-	case KEY_DOWN:
-	case KEY_LEFT:
-	case KEY_RIGHT:
-		win_enableKeyRepeat();
-		break;
-	default:
-		if (!enablekeyrepeat)
-			win_disableKeyRepeat();
-	}
-
-	switch (rawkey)
-	{
-	case KEY_LEFT:
-		paletteLeft();
-		break;
-
-	case KEY_RIGHT:
-		paletteRight();
-		break;
-
-	case KEY_UP:
-		if (editorInfo.eschn > 0)
-			editorInfo.eschn--;
-		break;
-	case KEY_DOWN:
-		if (editorInfo.eschn < 2)
-			editorInfo.eschn++;
-		break;
-	}
-
-	if (editorInfo.eseditpos - editorInfo.esview < 0)
-	{
-		editorInfo.esview = editorInfo.eseditpos;
-	}
-	if (editorInfo.eseditpos - editorInfo.esview >= VISIBLEORDERLIST)
-	{
-		editorInfo.esview = editorInfo.eseditpos - VISIBLEORDERLIST + 1;
-	}
-}
 
 void setMasterLoopChannel(GTOBJECT *gt)
 {
