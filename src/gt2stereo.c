@@ -2673,8 +2673,8 @@ int mouseTransportBar(GTOBJECT *gt)
 
 		if (newCh != maxSIDChannels)
 		{
-			handleSIDChannelCountChange(&gtObject);
 			maxSIDChannels = newCh;
+			handleSIDChannelCountChange(&gtObject);			
 		}
 		return 1;
 	}
@@ -2804,11 +2804,14 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 		else
 			gt->editorInfo[c2].epnum = 0;
 	}
+
 	// overkill??
 	editorInfo.esnum = 1;
 	songchange(gt, 1);
 	editorInfo.esnum = 0;
 	songchange(gt, 1);
+
+
 }
 
 void nextSongPos(GTOBJECT *gt)
