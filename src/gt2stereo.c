@@ -952,7 +952,6 @@ void docommand(void)
 	if (m)
 		mousebDoubleClick = 0;
 
-
 	GTUNDO_OBJECT *ed = undoCreateEditorInfo();
 
 	// Mode-specific commands
@@ -2714,15 +2713,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (editPaletteMode)
 			return 1;
 
-		if (mousebDoubleClick)
-			previousSongPos(&gtObject, 1);
-		else
-		{
-			if (editorInfo.eppos)
-				previousSongPos(&gtObject, 0);
-			else
-				previousSongPos(&gtObject, 1);
-		}
+		handlePressRewind(mousebDoubleClick);
 		return 1;
 	}
 
@@ -2779,6 +2770,18 @@ int mouseTransportBar(GTOBJECT *gt)
 
 }
 
+void handlePressRewind(int doubleClick)
+{
+	if (doubleClick)
+		previousSongPos(&gtObject, 1);
+	else
+	{
+		if (editorInfo.eppos)
+			previousSongPos(&gtObject, 0);
+		else
+			previousSongPos(&gtObject, 1);
+	}
+}
 
 
 int checkMouseRange(int x, int y, int w, int h)

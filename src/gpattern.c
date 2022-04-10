@@ -1134,16 +1134,26 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		break;
 
 	case KEY_APOST2:
+
+
 		if (!shiftpressed)
 		{
 			editorInfo.epchn++;
-			if (editorInfo.epchn >= MAX_CHN) editorInfo.epchn = 0;
+			int maxCh = 6;
+			if (maxSIDChannels == 3 || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+				maxCh = 3;
+
+			if (editorInfo.epchn >= maxCh) editorInfo.epchn = 0;
 			if (editorInfo.eppos > pattlen[gt->editorInfo[c2].epnum]) editorInfo.eppos = pattlen[gt->editorInfo[c2].epnum];
 		}
 		else
 		{
 			editorInfo.epchn--;
-			if (editorInfo.epchn < 0) editorInfo.epchn = MAX_CHN - 1;
+			int maxCh = 6;
+			if (maxSIDChannels == 3 || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+				maxCh = 3;
+
+			if (editorInfo.epchn < 0) editorInfo.epchn = maxCh - 1;
 			if (editorInfo.eppos > pattlen[gt->editorInfo[c2].epnum]) editorInfo.eppos = pattlen[gt->editorInfo[c2].epnum];
 		}
 
