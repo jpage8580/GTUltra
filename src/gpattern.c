@@ -31,7 +31,6 @@ EDITOR_INFO editorInfo;
 EDITOR_INFO editorInfoBackup;
 int disableEnterToReturnToLastPos;
 
-
 void patterncommands(GTOBJECT *gt, int midiNote)
 {
 	int jrawkey = rawkey;
@@ -124,10 +123,17 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		else
 			newnote = midiNote;
 
-
 		if (newnote > LASTNOTE) newnote = -1;
-		if ((jrawkey == KEY_BACKSPACE) && (!editorInfo.epcolumn)) newnote = REST;
-		if ((jrawkey == 0x14) && (!editorInfo.epcolumn)) newnote = KEYOFF;
+		if ((jrawkey == KEY_BACKSPACE) && (!editorInfo.epcolumn))
+		{
+			newnote = REST;
+		}
+
+
+		if ((jrawkey == KEY_CAPSLOCK) && (!editorInfo.epcolumn))
+			newnote = KEYOFF;
+
+
 		if (jrawkey == KEY_ENTER)
 		{
 			switch (editorInfo.epcolumn)
@@ -324,6 +330,9 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 
 		if (newnote >= 0)
 		{
+	//		sprintf(textbuffer, "note: %x", newnote);
+	//		printtext(70, 36, 0xe, textbuffer);
+
 			if ((recordmode) && (editorInfo.eppos < pattlen[gt->editorInfo[c2].epnum]))
 			{
 				pattern[gt->editorInfo[c2].epnum][editorInfo.eppos * 4] = newnote;
@@ -1405,6 +1414,8 @@ void expandpattern(GTOBJECT *gt)
 
 void splitpattern(GTOBJECT *gt)
 {
+
+
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);
 
 	int c = gt->editorInfo[c2].epnum;
@@ -1418,6 +1429,7 @@ void splitpattern(GTOBJECT *gt)
 
 	if (insertpattern(c, gt))
 	{
+
 		int oldesnum = editorInfo.esnum;
 		int oldeschn = editorInfo.eschn;
 		int oldeseditpos = editorInfo.eseditpos;
