@@ -2695,7 +2695,7 @@ int mouseTransportBar(GTOBJECT *gt)
 			return 1;
 
 		followplay = 1 - followplay;
-		if (followplay)
+		if (followplay && gt->songinit != PLAY_STOPPED)
 			resetOrderView(&gtObject);
 		return 1;
 	}
