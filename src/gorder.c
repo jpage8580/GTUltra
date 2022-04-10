@@ -959,29 +959,27 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 
 	GTOBJECT *gtPlayer = &gtObject;
 
-	int c3 = getActualChannel(songNum, editorInfo.epmarkchn);
-
-//	c3 = 0;
-//	int markStart = editorInfo.epmarkstart;
-//	int markEnd = editorInfo.epmarkend;
-//	if (markEnd < markStart)
-//	{
-//		markStart = markEnd;
-//		markEnd = editorInfo.epmarkstart;
-//	}
+	int c3 = getActualChannel(songNum, channelNum);
 
 
-	int c2 = channelNum;
+
+//	int c2 = channelNum;
 	int sng = songNum;
 
-	if (c2 >= maxSIDChannels)
+//	sprintf(textbuffer, "sng %d, c2 %d, c3 %d", songNum, c2, c3);
+//	printtext(70, 36, 0xe, textbuffer);
+//	return 0;
+
+	if (c3 >= maxSIDChannels)
 		return -1;
 
 	gtloop->loopEnabledFlag = 0;
 	initsong(sng, PLAY_BEGINNING, gtloop);
 	gtloop->disableLoopSearch = 1;
+	gtloop->noSIDWrites = 1;
 
 	do {
+
 		playroutine(gtloop);
 
 		if (gtloop->songinit == PLAY_STOPPED)	// Error in song data
@@ -989,10 +987,12 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 
 	} while (gtloop->chn[c3].songptr <= startSongPos);
 
+//	return 0;
 
 	memcpy((char *)&gtPlayer->loopStartChn[0], (char*)&gtloop->chn[0], sizeof(CHN)*MAX_PLAY_CH);
 
 	memcpy((char *)&gtPlayer->looptimemin, (char*)&gtloop->timemin, sizeof(int) * 3);
+
 
 
 	int tempMin = gtloop->timemin;
