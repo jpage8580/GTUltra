@@ -56,14 +56,17 @@ void instrumentcommands(GTOBJECT *gt)
 	case KEY_S:
 		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < 9))
 		{
-			memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
-			if (cutinstr != -1)
+			if (!ctrlpressed)
 			{
-				int c, d;
-				for (c = 0; c < MAX_PATT; c++)
+				memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
+				if (cutinstr != -1)
 				{
-					for (d = 0; d < pattlen[c]; d++)
-						if (pattern[c][d * 4 + 1] == cutinstr) pattern[c][d * 4 + 1] = editorInfo.einum;
+					int c, d;
+					for (c = 0; c < MAX_PATT; c++)
+					{
+						for (d = 0; d < pattlen[c]; d++)
+							if (pattern[c][d * 4 + 1] == cutinstr) pattern[c][d * 4 + 1] = editorInfo.einum;
+					}
 				}
 			}
 		}
