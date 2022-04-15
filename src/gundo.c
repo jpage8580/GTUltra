@@ -57,6 +57,7 @@ void undoInitAllAreas(GTOBJECT *gt)
 	}
 
 	undoInitUndoArea((char*)&pattlen, MAX_PATT * sizeof(int), UNDO_AREA_PATTERN_LEN, 0);
+	undoInitUndoArea((char*)&songlen, MAX_SONGS*MAX_CHN * sizeof(int), UNDO_AREA_ORDERLIST_LEN, 0);
 
 	for (int s = 0;s < MAX_SONGS;s++)
 	{
@@ -64,6 +65,7 @@ void undoInitAllAreas(GTOBJECT *gt)
 		{
 			undoInitUndoArea((char*)&songorder[s][i], MAX_SONGLEN + 2, UNDO_AREA_ORDERLIST, i + (s*MAX_CHN));
 		}
+		
 	}
 
 	for (int i = 0;i < MAX_INSTR;i++)

@@ -163,10 +163,10 @@ int main(int argc, char **argv)
 		io_close(handle);
 	}
 
-//	swapPalettes(1, 2);
-//	swapPalettes(1, 0);
+	//	swapPalettes(1, 2);
+	//	swapPalettes(1, 0);
 
-	// Load configuration
+		// Load configuration
 #ifdef __WIN32__
 	GetModuleFileName(NULL, filename, MAX_PATHNAME);
 	filename[strlen(filename) - 3] = 'c';
@@ -574,7 +574,7 @@ int main(int argc, char **argv)
 			// Shutdown sound output now
 			sound_uninit();
 			return 0;
-}
+		}
 
 	}
 
@@ -610,19 +610,19 @@ int main(int argc, char **argv)
 #endif
 
 
-//	paletteChanged = 0;	// JP TEST TO REMOVE SAVE 
-//	if (paletteChanged)
-//	{
-//		configfile = fopen("gtskins.bin", "wb");		// wb write binary. wt = write text
-//		if (configfile)
-//		{
-//			fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
-//			fclose(configfile);
-//		}
-//	}
+	//	paletteChanged = 0;	// JP TEST TO REMOVE SAVE 
+	//	if (paletteChanged)
+	//	{
+	//		configfile = fopen("gtskins.bin", "wb");		// wb write binary. wt = write text
+	//		if (configfile)
+	//		{
+	//			fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
+	//			fclose(configfile);
+	//		}
+	//	}
 
 
-	// Save configuration
+		// Save configuration
 #ifndef __WIN32__
 #ifdef __amigaos__
 	strcpy(filename, "PROGDIR:goattrk2.cfg");
@@ -966,6 +966,9 @@ void docommand(void)
 		{
 			undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
 		}
+
+		undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_LEN, 0, UNDO_AREA_DIRTY_CHECK);
+		
 		c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);
 
 		//	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, c2, UNDO_AREA_DIRTY_CHECK);
@@ -1008,6 +1011,7 @@ void docommand(void)
 		{
 			undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
 		}
+		undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_LEN, 0, UNDO_AREA_DIRTY_CHECK);
 
 		// JP REMOVED THIS. SEEMS TO CAUSE PROBLEMS..
 	//	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, c2, UNDO_AREA_DIRTY_CHECK);
@@ -1394,10 +1398,10 @@ void mousecommands(GTOBJECT *gt)
 	}
 
 
-//	if ((!prevmouseb) && (mousex <= 7) && (mousey == TRANSPORT_BAR_Y))
-//	{
-//		recordmode ^= 1;
-//	}
+	//	if ((!prevmouseb) && (mousex <= 7) && (mousey == TRANSPORT_BAR_Y))
+	//	{
+	//		recordmode ^= 1;
+	//	}
 	for (c = 0; c < MAX_CHN; c++)
 	{
 		if ((!prevmouseb) && (mousey >= 23 + 3 + 10) && (mousex >= 59 + 7 * c) && (mousex <= 64 + 7 * c))
@@ -2633,14 +2637,14 @@ int mouseTransportBar(GTOBJECT *gt)
 			}
 			else
 			{
-		//		editPaletteMode = 1 - editPaletteMode;
+				//		editPaletteMode = 1 - editPaletteMode;
 				displayPaletteEditorWindow(gt);
 				return 1;
-		//		handlePaletteDisplay(gt, currentPalettePreset);
-		//		if (editPaletteMode)
-		//		{
-		//			stopsong(gt);
-		//		}
+				//		handlePaletteDisplay(gt, currentPalettePreset);
+				//		if (editPaletteMode)
+				//		{
+				//			stopsong(gt);
+				//		}
 			}
 		}
 		else
@@ -2673,7 +2677,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (newCh != maxSIDChannels)
 		{
 			maxSIDChannels = newCh;
-			handleSIDChannelCountChange(&gtObject);			
+			handleSIDChannelCountChange(&gtObject);
 		}
 		return 1;
 	}
@@ -2796,23 +2800,71 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 	stopsong(gt);
 	SDL_Delay(100);	// ensure that GT player has done an update, so that playing channels are now silent prior to setting new channel count
 
+//	if (gt->masterLoopChannel >= maxSIDChannels)
+//		gt->masterLoopChannel = 0;
+
+
+		if (editorInfo.eschn >= maxSIDChannels)
+			editorInfo.eschn = 0;
+
+
+	if ((editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn]) || (editorInfo.eseditpos > songlen[editorInfo.esnum][editorInfo.eschn] + 1))
+	{
+		editorInfo.eseditpos = songlen[editorInfo.esnum][editorInfo.eschn] + 1;
+		editorInfo.escolumn = 0;
+	}
+	setMasterLoopChannel(gt);
+
+	orderSelectPatternsFromSelected(gt);
+	return;
+
+	int resetSong = 0;
 
 	for (int i = 0;i < MAX_PLAY_CH;i++)
 	{
 		int c2 = getActualChannel(editorInfo.esnum, i);
+		int sng = getActualSongNumber(editorInfo.esnum, i);
 
-		gt->editorInfo[c2].espos = 0;	// reset current channel pos
-		if (songlen[i / 6][i % 6] > 0)
-			gt->editorInfo[c2].epnum = songorder[i / 6][i % 6][0];
+		int ep = gt->editorInfo[c2].espos;
+		int ep2 = ep;
+
+
+
+		if (songlen[sng][c2 % 6] > 0)
+		{
+			do
+			{
+				ep2 = ep;
+				if ((songorder[sng][c2 % 6][ep] >= REPEAT) && (songorder[sng][c2 % 6][ep] < TRANSDOWN))
+					ep++;
+				if ((songorder[sng][c2 % 6][ep] >= TRANSDOWN) && (songorder[sng][c2 % 6][ep] < LOOPSONG))
+					ep++;
+			} while (ep != ep2);
+			gt->editorInfo[c2].epnum = songorder[sng][c2 % 6][ep];
+			gt->editorInfo[c2].espos = ep;	// set current channel pos
+		}
 		else
+		{
+			resetSong = 1;
 			gt->editorInfo[c2].epnum = 0;
+			gt->editorInfo[c2].espos = 0;	// reset current channel pos
+		}
+
+
+		//		if (songlen[i / 6][i % 6] > 0)
+		//			gt->editorInfo[c2].epnum = songorder[i / 6][i % 6][ep];
+		//		else
+		//			gt->editorInfo[c2].epnum = 0;
 	}
 
 	// overkill??
-	editorInfo.esnum = 1;
-	songchange(gt, 1);
-	editorInfo.esnum = 0;
-	songchange(gt, 1);
+	if (resetSong)
+	{
+		editorInfo.esnum = 1;
+		songchange(gt, 1);
+		editorInfo.esnum = 0;
+		songchange(gt, 1);
+	}
 
 
 }

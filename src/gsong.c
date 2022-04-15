@@ -326,9 +326,6 @@ int loadsong(GTOBJECT *gt)
 			int amount;
 			int loadsize;
 			clearsong(1, 1, 1, 1, 1, gt);
-
-
-
 			ok = 1;
 
 			// Read infotexts
@@ -338,6 +335,7 @@ int loadsong(GTOBJECT *gt)
 
 			// Read songorderlists
 			channelstoload = determinechannels(handle);
+
 			amount = fread8(handle);
 			for (d = 0; d < amount; d++)
 			{
@@ -1606,8 +1604,18 @@ int insertpattern(int p, GTOBJECT *gt)
 
 	findusedpatterns();
 	if (p >= MAX_PATT - 2) return 0;
+	sprintf(textbuffer, "split3! %d (%x)", p, p);
+	printtext(70, 36, 0xe, textbuffer);
 	if (pattused[MAX_PATT - 1]) return 0;
-	memmove(pattern[p + 2], pattern[p + 1], (MAX_PATT - p - 2)*(MAX_PATTROWS * 4 + 4));
+	printtext(70, 36, 0xe, "split4!");
+
+	// Mark all patterns from this point onwards for undo.
+	for (int i=p+1;i<MAX_PATT-p-2;i++)
+	{
+		undoAreaSetCheckForChange(UNDO_AREA_PATTERN, i, UNDO_AREA_DIRTY_CHECK);
+	}
+
+	memmove(pattern[p + 2], pattern[p + 1], (MAX_PATT - p - 2)*(MAX_PATTROWS * 4 + 4));	// Move ALL pattern data past the insert point up one pattern
 	countpatternlengths();
 
 	for (c = 0; c < MAX_SONGS; c++)

@@ -453,6 +453,11 @@ void displayOrderList(GTOBJECT *gt, int cc)
 				{
 					if ((songorder[editorInfo.esnum][c][p] < REPEAT) || (p >= songlen[editorInfo.esnum][c]))
 					{
+						if (songorder[editorInfo.esnum][c][p] >= 0xd0)
+						{
+							sprintf(textbuffer, "Error! p=%x songlen=%x c=%x", p, songlen[editorInfo.esnum][c], c);
+							printtext(70, 36, 0xe, textbuffer);
+						}
 						sprintf(textbuffer, "%02X ", songorder[editorInfo.esnum][c][p]);
 						if ((p >= songlen[editorInfo.esnum][c]) && (color == CNORMAL)) color = CCOMMAND;
 					}
