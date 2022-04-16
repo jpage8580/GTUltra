@@ -94,7 +94,7 @@ char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.1.2";
+char *programname = "$VER: GTUltra V1.1.3";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -1419,10 +1419,10 @@ void mousecommands(GTOBJECT *gt)
 	{
 		if ((mousey == 0) && (!prevmouseb) && (mouseb == MOUSEB_LEFT))
 		{
-			if ((mousex >= 38 + 20) && (mousex <= 39 + 20))
-			{
-				monomode ^= 1;
-			}
+//			if ((mousex >= 38 + 20) && (mousex <= 39 + 20))
+//			{
+//				monomode ^= 1;
+//			}
 			if ((mousex >= 40 + 20) && (mousex <= 41 + 20))
 			{
 				usefinevib ^= 1;
@@ -2598,6 +2598,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		return 0;
 
 
+
 	if (checkMouseRange(TRANSPORT_BAR_X + 37, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (mouseb == MOUSEB_RIGHT)
@@ -2795,6 +2796,12 @@ int mouseTransportBar(GTOBJECT *gt)
 			displayMIDISelectWindow();
 		else
 			transportShowKeyboard = 1 - transportShowKeyboard;
+	}
+
+
+	if (checkMouseRange(TRANSPORT_BAR_X + 41, TRANSPORT_BAR_Y, 3, 2))
+	{
+		monomode ^= 1;
 	}
 
 	return 0;

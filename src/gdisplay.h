@@ -87,6 +87,7 @@ void displayTransportBarSIDCount(int x, int y);
 void displayTransportBarKeyboard(int x, int y);
 void displayTransportBarMasterVolume(int x, int y);
 void displayTransportBarDetune(int x, int y);
+void displayTransportBarMonoStereo(int x, int y);
 
 int getTableTitleColour(int c);
 void displayOriginalTableView(int cc);

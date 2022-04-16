@@ -93,10 +93,10 @@ void printstatus(GTOBJECT *gt)
 		textbuffer[57] = 0;
 		printtext(0, 0, getColor(15, 1), textbuffer);
 
-		if (monomode)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "M");
-		else
-			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "M");
+//		if (monomode)
+//			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "M");
+//		else
+//			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "M");
 
 		menuInfoXOffset += 2;
 
@@ -220,16 +220,16 @@ void printstatus(GTOBJECT *gt)
 	printtext(40 + 20 + 5, getColor(2, 0), lockPatternColor, textbuffer);
 
 
-//	if (!editPaletteMode)
-		sprintf(textbuffer, "(SUBTUNE % 02X, POS % 02X)   ", editorInfo.esnum, editorInfo.eseditpos);
-//	else
-//		sprintf(textbuffer, "(PALETTE % 02X, POS % 02X)   ", currentPalettePreset, editorInfo.eseditpos);
+	//	if (!editPaletteMode)
+	sprintf(textbuffer, "(SUBTUNE % 02X, POS % 02X)   ", editorInfo.esnum, editorInfo.eseditpos);
+	//	else
+	//		sprintf(textbuffer, "(PALETTE % 02X, POS % 02X)   ", currentPalettePreset, editorInfo.eseditpos);
 	printtext(40 + 20 + 15, getColor(2, 0), getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 
-//	if (!editPaletteMode)
-		displayOrderList(gt, cc);
-//	else
-//		displayPaletteInfo(cc);
+	//	if (!editPaletteMode)
+	displayOrderList(gt, cc);
+	//	else
+	//		displayPaletteInfo(cc);
 
 	sprintf(textbuffer, "                  ", instrumentCount[editorInfo.einum]);
 	printtext(60 + 20, 7 + 3 + 5, getColor(0xe, 0), textbuffer);
@@ -611,10 +611,10 @@ void displayPattern(GTOBJECT *gt)
 		printbyte(PATTERN_X + (MAX_CHN * 9) + 4, PATTERN_Y + 1 + d, colort, 0xff);
 
 		color &= 0xff00;
-//		if ((p% stepsize) == 0)
-//			color |= CPATTERN_INDEX_HIGHLIGHT;
-//		else
-			color |= CPATTERN_NOTE_FOREGROUND;
+		//		if ((p% stepsize) == 0)
+		//			color |= CPATTERN_INDEX_HIGHLIGHT;
+		//		else
+		color |= CPATTERN_NOTE_FOREGROUND;
 
 		if ((p < 0) || (p > maxpattlen))
 		{
@@ -1000,6 +1000,8 @@ void displayTransportBar(GTOBJECT *gt)
 	displayTransportBarKeyboard(x, TRANSPORT_BAR_Y);
 	x += 4;
 	displayTransportBarDetune(x, TRANSPORT_BAR_Y);
+	x += 4;
+	displayTransportBarMonoStereo(x, TRANSPORT_BAR_Y);
 
 
 
@@ -1167,6 +1169,31 @@ void displayTransportBarDetune(int x, int y)
 	}
 	sprintf(textbuffer, "%.1f", detuneCent + 1);
 	printtext(x + 0, y + 1, color, textbuffer);
+
+}
+
+void displayTransportBarMonoStereo(int x, int y)
+{
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+
+
+	if (monomode || maxSIDChannels == 3)
+	{
+		printbyte(x, y + 1, color, 0x20);
+		printbyte(x + 1, y + 1, color, 0x9c);
+		printbyte(x + 2, y + 1, color, 0x20);
+		printtext(x, y, color, "MON");
+	}
+	else
+	{
+		printbyte(x, y + 1, color, 0x9b);
+		printbyte(x + 1, y + 1, color, 0x20);
+		printbyte(x + 2, y + 1, color, 0x9c);
+		printtext(x, y, color, "STE");
+	}
+
+//	sprintf(textbuffer, "%.1f", detuneCent + 1);
+//	printtext(x + 0, y + 1, color, textbuffer);
 
 }
 
