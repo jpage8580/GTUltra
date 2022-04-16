@@ -51,10 +51,10 @@ void undoInitAllAreas(GTOBJECT *gt)
 
 	}
 
-	for (int i = 0;i < MAX_PLAY_CH;i++)
-	{
-		undoInitUndoArea((char*)&gt->editorInfo[i], sizeof(CHN_EDITOR_INFO), UNDO_AREA_CHANNEL_EDITOR_INFO, i);
-	}
+//	for (int i = 0;i < MAX_PLAY_CH;i++)
+//	{
+		undoInitUndoArea((char*)&gt->editorInfo, sizeof(CHN_EDITOR_INFO)*MAX_PLAY_CH, UNDO_AREA_CHANNEL_EDITOR_INFO, 0);
+//	}
 
 	undoInitUndoArea((char*)&pattlen, MAX_PATT * sizeof(int), UNDO_AREA_PATTERN_LEN, 0);
 	undoInitUndoArea((char*)&songlen, MAX_SONGS*MAX_CHN * sizeof(int), UNDO_AREA_ORDERLIST_LEN, 0);
@@ -185,8 +185,22 @@ void undoInitUndoArea(char *mem, int size, int undoAreaType, int subIndex)
 	ga->jtest = 1234;
 	undoAreaList[undoAreaIndex] = (char*)ga;
 	undoAreaIndex++;
-
 }
+
+void updateUndoBuffer(int undoAreaType)
+{
+	for (int i = 0;i < undoAreaIndex;i++)
+	{
+		GTUNDO_AREA *ga = (GTUNDO_AREA *)undoAreaList[i];
+
+		if (ga->undoAreaType == undoAreaType)
+		{
+			memcpy(ga->undoObject->data, ga->undoObject->dest, ga->undoObject->size);
+			return;
+		}
+	}
+}
+
 
 void undoAreaSetCheckForChange(int areaType, int areaIndex, int onOff)
 {
@@ -420,6 +434,10 @@ void undoFinalizeUndoPackage(GTUNDO_OBJECT *editorSettings)
 
 	if (undoPackageCounter == 0)
 		return;
+
+
+//	sprintf(textbuffer, "patcheck pat %x", gtObject.editorInfo[2].epnum);
+//	printtext(70, 36, 0xe, textbuffer);
 
 	undoCounter++;	// we can use this to know if anything has been modified in the editor
 

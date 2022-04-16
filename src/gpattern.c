@@ -1436,10 +1436,10 @@ void splitpattern(GTOBJECT *gt)
 	if (editorInfo.eppos == l) return;
 
 	stopsong(gt);
-
+	updateUndoBuffer(UNDO_AREA_CHANNEL_EDITOR_INFO);
+	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, 0, UNDO_AREA_DIRTY_CHECK);
 	if (insertpattern(c, gt))
 	{
-
 		int oldesnum = editorInfo.esnum;
 		int oldeschn = editorInfo.eschn;
 		int oldeseditpos = editorInfo.eseditpos;
@@ -1485,13 +1485,19 @@ void joinpattern(GTOBJECT *gt)
 	int c = gt->editorInfo[c2].epnum;
 	int d;
 
-	if (editorInfo.eschn != editorInfo.epchn) return;
+	// JP - No idea why this is here. 
+//	if (editorInfo.eschn != editorInfo.epchn) return;
+
 	if (songorder[editorInfo.esnum][editorInfo.epchn][editorInfo.eseditpos] != c) return;
+
 	d = songorder[editorInfo.esnum][editorInfo.epchn][editorInfo.eseditpos + 1];
 	if (d >= MAX_PATT) return;
+
 	if (pattlen[c] + pattlen[d] > MAX_PATTROWS) return;
 
 	stopsong(gt);
+	updateUndoBuffer(UNDO_AREA_CHANNEL_EDITOR_INFO);
+	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, 0, UNDO_AREA_DIRTY_CHECK);
 
 	if (insertpattern(c, gt))
 	{

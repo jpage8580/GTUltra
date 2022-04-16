@@ -1604,10 +1604,7 @@ int insertpattern(int p, GTOBJECT *gt)
 
 	findusedpatterns();
 	if (p >= MAX_PATT - 2) return 0;
-	sprintf(textbuffer, "split3! %d (%x)", p, p);
-	printtext(70, 36, 0xe, textbuffer);
 	if (pattused[MAX_PATT - 1]) return 0;
-	printtext(70, 36, 0xe, "split4!");
 
 	// Mark all patterns from this point onwards for undo.
 	for (int i=p+1;i<MAX_PATT-p-2;i++)
@@ -1706,7 +1703,13 @@ void findusedpatterns(void)
 				for (e = 0; e < songlen[c][d]; e++)
 				{
 					if (songorder[c][d][e] < REPEAT)
+					{
+						if (songorder[c][d][e] == 0xcf)
+						{
+
+						}
 						pattused[songorder[c][d][e]] = 1;
+					}
 				}
 			}
 		}
