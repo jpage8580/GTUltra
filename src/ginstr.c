@@ -29,7 +29,7 @@ void instrumentcommands(GTOBJECT *gt)
 	{
 	case 0x8:
 	case KEY_DEL:
-		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
 		{
 			deleteinstrtable(editorInfo.einum);
 			clearinstr(editorInfo.einum);
@@ -37,7 +37,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_X:
-		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
 		{
 			cutinstr = editorInfo.einum;
 			memcpy(&instrcopybuffer, &instr[editorInfo.einum], sizeof(INSTR));
@@ -46,7 +46,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_C:
-		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
 		{
 			cutinstr = -1;
 			memcpy(&instrcopybuffer, &instr[editorInfo.einum], sizeof(INSTR));
@@ -56,53 +56,57 @@ void instrumentcommands(GTOBJECT *gt)
 	case KEY_S:
 		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < 9))
 		{
-			if (!ctrlpressed)
+			memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
+			if (cutinstr != -1)
 			{
-				memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
-				if (cutinstr != -1)
+				int c, d;
+				for (c = 0; c < MAX_PATT; c++)
 				{
-					int c, d;
-					for (c = 0; c < MAX_PATT; c++)
-					{
-						for (d = 0; d < pattlen[c]; d++)
-							if (pattern[c][d * 4 + 1] == cutinstr) pattern[c][d * 4 + 1] = editorInfo.einum;
-					}
+					for (d = 0; d < pattlen[c]; d++)
+						if (pattern[c][d * 4 + 1] == cutinstr) pattern[c][d * 4 + 1] = editorInfo.einum;
 				}
+
 			}
 		}
 		break;
 
 	case KEY_V:
-		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
 		{
 			memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
 		}
 		break;
 
 	case KEY_RIGHT:
-		if (editorInfo.eipos < 9)
+		if (!ctrlpressed)
 		{
-			editorInfo.eicolumn++;
-			if (editorInfo.eicolumn > 1)
+			if (editorInfo.eipos < 9)
 			{
-				editorInfo.eicolumn = 0;
-				editorInfo.eipos += 5;
-				if (editorInfo.eipos >= 9) editorInfo.eipos -= 10;
-				if (editorInfo.eipos < 0) editorInfo.eipos = 8;
+				editorInfo.eicolumn++;
+				if (editorInfo.eicolumn > 1)
+				{
+					editorInfo.eicolumn = 0;
+					editorInfo.eipos += 5;
+					if (editorInfo.eipos >= 9) editorInfo.eipos -= 10;
+					if (editorInfo.eipos < 0) editorInfo.eipos = 8;
+				}
 			}
 		}
 		break;
 
 	case KEY_LEFT:
-		if (editorInfo.eipos < 9)
+		if (!ctrlpressed)
 		{
-			editorInfo.eicolumn--;
-			if (editorInfo.eicolumn < 0)
+			if (editorInfo.eipos < 9)
 			{
-				editorInfo.eicolumn = 1;
-				editorInfo.eipos -= 5;
-				if (editorInfo.eipos < 0) editorInfo.eipos += 10;
-				if (editorInfo.eipos >= 9) editorInfo.eipos = 8;
+				editorInfo.eicolumn--;
+				if (editorInfo.eicolumn < 0)
+				{
+					editorInfo.eicolumn = 1;
+					editorInfo.eipos -= 5;
+					if (editorInfo.eipos < 0) editorInfo.eipos += 10;
+					if (editorInfo.eipos >= 9) editorInfo.eipos = 8;
+				}
 			}
 		}
 		break;
@@ -124,7 +128,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_N:
-		if ((editorInfo.eipos != 9) && (shiftpressed))
+		if ((editorInfo.eipos != 9) && (shiftOrCtrlPressed))
 		{
 			editorInfo.eipos = 9;
 			return;
@@ -132,7 +136,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_U:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			editorInfo.etlock ^= 1;
 			validatetableview();
@@ -142,7 +146,7 @@ void instrumentcommands(GTOBJECT *gt)
 	case KEY_SPACE:
 		if (editorInfo.eipos != 9)
 		{
-			if (!shiftpressed)
+			if (!shiftOrCtrlPressed)
 				playtestnote(FIRSTNOTE + editorInfo.epoctave * 12, editorInfo.einum, editorInfo.epchn, gt);
 			else
 				releasenote(editorInfo.epchn, gt);
@@ -162,7 +166,7 @@ void instrumentcommands(GTOBJECT *gt)
 
 			if (instr[editorInfo.einum].ptr[editorInfo.eipos - 2])
 			{
-				if ((editorInfo.eipos == 5) && (shiftpressed))
+				if ((editorInfo.eipos == 5) && (shiftOrCtrlPressed))
 				{
 					instr[editorInfo.einum].ptr[STBL] = makespeedtable(instr[editorInfo.einum].ptr[STBL], finevibrato, 1) + 1;
 					break;
@@ -175,7 +179,7 @@ void instrumentcommands(GTOBJECT *gt)
 				pos = gettablelen(editorInfo.eipos - 2);
 
 				if (pos >= MAX_TABLELEN - 1) pos = MAX_TABLELEN - 1;
-				if (shiftpressed) instr[editorInfo.einum].ptr[editorInfo.eipos - 2] = pos + 1;
+				if (shiftOrCtrlPressed) instr[editorInfo.einum].ptr[editorInfo.eipos - 2] = pos + 1;
 			}
 			allowEnterToReturnToPosition();
 			gototable(editorInfo.eipos - 2, pos);

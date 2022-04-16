@@ -32,7 +32,7 @@ void tablecommands(GTOBJECT *gt)
 	switch (rawkey)
 	{
 	case KEY_Q:
-		if ((shiftpressed) && (editorInfo.etnum == STBL))
+		if ((shiftOrCtrlPressed) && (editorInfo.etnum == STBL))
 		{
 			int speed = (ltable[editorInfo.etnum][editorInfo.etpos] << 8) | rtable[editorInfo.etnum][editorInfo.etpos];
 			speed *= 34716;
@@ -45,7 +45,7 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_A:
-		if ((shiftpressed) && (editorInfo.etnum == STBL))
+		if ((shiftOrCtrlPressed) && (editorInfo.etnum == STBL))
 		{
 			int speed = (ltable[editorInfo.etnum][editorInfo.etpos] << 8) | rtable[editorInfo.etnum][editorInfo.etpos];
 			speed *= 30929;
@@ -57,7 +57,7 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_W:
-		if ((shiftpressed) && (editorInfo.etnum == STBL))
+		if ((shiftOrCtrlPressed) && (editorInfo.etnum == STBL))
 		{
 			int speed = (ltable[editorInfo.etnum][editorInfo.etpos] << 8) | rtable[editorInfo.etnum][editorInfo.etpos];
 			speed *= 2;
@@ -66,7 +66,7 @@ void tablecommands(GTOBJECT *gt)
 			ltable[editorInfo.etnum][editorInfo.etpos] = speed >> 8;
 			rtable[editorInfo.etnum][editorInfo.etpos] = speed & 0xff;
 		}
-		if ((shiftpressed) && ((editorInfo.etnum == PTBL) || (editorInfo.etnum == FTBL)) && (ltable[editorInfo.etnum][editorInfo.etpos] < 0x80))
+		if ((shiftOrCtrlPressed) && ((editorInfo.etnum == PTBL) || (editorInfo.etnum == FTBL)) && (ltable[editorInfo.etnum][editorInfo.etpos] < 0x80))
 		{
 			int speed = (signed char)(rtable[editorInfo.etnum][editorInfo.etpos]);
 			speed *= 2;
@@ -80,7 +80,7 @@ void tablecommands(GTOBJECT *gt)
 	case KEY_S:
 		if (!ctrlpressed)
 		{
-			if ((shiftpressed) && (editorInfo.etnum == STBL))
+			if ((shiftOrCtrlPressed) && (editorInfo.etnum == STBL))
 			{
 				int speed = (ltable[editorInfo.etnum][editorInfo.etpos] << 8) | rtable[editorInfo.etnum][editorInfo.etpos];
 				speed /= 2;
@@ -88,7 +88,7 @@ void tablecommands(GTOBJECT *gt)
 				ltable[editorInfo.etnum][editorInfo.etpos] = speed >> 8;
 				rtable[editorInfo.etnum][editorInfo.etpos] = speed & 0xff;
 			}
-			if ((shiftpressed) && ((editorInfo.etnum == PTBL) || (editorInfo.etnum == FTBL)) && (ltable[editorInfo.etnum][editorInfo.etpos] < 0x80))
+			if ((shiftOrCtrlPressed) && ((editorInfo.etnum == PTBL) || (editorInfo.etnum == FTBL)) && (ltable[editorInfo.etnum][editorInfo.etpos] < 0x80))
 			{
 				int speed = (signed char)(rtable[editorInfo.etnum][editorInfo.etpos]);
 				speed /= 2;
@@ -99,128 +99,134 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_SPACE:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 			playtestnote(FIRSTNOTE + editorInfo.epoctave * 12, editorInfo.einum, editorInfo.epchn, gt);
 		else
 			releasenote(editorInfo.epchn, gt);
 		break;
 
 	case KEY_RIGHT:
-		editorInfo.etcolumn++;
-		int maxC = 3;
-		if (editorInfo.editTableMode == EDIT_TABLE_PULSE && editorInfo.editmode == EDIT_TABLES)
+		if (!ctrlpressed)
 		{
-			maxC = 4;
-		}
-
-		if (editorInfo.etcolumn > maxC)
-		{
-			disableEnterToReturnToLastPos = 1;
-
-			editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-			editorInfo.etcolumn = 0;
-
+			editorInfo.etcolumn++;
+			int maxC = 3;
 			if (editorInfo.editTableMode == EDIT_TABLE_PULSE && editorInfo.editmode == EDIT_TABLES)
 			{
-				if (ltable[PTBL][editorInfo.etpos] < 0x80 || ltable[PTBL][editorInfo.etpos] >= 0xfe)
-					editorInfo.etcolumn++;
+				maxC = 4;
 			}
 
-			editorInfo.etnum++;
-
-
-
-			if (editorInfo.etnum >= MAX_TABLES)
-				editorInfo.etnum = 0;
-
-			editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
-		}
-
-		if (editorInfo.editTableMode == EDIT_TABLE_WAVE)
-		{
-			if (editorInfo.etnum != EDIT_TABLE_SPEED - 1 && editorInfo.etnum > 0)
+			if (editorInfo.etcolumn > maxC)
 			{
+				disableEnterToReturnToLastPos = 1;
+
 				editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-				editorInfo.etnum = EDIT_TABLE_SPEED - 1;
+				editorInfo.etcolumn = 0;
+
+				if (editorInfo.editTableMode == EDIT_TABLE_PULSE && editorInfo.editmode == EDIT_TABLES)
+				{
+					if (ltable[PTBL][editorInfo.etpos] < 0x80 || ltable[PTBL][editorInfo.etpos] >= 0xfe)
+						editorInfo.etcolumn++;
+				}
+
+				editorInfo.etnum++;
+
+
+
+				if (editorInfo.etnum >= MAX_TABLES)
+					editorInfo.etnum = 0;
+
 				editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
 			}
-		}
-		else if (editorInfo.editTableMode == EDIT_TABLE_FILTER)
-		{
-			if (editorInfo.etnum != FTBL)
-			{
-				editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-				editorInfo.etnum = FTBL;
-				editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
-			}
-		}
-		else if (editorInfo.editTableMode == EDIT_TABLE_PULSE)
-		{
-			if (editorInfo.etnum != PTBL)
-			{
-				editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-				editorInfo.etnum = PTBL;
-				editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
-			}
-		}
 
-		if (shiftpressed) editorInfo.etmarknum = -1;
+			if (editorInfo.editTableMode == EDIT_TABLE_WAVE)
+			{
+				if (editorInfo.etnum != EDIT_TABLE_SPEED - 1 && editorInfo.etnum > 0)
+				{
+					editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
+					editorInfo.etnum = EDIT_TABLE_SPEED - 1;
+					editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				}
+			}
+			else if (editorInfo.editTableMode == EDIT_TABLE_FILTER)
+			{
+				if (editorInfo.etnum != FTBL)
+				{
+					editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
+					editorInfo.etnum = FTBL;
+					editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				}
+			}
+			else if (editorInfo.editTableMode == EDIT_TABLE_PULSE)
+			{
+				if (editorInfo.etnum != PTBL)
+				{
+					editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
+					editorInfo.etnum = PTBL;
+					editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				}
+			}
+
+			if (shiftpressed) editorInfo.etmarknum = -1;
+		}
 		break;
 
 	case KEY_LEFT:
-		editorInfo.etcolumn--;
-
-		maxC = 3;
-		if (editorInfo.editTableMode == EDIT_TABLE_PULSE && editorInfo.editmode == EDIT_TABLES)
+		if (!ctrlpressed)
 		{
-			maxC = 4;
-			if (ltable[PTBL][editorInfo.etpos] < 0x80 || ltable[PTBL][editorInfo.etpos] >= 0xfe)
+			editorInfo.etcolumn--;
+
+			int maxC = 3;
+			if (editorInfo.editTableMode == EDIT_TABLE_PULSE && editorInfo.editmode == EDIT_TABLES)
 			{
-				if (editorInfo.etcolumn == 0)
-					editorInfo.etcolumn--;
+				maxC = 4;
+				if (ltable[PTBL][editorInfo.etpos] < 0x80 || ltable[PTBL][editorInfo.etpos] >= 0xfe)
+				{
+					if (editorInfo.etcolumn == 0)
+						editorInfo.etcolumn--;
+				}
 			}
-		}
 
-		if (editorInfo.etcolumn < 0)
-		{
-			disableEnterToReturnToLastPos = 1;
-			editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-			editorInfo.etcolumn = maxC;
-			editorInfo.etnum--;
-			if (editorInfo.etnum < 0) editorInfo.etnum = MAX_TABLES - 1;
-			editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
-		}
-
-		if (editorInfo.editTableMode == EDIT_TABLE_WAVE)
-		{
-			if (editorInfo.etnum != EDIT_TABLE_SPEED - 1 && editorInfo.etnum > 0)
+			if (editorInfo.etcolumn < 0)
 			{
+				disableEnterToReturnToLastPos = 1;
 				editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-				editorInfo.etnum = WTBL;
+				editorInfo.etcolumn = maxC;
+				editorInfo.etnum--;
+				if (editorInfo.etnum < 0) editorInfo.etnum = MAX_TABLES - 1;
 				editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
 			}
-		}
-		else if (editorInfo.editTableMode == EDIT_TABLE_FILTER)
-		{
-			if (editorInfo.etnum != FTBL)
+
+			if (editorInfo.editTableMode == EDIT_TABLE_WAVE)
 			{
-				editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-				editorInfo.etnum = FTBL;
-				editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				if (editorInfo.etnum != EDIT_TABLE_SPEED - 1 && editorInfo.etnum > 0)
+				{
+					editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
+					editorInfo.etnum = WTBL;
+					editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				}
 			}
-		}
-		else if (editorInfo.editTableMode == EDIT_TABLE_PULSE)
-		{
-			if (editorInfo.etnum != PTBL)
+			else if (editorInfo.editTableMode == EDIT_TABLE_FILTER)
 			{
-				editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
-				editorInfo.etnum = PTBL;
-				editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				if (editorInfo.etnum != FTBL)
+				{
+					editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
+					editorInfo.etnum = FTBL;
+					editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				}
 			}
-		}
+			else if (editorInfo.editTableMode == EDIT_TABLE_PULSE)
+			{
+				if (editorInfo.etnum != PTBL)
+				{
+					editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
+					editorInfo.etnum = PTBL;
+					editorInfo.etpos += editorInfo.etview[editorInfo.etnum];
+				}
+			}
 
 
-		if (shiftpressed) editorInfo.etmarknum = -1;
+			if (shiftpressed) editorInfo.etmarknum = -1;
+		}
 		break;
 
 	case KEY_HOME:
@@ -249,7 +255,7 @@ void tablecommands(GTOBJECT *gt)
 
 	case KEY_X:
 	case KEY_C:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			if (editorInfo.etmarknum == -1)	// no table selected. copy single row under cursor
 			{
@@ -296,7 +302,7 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_V:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			if (tablecopyrows)
 			{
@@ -312,11 +318,11 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_O:
-		if (shiftpressed) optimizetable(editorInfo.etnum);
+		if (shiftOrCtrlPressed) optimizetable(editorInfo.etnum);
 		break;
 
 	case KEY_U:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			editorInfo.etlock ^= 1;
 			validatetableview();
@@ -470,7 +476,7 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_N:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			switch (editorInfo.etnum)
 			{
@@ -496,7 +502,7 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_INS:
-		inserttable(editorInfo.etnum, editorInfo.etpos, shiftpressed);
+		inserttable(editorInfo.etnum, editorInfo.etpos, shiftOrCtrlPressed);
 		break;
 
 	case KEY_ENTER:
@@ -544,7 +550,7 @@ void tablecommands(GTOBJECT *gt)
 			case STBL:
 				if (rtable[editorInfo.etnum][editorInfo.etpos])
 				{
-					if (!shiftpressed)
+					if (!shiftOrCtrlPressed)
 					{
 
 						allowEnterToReturnToPosition();
@@ -587,7 +593,7 @@ void tablecommands(GTOBJECT *gt)
 				}
 				else
 				{
-					if (shiftpressed)
+					if (shiftOrCtrlPressed)
 					{
 						int pos = gettablelen(table);
 						if (pos >= MAX_TABLELEN - 1) pos = MAX_TABLELEN - 1;
@@ -608,7 +614,7 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_APOST2:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			editorInfo.etpos -= editorInfo.etview[editorInfo.etnum];
 			editorInfo.etnum--;
@@ -1156,7 +1162,7 @@ void validatetableview(void)
 
 void tableup(void)
 {
-	if (shiftpressed)
+	if (shiftOrCtrlPressed)
 	{
 		if ((editorInfo.etmarknum != editorInfo.etnum) || (editorInfo.etpos != editorInfo.etmarkend))
 		{
@@ -1166,7 +1172,7 @@ void tableup(void)
 	}
 	editorInfo.etpos--;
 	if (editorInfo.etpos < 0) editorInfo.etpos = 0;
-	if (shiftpressed)
+	if (shiftOrCtrlPressed)
 	{
 		editorInfo.etmarkend = editorInfo.etpos;
 		if (editorInfo.etmarkend == editorInfo.etmarkstart)
@@ -1177,7 +1183,7 @@ void tableup(void)
 
 void tabledown(void)
 {
-	if (shiftpressed)
+	if (shiftOrCtrlPressed)
 	{
 		if ((editorInfo.etmarknum != editorInfo.etnum) || (editorInfo.etpos != editorInfo.etmarkend))
 		{
@@ -1187,7 +1193,7 @@ void tabledown(void)
 	}
 	editorInfo.etpos++;
 	if (editorInfo.etpos >= MAX_TABLELEN) editorInfo.etpos = MAX_TABLELEN - 1;
-	if (shiftpressed)
+	if (shiftOrCtrlPressed)
 	{
 		editorInfo.etmarkend = editorInfo.etpos;
 		if (editorInfo.etmarkend == editorInfo.etmarkstart)

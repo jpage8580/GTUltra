@@ -40,6 +40,9 @@ int eacolumn = 0;
 int eamode = 0;
 int paletteChanged = 0;
 
+int leftKeyTicksDelta = 0;
+int leftKeyTicks = 0;
+
 unsigned keypreset = KEY_TRACKER;
 unsigned playerversion = 0;
 int fileformat = FORMAT_PRG;
@@ -565,7 +568,7 @@ int main(int argc, char **argv)
 
 #if 0
 	initsong(editorInfo.esnum, PLAY_BEGINNING, &gtObject);
-	followplay = shiftpressed;
+	followplay = shiftOrCtrlPressed;
 	while (!exitprogram)
 	{
 		//waitkeymouse(&gtObject);
@@ -921,7 +924,7 @@ void converthex()
 		{
 			if (c >= 10)
 			{
-				if (!shiftpressed) hexnybble = c;
+				if (!shiftOrCtrlPressed) hexnybble = c;
 			}
 			else
 			{
@@ -1246,7 +1249,7 @@ void mousecommands(GTOBJECT *gt)
 		if (mouseb & MOUSEB_LEFT)
 		{
 			int m = mousebDoubleClick;
-			int s = shiftpressed;
+			int s = shiftOrCtrlPressed;
 
 
 			if (mouseheld > HOLDDELAY && !editPaletteMode)
@@ -1265,7 +1268,7 @@ void mousecommands(GTOBJECT *gt)
 				editorInfo.escolumn = newcolumn;
 
 				setMasterLoopChannel(gt);
-				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn);
+				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn,1);
 
 			}
 			else
@@ -1454,17 +1457,17 @@ void mousecommands(GTOBJECT *gt)
 			if ((mousex >= 0) && (mousex <= 5))
 			{
 				initsong(editorInfo.esnum, PLAY_BEGINNING, gt);
-				followplay = shiftpressed;
+				followplay = shiftOrCtrlPressed;
 			}
 			if ((mousex >= 7) && (mousex <= 15))
 			{
 				initsong(editorInfo.esnum, PLAY_POS, gt);
-				followplay = shiftpressed;
+				followplay = shiftOrCtrlPressed;
 			}
 			if ((mousex >= 17) && (mousex <= 26))
 			{
 				initsong(editorInfo.esnum, PLAY_PATTERN, gt);
-				followplay = shiftpressed;
+				followplay = shiftOrCtrlPressed;
 			}
 			if ((mousex >= 28) && (mousex <= 33))
 				stopsong(gt);
@@ -1554,7 +1557,7 @@ void generalcommands(GTOBJECT *gt)
 	switch (rawkey)
 	{
 	case KEY_ESC:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 			quit(gt);
 		else
 			clear(gt);
@@ -1600,11 +1603,11 @@ void generalcommands(GTOBJECT *gt)
 	case KEY_F12:
 
 	case SDLK_HELP:
-		onlinehelp(0, shiftpressed, gt);
+		onlinehelp(0, shiftOrCtrlPressed, gt);
 		break;
 
 	case KEY_TAB:
-		if (!shiftpressed) editorInfo.editmode++;
+		if (!shiftOrCtrlPressed) editorInfo.editmode++;
 		else editorInfo.editmode--;
 		if (editorInfo.editmode > EDIT_NAMES) editorInfo.editmode = EDIT_PATTERN;
 		if (editorInfo.editmode < EDIT_PATTERN) editorInfo.editmode = EDIT_NAMES;
@@ -1619,14 +1622,14 @@ void generalcommands(GTOBJECT *gt)
 		// JP - Shift_F1  changed to just turn looping on/off
 		playUntilEnd();
 		initsong(editorInfo.esnum, PLAY_BEGINNING, gt);
-		//	followplay = shiftpressed;
+		//	followplay = shiftOrCtrlPressed;
 
 		break;
 
 		// PLAY FROM START OF SELECTED PATTERN
 	case KEY_F2:
 
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 			followplay = 1 - followplay;
 		else
 		{
@@ -1649,7 +1652,7 @@ void generalcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_F4:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 			mutechannel(editorInfo.epchn, gt);
 		else
 		{
@@ -1663,19 +1666,19 @@ void generalcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_F5:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 			editorInfo.editmode = EDIT_PATTERN;
 		else prevmultiplier();
 		break;
 
 	case KEY_F6:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 			editorInfo.editmode = EDIT_ORDERLIST;
 		else nextmultiplier();
 		break;
 
 	case KEY_F7:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 		{
 			if (editorInfo.editmode == EDIT_INSTRUMENT)
 				editorInfo.editmode = EDIT_TABLES;
@@ -1686,7 +1689,7 @@ void generalcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_F8:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 			editorInfo.editmode = EDIT_TABLES;		// 'Cos JAMMAR SAID SO!
 		else
 		{
@@ -1696,7 +1699,7 @@ void generalcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_F9:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 			relocator(gt);
 		else
 		{
@@ -1720,6 +1723,30 @@ void generalcommands(GTOBJECT *gt)
 	case KEY_F11:
 		save(gt);
 		break;
+
+	case KEY_LEFT:
+		if (ctrlpressed)
+		{
+				leftKeyTicksDelta = SDL_GetTicks() - leftKeyTicks;
+				leftKeyTicks = SDL_GetTicks();
+				if (leftKeyTicksDelta < 300)
+				{
+					handlePressRewind(1);		// double click
+				}
+				else
+				{
+					handlePressRewind(0);		// single click
+				}
+		}
+		break;
+
+	case KEY_RIGHT:
+		if (ctrlpressed)
+		{
+			nextSongPos(&gtObject);
+		}
+		break;
+
 	}
 }
 
@@ -1732,7 +1759,7 @@ void load(GTOBJECT *gt)
 	if ((editorInfo.editmode != EDIT_INSTRUMENT) && (editorInfo.editmode != EDIT_TABLES))
 	{
 		int ok = 0;
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 		{
 			if (fileselector(songfilename, songpath, songfilter, "LOAD SONG", 0, gt, CEDIT))
 				ok = loadsong(gt);
@@ -1828,7 +1855,7 @@ void save(GTOBJECT *gt)
 
 void quit(GTOBJECT *gt)
 {
-	if ((!shiftpressed) || (mouseb))
+	if ((!shiftOrCtrlPressed) || (mouseb))
 	{
 		printtextcp(78, 36, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "Really Quit (y/n)?");
 		waitkey(gt);
@@ -1985,7 +2012,7 @@ void editadsr(GTOBJECT *gt)
 		{
 
 		case KEY_F7:
-			if (!shiftpressed) break;
+			if (!shiftOrCtrlPressed) break;
 
 		case KEY_ESC:
 		case KEY_ENTER:
@@ -2764,7 +2791,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 	if (checkMouseRange(TRANSPORT_BAR_X + 33, TRANSPORT_BAR_Y, 3, 2))
 	{
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 			displayMIDISelectWindow();
 		else
 			transportShowKeyboard = 1 - transportShowKeyboard;
@@ -2892,7 +2919,7 @@ void nextSongPos(GTOBJECT *gt)
 	else
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr < songlen[songNum][c3])
-			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr, gt->masterLoopChannel);
+			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr, gt->masterLoopChannel,0);
 	}
 }
 
@@ -2921,7 +2948,7 @@ void previousSongPos(GTOBJECT *gt, int songDffset)
 	else
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr)
-			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr - 1 - songDffset, gt->masterLoopChannel);
+			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr - 1 - songDffset, gt->masterLoopChannel,0);
 	}
 }
 
@@ -2935,7 +2962,7 @@ void setSongToBeginning(GTOBJECT *gt)
 	if (gt->songinit == PLAY_STOPPED)
 		orderSelectPatternsFromSelected(gt);
 	else
-		orderPlayFromPosition(gt, 0, 0, 0);
+		orderPlayFromPosition(gt, 0, 0, 0,0);
 
 	editorInfo.esview = 0;
 	editorInfo.eseditpos = 0;

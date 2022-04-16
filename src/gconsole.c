@@ -21,6 +21,7 @@ unsigned char *chardata = NULL;
 int key = 0;
 int rawkey = 0;
 int shiftpressed = 0;
+int shiftOrCtrlPressed = 0;
 int ctrlpressed = 0;
 int bothShiftAndCtrlPressed = 0;
 int cursorflashdelay = 0;
@@ -190,7 +191,7 @@ void initicon(void)
 			io_close(handle);
 			rw = SDL_RWFromMem(iconbuffer, size);
 			icon = SDL_LoadBMP_RW(rw, 0);
-//			SDL_WM_SetIcon(icon, 0);
+			//			SDL_WM_SetIcon(icon, 0);
 			SDL_SetWindowIcon(win_window, icon);
 			free(iconbuffer);
 		}
@@ -708,16 +709,16 @@ void fliptoscreen(void)
 	// Redraw changed screen regions
 	gfx_unlock();
 	gfx_flip();
-/*
-for (y = 0; y < MAX_ROWS; y++)
-	{
-		if (region[y])
+	/*
+	for (y = 0; y < MAX_ROWS; y++)
 		{
-			SDL_UpdateRect(gfx_screen, 0, y*fontheight, MAX_COLUMNS*fontwidth, fontheight);
-			region[y] = 0;
+			if (region[y])
+			{
+				SDL_UpdateRect(gfx_screen, 0, y*fontheight, MAX_COLUMNS*fontwidth, fontheight);
+				region[y] = 0;
+			}
 		}
-	}
-*/
+	*/
 }
 
 void forceRedraw()
@@ -788,20 +789,21 @@ void getkey(void)
 		}
 	}
 
-	shiftpressed = 0;
+	shiftOrCtrlPressed = 0;
 	ctrlpressed = 0;
+	shiftpressed = 0;
 	bothShiftAndCtrlPressed = 0;
 
 	if (win_keystate[SDL_SCANCODE_LCTRL] || win_keystate[SDL_SCANCODE_RCTRL])
 	{
 		ctrlpressed = 1;
-		if (win_keystate[SDL_SCANCODE_LSHIFT] || win_keystate[SDL_SCANCODE_RSHIFT])
-			bothShiftAndCtrlPressed = 1;
 	}
 
-	if ((win_keystate[SDL_SCANCODE_LSHIFT]) || (win_keystate[SDL_SCANCODE_RSHIFT]) ||
-		(win_keystate[SDL_SCANCODE_LCTRL]) || (win_keystate[SDL_SCANCODE_RCTRL]))
+	if ((win_keystate[SDL_SCANCODE_LSHIFT]) || (win_keystate[SDL_SCANCODE_RSHIFT]))
 		shiftpressed = 1;
+
+	shiftOrCtrlPressed = shiftpressed | ctrlpressed;
+	bothShiftAndCtrlPressed = shiftpressed * ctrlpressed;
 
 	if (rawkey == SDL_SCANCODE_KP_ENTER)
 	{

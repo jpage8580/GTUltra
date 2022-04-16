@@ -160,7 +160,7 @@ void orderlistcommands(GTOBJECT *gt)
 	case KEY_4:
 	case KEY_5:
 	case KEY_6:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			int schn = editorInfo.eschn;
 			int tchn = 0;
@@ -189,7 +189,7 @@ void orderlistcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_X:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			if (editorInfo.esmarkchn == -1)	// no table selected. copy single row under cursor
 			{
@@ -230,7 +230,7 @@ void orderlistcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_C:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			if (editorInfo.esmarkchn == -1)	// no table selected. copy single row under cursor
 			{
@@ -266,7 +266,7 @@ void orderlistcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_V:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			int oldlen = songlen[editorInfo.esnum][editorInfo.eschn];
 
@@ -286,7 +286,7 @@ void orderlistcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_L:
-		if (shiftpressed)
+		if (shiftOrCtrlPressed)
 		{
 			if (editorInfo.esmarkchn == -1)
 			{
@@ -300,7 +300,7 @@ void orderlistcommands(GTOBJECT *gt)
 
 
 	case KEY_SPACE:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 		{
 			int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12
 
@@ -328,7 +328,7 @@ void orderlistcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_BACKSPACE:
-		if (!shiftpressed)
+		if (!shiftOrCtrlPressed)
 		{
 			int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12
 
@@ -368,7 +368,7 @@ void orderlistcommands(GTOBJECT *gt)
 		if (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn])
 		{
 
-			if (!shiftpressed)
+			if (!shiftOrCtrlPressed)
 			{
 				int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12
 
@@ -444,11 +444,13 @@ void orderlistcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_LEFT:
-		orderleft();
+		if (!ctrlpressed)
+			orderleft();
 		break;
 
 	case KEY_RIGHT:
-		orderright();
+		if (!ctrlpressed)
+			orderright();
 		break;
 
 	case KEY_UP:
@@ -460,7 +462,7 @@ void orderlistcommands(GTOBJECT *gt)
 			editorInfo.escolumn = 0;
 		}
 		setMasterLoopChannel(gt);
-		if (shiftpressed) editorInfo.esmarkchn = -1;
+		if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
 		break;
 
 	case KEY_DOWN:
@@ -475,7 +477,7 @@ void orderlistcommands(GTOBJECT *gt)
 		}
 		setMasterLoopChannel(gt);
 
-		if (shiftpressed) editorInfo.esmarkchn = -1;
+		if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
 		break;
 	}
 	if (editorInfo.eseditpos - editorInfo.esview < 0)
@@ -604,7 +606,7 @@ void deleteorder(GTOBJECT *gt)
 
 void orderleft(void)
 {
-	if ((shiftpressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
+	if ((shiftOrCtrlPressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
 	{
 		if ((editorInfo.esmarkchn != editorInfo.eschn) || (editorInfo.eseditpos != editorInfo.esmarkend))
 		{
@@ -628,7 +630,7 @@ void orderleft(void)
 		}
 		else editorInfo.escolumn = 0;
 	}
-	if ((shiftpressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
+	if ((shiftOrCtrlPressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
 	{
 		editorInfo.esmarkend = editorInfo.eseditpos;
 		if (editorInfo.esmarkend == editorInfo.esmarkstart)
@@ -638,7 +640,7 @@ void orderleft(void)
 
 void orderright(void)
 {
-	if ((shiftpressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
+	if ((shiftOrCtrlPressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
 	{
 		if ((editorInfo.esmarkchn != editorInfo.eschn) || (editorInfo.eseditpos != editorInfo.esmarkend))
 		{
@@ -659,7 +661,7 @@ void orderright(void)
 		}
 		else editorInfo.escolumn = 1;
 	}
-	if ((shiftpressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
+	if ((shiftOrCtrlPressed) && (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn]))
 	{
 		editorInfo.esmarkend = editorInfo.eseditpos;
 		if (editorInfo.esmarkend == editorInfo.esmarkstart)
@@ -927,7 +929,7 @@ int calcStartofInterPatternLoop(int songNum, int channelNum, int startSongPos, G
 		int found = 0;
 		if (findPatternLoopStart == 0 && gtloop->chn[c3].pattptr == markStart * 4)
 			found = 1;
-		else if (gtloop->chn[c3].songptr != startSongPos+1 || gtloop->chn[c3].pattptr<lastpattptr)
+		else if (gtloop->chn[c3].songptr != startSongPos + 1 || gtloop->chn[c3].pattptr < lastpattptr)
 			found = 1;
 		if (found)
 		{
@@ -963,12 +965,12 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 
 
 
-//	int c2 = channelNum;
+	//	int c2 = channelNum;
 	int sng = songNum;
 
-//	sprintf(textbuffer, "sng %d, c2 %d, c3 %d", songNum, c2, c3);
-//	printtext(70, 36, 0xe, textbuffer);
-//	return 0;
+	//	sprintf(textbuffer, "sng %d, c2 %d, c3 %d", songNum, c2, c3);
+	//	printtext(70, 36, 0xe, textbuffer);
+	//	return 0;
 
 	if (c3 >= maxSIDChannels)
 		return -1;
@@ -987,7 +989,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 
 	} while (gtloop->chn[c3].songptr <= startSongPos);
 
-//	return 0;
+	//	return 0;
 
 	memcpy((char *)&gtPlayer->loopStartChn[0], (char*)&gtloop->chn[0], sizeof(CHN)*MAX_PLAY_CH);
 
@@ -1026,7 +1028,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 	return 0;
 }
 
-void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, int focusChannel)
+void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, int focusChannel, int enableSIDWrites)
 {
 
 	if (startSongPos < songlen[editorInfo.esnum][focusChannel])
@@ -1065,8 +1067,11 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 			if (gt->songinit == PLAY_STOPPED)	// Error in song data
 				return;
 
-			if (gt->chn[c2].songptr >= startSongPos - 1)
-				JPSoundMixer(NULL, 1024);
+			if (enableSIDWrites)
+			{
+				if (gt->chn[c2].songptr >= startSongPos - 1)
+					JPSoundMixer(NULL, 1024);
+			}
 
 		} while (gt->chn[c2].songptr <= ep);
 

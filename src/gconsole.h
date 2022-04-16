@@ -32,6 +32,7 @@ void forceRedraw();
 #ifndef GCONSOLE_C
 extern int key, rawkey, shiftpressed, cursorflashdelay, ctrlpressed;
 extern int bothShiftAndCtrlPressed;
+extern int shiftOrCtrlPressed;
 extern int mouseb, prevmouseb;
 extern int mouseheld;
 extern int mousex, mousey;

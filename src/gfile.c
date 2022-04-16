@@ -337,7 +337,7 @@ int fileselector(char *name, char *path, char *filter, char *title, int filemode
       break;
 
       case KEY_TAB:
-      if (!shiftpressed)
+      if (!shiftOrCtrlPressed)
       {
         filemode++;
         if (filemode > 3) filemode = 0;
