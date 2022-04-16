@@ -79,6 +79,7 @@ int quickAddObjectToList(char *m, GTUNDO_AREA *gArea);
 int getUndoPacket(int *currentOffset, char *cmp1, char *cmp2, int *startOffset, int*endOffset, int areaSize);
 void undoDisplay();
 void refreshVariables();
+void updateUndoBuffer(int undoAreaType);
 
 
 #endif
