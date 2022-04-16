@@ -216,4 +216,5 @@ void detunePitchTable();
 void swapPalettes(int p1, int p2);
 void handlePressRewind(int doubleClick);
 
+
 #endif
