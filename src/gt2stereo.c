@@ -97,7 +97,7 @@ char skinFilename[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.1.3";
+char *programname = "$VER: GTUltra V1.1.4";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
