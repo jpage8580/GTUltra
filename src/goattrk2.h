@@ -118,6 +118,9 @@ extern char *notenameTableView[];
 extern char textbuffer[MAX_PATHNAME];
 extern unsigned char hexkeytbl[16];
 extern unsigned char datafile[];
+extern char charsetFilename[MAX_PATHNAME];
+extern char skinFilename[MAX_PATHNAME];
+
 //unsigned short paletteUIDisplay[MAX_PALETTE_ENTRIES];
 
 extern float masterVolume;
@@ -215,6 +218,6 @@ float centToHz(int cent);
 void detunePitchTable();
 void swapPalettes(int p1, int p2);
 void handlePressRewind(int doubleClick);
-
+void createFilename(char *filePath, char *newfileName, char *filename);
 
 #endif

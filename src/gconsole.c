@@ -98,7 +98,7 @@ int initscreen(void)
 	chardata = (unsigned char*)malloc(4096);
 	if (!chardata) return 0;
 
-	charset = fopen("charset.bin", "rb");		//Have we a local copy of the charset? If so, use that. Otherwise, use the one in the wad file..
+	charset = fopen(charsetFilename, "rb");		//Have we a local copy of the charset? If so, use that. Otherwise, use the one in the wad file..
 	if (!charset)
 	{
 		handle = io_open("chargen.bin");

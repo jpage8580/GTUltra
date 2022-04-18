@@ -93,11 +93,16 @@ char instrfilter[MAX_FILENAME];
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
+char skinFilename[MAX_PATHNAME];
+char charsetFilename[MAX_PATHNAME];
+
 extern char *notename[];
 char *programname = "$VER: GTUltra V1.1.3";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
+
+
 
 char textbuffer[MAX_PATHNAME];
 char infoTextBuffer[256];
@@ -108,6 +113,8 @@ char transportRecord = 1;
 char transportPlay = 1;
 char transportShowKeyboard = 0;
 char jdebugPlaying = 0;
+
+char jpdebug = 0;
 
 int selectedMIDIPort = 0;
 
@@ -130,13 +137,17 @@ unsigned char paletteB[256];
 int maxSIDChannels = 12;
 int gMIDINote = -1;
 
+int loadedSongFlag = 0;
+
+
 WAVEFORM_INFO waveformDisplayInfo;
 
 
 int main(int argc, char **argv)
 {
 	char filename[MAX_PATHNAME];
-	char palettename[MAX_PATHNAME];
+
+//	char palettename[MAX_PATHNAME];
 
 	FILE *configfile;
 	int c, d;
@@ -151,8 +162,24 @@ int main(int argc, char **argv)
 	// Open datafile
 	io_openlinkeddatafile(datafile);
 
+	// Load configuration
+#ifdef __WIN32__
+	GetModuleFileName(NULL, filename, MAX_PATHNAME);
+	filename[strlen(filename) - 3] = 'c';
+	filename[strlen(filename) - 2] = 'f';
+	filename[strlen(filename) - 1] = 'g';
+#elif __amigaos__
+	strcpy(filename, "PROGDIR:gtultra.cfg");
+#else
+	strcpy(filename, getenv("HOME"));
+	strcat(filename, "/.goattrk/gtultra.cfg");
+#endif
+
+	createFilename(filename, skinFilename, "gtskins.bin");
+	createFilename(filename, charsetFilename, "charset.bin");
+
 	// load palette
-	configfile = fopen("gtskins.bin", "rb");		// rb write binary.
+	configfile = fopen(skinFilename, "rb");		// rb read binary. Does file exist?
 	if (configfile)
 	{
 		fread(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
@@ -169,18 +196,8 @@ int main(int argc, char **argv)
 	//	swapPalettes(1, 2);
 	//	swapPalettes(1, 0);
 
-		// Load configuration
-#ifdef __WIN32__
-	GetModuleFileName(NULL, filename, MAX_PATHNAME);
-	filename[strlen(filename) - 3] = 'c';
-	filename[strlen(filename) - 2] = 'f';
-	filename[strlen(filename) - 1] = 'g';
-#elif __amigaos__
-	strcpy(filename, "PROGDIR:goattrk2.cfg");
-#else
-	strcpy(filename, getenv("HOME"));
-	strcat(filename, "/.goattrk/gt2stereo.cfg");
-#endif
+
+
 	configfile = fopen(filename, "rt");
 	if (configfile)
 	{
@@ -428,9 +445,15 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			memset(specialnotenames, 0, 186);
+
 			char startpath[MAX_PATHNAME];
 
-			strcpy(songfilename, argv[c]);
+			// JP - BUG in original GTStereo fix!
+			// if argv[c] is > 60, only strcpy if the path contains no folders
+			//strcpy(songfilename, argv[c]);
+
+			int foundFileName = 0;	// JP Fix
 			for (d = strlen(argv[c]) - 1; d >= 0; d--)
 			{
 				if ((argv[c][d] == '/') || (argv[c][d] == '\\'))
@@ -440,11 +463,18 @@ int main(int argc, char **argv)
 					chdir(startpath);
 					initpaths();
 					strcpy(songfilename, &argv[c][d + 1]);
+					foundFileName++;
 					break;
 				}
 			}
+			if (!foundFileName)
+			{
+				strcpy(songfilename, argv[c]);	// JP - Fix bug
+			}
 		}
 	}
+
+
 
 
 	// Validate parameters
@@ -545,26 +575,24 @@ int main(int argc, char **argv)
 
 	initSID(&gtObject);
 
-
-
 	//-------------------------------------------------------------
 #if 0
 	strcpy(songfilename, "ultestura.sng");
 	maxSIDChannels = 3;
-
+#endif
 	// Load song if applicable
 	if (strlen(songfilename))
 	{
 		int ok = loadsong(&gtObject);
 		if (ok)
 		{
+			loadedSongFlag = 1;
 			undoInitAllAreas(&gtObject);	// recreate undo buffers, using the loaded song as the original info
 			countInstruments();
 			setTableBackgroundColours(editorInfo.einum);
 		}
 	}
 
-#endif
 
 #if 0
 	initsong(editorInfo.esnum, PLAY_BEGINNING, &gtObject);
@@ -595,6 +623,9 @@ int main(int argc, char **argv)
 
 		waitkeymouse(&gtObject);
 		docommand();
+
+//		sprintf(textbuffer, "jpdebug %x . %x %x", jpdebug, specialnotenames[0], specialnotenames[1]);
+//		printtext(70, 36, 0xe, textbuffer);
 	}
 
 	// Shutdown sound output now
@@ -971,7 +1002,7 @@ void docommand(void)
 		}
 
 		undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_LEN, 0, UNDO_AREA_DIRTY_CHECK);
-		
+
 		c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);
 
 		//	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, c2, UNDO_AREA_DIRTY_CHECK);
@@ -1268,7 +1299,7 @@ void mousecommands(GTOBJECT *gt)
 				editorInfo.escolumn = newcolumn;
 
 				setMasterLoopChannel(gt);
-				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn,1);
+				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
 
 			}
 			else
@@ -1419,10 +1450,10 @@ void mousecommands(GTOBJECT *gt)
 	{
 		if ((mousey == 0) && (!prevmouseb) && (mouseb == MOUSEB_LEFT))
 		{
-//			if ((mousex >= 38 + 20) && (mousex <= 39 + 20))
-//			{
-//				monomode ^= 1;
-//			}
+			//			if ((mousex >= 38 + 20) && (mousex <= 39 + 20))
+			//			{
+			//				monomode ^= 1;
+			//			}
 			if ((mousex >= 40 + 20) && (mousex <= 41 + 20))
 			{
 				usefinevib ^= 1;
@@ -1727,16 +1758,16 @@ void generalcommands(GTOBJECT *gt)
 	case KEY_LEFT:
 		if (ctrlpressed)
 		{
-				leftKeyTicksDelta = SDL_GetTicks() - leftKeyTicks;
-				leftKeyTicks = SDL_GetTicks();
-				if (leftKeyTicksDelta < 300)
-				{
-					handlePressRewind(1);		// double click
-				}
-				else
-				{
-					handlePressRewind(0);		// single click
-				}
+			leftKeyTicksDelta = SDL_GetTicks() - leftKeyTicks;
+			leftKeyTicks = SDL_GetTicks();
+			if (leftKeyTicksDelta < 300)
+			{
+				handlePressRewind(1);		// double click
+			}
+			else
+			{
+				handlePressRewind(0);		// single click
+			}
 		}
 		break;
 
@@ -1749,8 +1780,6 @@ void generalcommands(GTOBJECT *gt)
 
 	}
 }
-
-int loadedSongFlag = 0;
 
 void load(GTOBJECT *gt)
 {
@@ -1792,7 +1821,7 @@ void load(GTOBJECT *gt)
 
 int quickSave()
 {
-	if (loadedSongFlag)
+	if (loadedSongFlag)	// set to 1 when song is loaded.set to 0 if song is cleared.
 	{
 		if (strlen(loadedsongfilename))
 			strcpy(songfilename, loadedsongfilename);
@@ -2838,8 +2867,8 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 //		gt->masterLoopChannel = 0;
 
 
-		if (editorInfo.eschn >= maxSIDChannels)
-			editorInfo.eschn = 0;
+	if (editorInfo.eschn >= maxSIDChannels)
+		editorInfo.eschn = 0;
 
 
 	if ((editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn]) || (editorInfo.eseditpos > songlen[editorInfo.esnum][editorInfo.eschn] + 1))
@@ -2926,7 +2955,7 @@ void nextSongPos(GTOBJECT *gt)
 	else
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr < songlen[songNum][c3])
-			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr, gt->masterLoopChannel,0);
+			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr, gt->masterLoopChannel, 0);
 	}
 }
 
@@ -2955,7 +2984,7 @@ void previousSongPos(GTOBJECT *gt, int songDffset)
 	else
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr)
-			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr - 1 - songDffset, gt->masterLoopChannel,0);
+			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr - 1 - songDffset, gt->masterLoopChannel, 0);
 	}
 }
 
@@ -2969,7 +2998,7 @@ void setSongToBeginning(GTOBJECT *gt)
 	if (gt->songinit == PLAY_STOPPED)
 		orderSelectPatternsFromSelected(gt);
 	else
-		orderPlayFromPosition(gt, 0, 0, 0,0);
+		orderPlayFromPosition(gt, 0, 0, 0, 0);
 
 	editorInfo.esview = 0;
 	editorInfo.eseditpos = 0;
@@ -3755,5 +3784,20 @@ void detunePitchTable()
 		freqtblhi[i] = (SIDFreq >> 8) & 0xff;
 	}
 
+}
+
+
+void createFilename(char *filePath, char *newfileName, char *filename)
+{
+	int d = 0;
+	for (d = strlen(filePath) - 1; d >= 0; d--)
+	{
+		if ((filePath[d] == '/') || (filePath[d] == '\\'))
+		{
+			strcpy(newfileName, filePath);
+			break;
+		}
+	}
+	strcpy(&newfileName[d + 1], filename);	
 }
 

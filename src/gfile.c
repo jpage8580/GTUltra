@@ -31,6 +31,9 @@ void initpaths(void)
   getcwd(songpath, MAX_PATHNAME);
   strcpy(instrpath, songpath);
   strcpy(packedpath, songpath);
+
+
+
 }
 
 int fileselector(char *name, char *path, char *filter, char *title, int filemode, GTOBJECT *gt, int boxColor)

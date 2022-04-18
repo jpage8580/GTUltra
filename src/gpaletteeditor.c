@@ -131,7 +131,7 @@ void savePalette()
 {
 	FILE *configfile;
 
-	configfile = fopen("gtskins.bin", "wb");		// wb write binary. wt = write text
+	configfile = fopen(skinFilename, "wb");		// wb write binary. wt = write text
 	if (configfile)
 	{
 		fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);

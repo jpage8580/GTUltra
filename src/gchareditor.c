@@ -296,7 +296,7 @@ int getPixel(int charToDisplay, int x, int y)
 
 void saveCharset()
 {
-	fileHandle = fopen("charset.bin", "wb");		// wb write binary. wt = write text
+	fileHandle = fopen(charsetFilename, "wb");		// wb write binary. wt = write text
 	if (fileHandle)
 	{
 		fwrite(chardata, 4096, 1, fileHandle);
