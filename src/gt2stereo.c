@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 {
 	char filename[MAX_PATHNAME];
 
-//	char palettename[MAX_PATHNAME];
+	//	char palettename[MAX_PATHNAME];
 
 	FILE *configfile;
 	int c, d;
@@ -624,8 +624,8 @@ int main(int argc, char **argv)
 		waitkeymouse(&gtObject);
 		docommand();
 
-//		sprintf(textbuffer, "jpdebug %x . %x %x", jpdebug, specialnotenames[0], specialnotenames[1]);
-//		printtext(70, 36, 0xe, textbuffer);
+		//		sprintf(textbuffer, "jpdebug %x . %x %x", jpdebug, specialnotenames[0], specialnotenames[1]);
+		//		printtext(70, 36, 0xe, textbuffer);
 	}
 
 	// Shutdown sound output now
@@ -1098,52 +1098,53 @@ void mousecommands(GTOBJECT *gt)
 	if (mouseTransportBar(gt))
 		return;
 
-
-	if (editPaletteMode)
-	{
-
-		if (((!prevmouseb) || (mouseheld > HOLDDELAY)) && (mousey == 2) && (mousex >= 63 + 21) && (mousex <= 64 + 21))
+	/*
+		if (editPaletteMode)
 		{
-			if (mouseb & MOUSEB_LEFT) nextsong(gt);
-			if (mouseb & MOUSEB_RIGHT) prevsong(gt);
-		}
 
-		// Song editpos & songnumber selection
-		if ((mousey >= 3) && (mousey <= 5) && (mousex >= 40 + 21) && mouseb)
-		{
-			if (editorInfo.editmode != EDIT_ORDERLIST && prevmouseb)
-				return;
-
-			// editing palette, so don't allow user to click elsewhere.
-
-			int newpos = editorInfo.esview + (mousex - 44 - 21) / 3;
-			int newcolumn = (mousex - 44 - 21) % 3;
-			int newchn = mousey - 3;
-			if (newcolumn < 0) newcolumn = 0;
-			if (newcolumn > 1) newcolumn = 1;
-			if (newpos < 0)
+			if (((!prevmouseb) || (mouseheld > HOLDDELAY)) && (mousey == 2) && (mousex >= 63 + 21) && (mousex <= 64 + 21))
 			{
-				newpos = 0;
-				newcolumn = 0;
+				if (mouseb & MOUSEB_LEFT) nextsong(gt);
+				if (mouseb & MOUSEB_RIGHT) prevsong(gt);
 			}
 
-			int maxPaletteText = getPaletteTextArraySize();
-
-			if (newpos >= maxPaletteText / 2)
+			// Song editpos & songnumber selection
+			if ((mousey >= 3) && (mousey <= 5) && (mousex >= 40 + 21) && mouseb)
 			{
-				newpos = (maxPaletteText / 2) - 1;
-				newcolumn = 1;
+				if (editorInfo.editmode != EDIT_ORDERLIST && prevmouseb)
+					return;
+
+				// editing palette, so don't allow user to click elsewhere.
+
+				int newpos = editorInfo.esview + (mousex - 44 - 21) / 3;
+				int newcolumn = (mousex - 44 - 21) % 3;
+				int newchn = mousey - 3;
+				if (newcolumn < 0) newcolumn = 0;
+				if (newcolumn > 1) newcolumn = 1;
+				if (newpos < 0)
+				{
+					newpos = 0;
+					newcolumn = 0;
+				}
+
+				int maxPaletteText = getPaletteTextArraySize();
+
+				if (newpos >= maxPaletteText / 2)
+				{
+					newpos = (maxPaletteText / 2) - 1;
+					newcolumn = 1;
+				}
+
+				editorInfo.eschn = newchn;
+				editorInfo.eseditpos = newpos;
+				editorInfo.escolumn = newcolumn;
+
+				editorInfo.editmode = EDIT_ORDERLIST;
+
 			}
-
-			editorInfo.eschn = newchn;
-			editorInfo.eseditpos = newpos;
-			editorInfo.escolumn = newcolumn;
-
-			editorInfo.editmode = EDIT_ORDERLIST;
-
+			return;
 		}
-		return;
-	}
+	*/
 
 	// Pattern editpos & pattern number selection
 	for (c = 0; c < MAX_CHN; c++)
@@ -1171,7 +1172,7 @@ void mousecommands(GTOBJECT *gt)
 					}
 				}
 			}
-			else if (!prevmouseb)
+			else if (mouseb && !prevmouseb)
 			{
 				if ((mousex >= PATTERN_X + 5 + c * 9) && (mousex <= PATTERN_X + 7 + c * 9))
 					mutechannel(c, gt);
@@ -1283,7 +1284,7 @@ void mousecommands(GTOBJECT *gt)
 			int s = shiftOrCtrlPressed;
 
 
-			if (mouseheld > HOLDDELAY && !editPaletteMode)
+			if (((mouseheld > HOLDDELAY) || (s != 0) && !editPaletteMode))
 			{
 				editorInfo.eschn = newchn;
 				editorInfo.eseditpos = newpos;
@@ -1436,11 +1437,11 @@ void mousecommands(GTOBJECT *gt)
 	//	{
 	//		recordmode ^= 1;
 	//	}
-	for (c = 0; c < MAX_CHN; c++)
-	{
-		if ((!prevmouseb) && (mousey >= 23 + 3 + 10) && (mousex >= 59 + 7 * c) && (mousex <= 64 + 7 * c))
-			mutechannel(c, gt);
-	}
+//	for (c = 0; c < MAX_CHN; c++)
+//	{
+//		if ((!prevmouseb) && (mousey >= 23 + 3 + 10) && (mousex >= 59 + 7 * c) && (mousex <= 64 + 7 * c))
+//			mutechannel(c, gt);
+//	}
 
 
 	checkMouseInWaveformInfo();
@@ -3798,6 +3799,6 @@ void createFilename(char *filePath, char *newfileName, char *filename)
 			break;
 		}
 	}
-	strcpy(&newfileName[d + 1], filename);	
+	strcpy(&newfileName[d + 1], filename);
 }
 
