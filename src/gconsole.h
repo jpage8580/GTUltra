@@ -22,9 +22,9 @@ void printbg(int x, int y, int color, int length);
 void getkey(void);
 void drawLine(int x, int y, int w, int h, int colr);
 
-void printbyte(int x, int y, int color, char b);
-void printbyterow(int x, int y, int color, char b, int length);
-void printbytecol(int x, int y, int color, char b, int length);
+void printbyte(int x, int y, int color, unsigned int b);
+void printbyterow(int x, int y, int color, unsigned int b, int length);
+void printbytecol(int x, int y, int color, unsigned int b, int length);
 void modifyChars();
 int getColor(int fcolor, int bcolor);
 void forceRedraw();

@@ -14,6 +14,7 @@ int editPaletteX = 0;
 int editPaletteY = 0;
 int drawEnable = 0;
 int selectedCharIndex = 0;
+int charsetIndex = 0;
 
 int copyCharIndex = -1;
 
@@ -72,6 +73,12 @@ void displayCharWindow()
 					saveCharset();
 			}
 
+			if ((mousey == boxY + 3) && (mousex < (boxX + 13 + 22)) && (mousex >= (boxX + 10 + 22)))
+			{
+				if (!prevmouseb)
+					charsetIndex = 1 - charsetIndex;
+			}
+
 			if ((mousey < boxY) || (mousey >= boxY + boxHeight) || (mousex < boxX) || (mousex >= boxX + boxWidth))
 			{
 				if ((!prevmouseb) && (lastclick))
@@ -84,13 +91,13 @@ void displayCharWindow()
 				editPixelX = (mousex - charEditX) / 2;
 				if (!prevmouseb)
 				{
-					drawEnable = getPixel(selectedCharIndex, editPixelX, editPixelY);
+					drawEnable = getPixel(selectedCharIndex+(charsetIndex*0x100), editPixelX, editPixelY);
 					if (drawEnable)
 						drawEnable = 0;
 					else
 						drawEnable = 1;
 				}
-				setPixel(selectedCharIndex, editPixelX, editPixelY, drawEnable);
+				setPixel(selectedCharIndex + (charsetIndex * 0x100), editPixelX, editPixelY, drawEnable);
 				forceRedraw();
 				gfx_redraw = 1;
 			}
@@ -101,7 +108,7 @@ void displayCharWindow()
 			}
 			else if (mousex >= charSketchX && mousex < charSketchX + 10 && mousey >= charSketchY && mousey < charSketchY + 10)
 			{
-				sketchArray[((mousey - charSketchY) * 10) + (mousex - charSketchX)] = selectedCharIndex;
+				sketchArray[((mousey - charSketchY) * 10) + (mousex - charSketchX)] = selectedCharIndex+(charsetIndex*0x100);
 			}
 		}
 
@@ -119,11 +126,14 @@ void displayCharWindow()
 		}
 
 		int chr = 0;
+		int cp = boxColor;
+		if (charsetIndex)
+			cp = 0xc;
 		for (int y = 0;y < 8;y++)
 		{
 			for (int x = 0;x < 32;x++)
 			{
-				printbyte(charPaletteX + x, charPaletteY + y, boxColor, chr);
+				printbyte(charPaletteX + x, charPaletteY + y, cp, chr+(charsetIndex*0x100));
 				chr++;
 			}
 		}
@@ -137,21 +147,21 @@ void displayCharWindow()
 		case KEY_C:
 			if (ctrlpressed)
 			{
-				copyCharIndex = selectedCharIndex;
+				copyCharIndex = selectedCharIndex + (charsetIndex * 0x100);
 			}
 			break;
 
 		case KEY_F:
 			if (ctrlpressed)
 			{
-				flipCharX(selectedCharIndex);
+				flipCharX(selectedCharIndex + (charsetIndex * 0x100));
 			}
 			break;
 
 		case KEY_I:
 			if (ctrlpressed)
 			{
-				inverseChar(selectedCharIndex);
+				inverseChar(selectedCharIndex + (charsetIndex * 0x100));
 			}
 			break;
 
@@ -160,7 +170,7 @@ void displayCharWindow()
 			{
 				if (copyCharIndex >= 0)
 				{
-					copyChar(copyCharIndex, selectedCharIndex);
+					copyChar(copyCharIndex, selectedCharIndex + (charsetIndex * 0x100));
 				}
 			}
 			break;
@@ -175,7 +185,7 @@ void displayCharWindow()
 		}
 
 		selectedCharIndex = (editPaletteY * 32) + editPaletteX;
-		displayZoomedChar(selectedCharIndex, charEditX, charEditY, boxColor);
+		displayZoomedChar(selectedCharIndex + (charsetIndex * 0x100), charEditX, charEditY, boxColor);
 		// Not quite square - but close enough 2x2 for each pixel
 
 		drawbox(3, 3, boxColor, boxWidth, boxHeight);
@@ -198,8 +208,12 @@ void displayCharWindow()
 		printbg(charEditX + cx, charEditY + editPixelY, cc, 2);
 
 
-		sprintf(textbuffer, "Char: $%02X (%d)", selectedCharIndex, selectedCharIndex);
+		sprintf(textbuffer, "Char: $%03X (%d)", selectedCharIndex+(0x100*charsetIndex), selectedCharIndex + (charsetIndex * 0x100));
 		printtext(boxX + 2, boxY + 3, boxColor, textbuffer);
+
+		printtext(boxX + 22, boxY + 3, boxColor, "Charset:");
+		sprintf(textbuffer, "%d/2", (charsetIndex+1));
+		printtext(boxX + 22+10, boxY + 3, getColor(0,boxColor), textbuffer);
 
 		fliptoscreen();
 	}
@@ -299,7 +313,7 @@ void saveCharset()
 	fileHandle = fopen(charsetFilename, "wb");		// wb write binary. wt = write text
 	if (fileHandle)
 	{
-		fwrite(chardata, 4096, 1, fileHandle);
+		fwrite(chardata, 4096*2, 1, fileHandle);
 		fclose(fileHandle);
 	}
 }

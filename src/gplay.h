@@ -48,6 +48,7 @@ typedef struct
   unsigned char advance;
   unsigned char gatetimer;
   unsigned char loopCount;
+  unsigned short freqBackup;
 
   int releaseTime;
 

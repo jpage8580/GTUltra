@@ -97,7 +97,7 @@ char skinFilename[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.1.4";
+char *programname = "$VER: GTUltra V1.1.5";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -139,6 +139,7 @@ int gMIDINote = -1;
 
 int loadedSongFlag = 0;
 
+int jdebug[16];
 
 WAVEFORM_INFO waveformDisplayInfo;
 
@@ -624,8 +625,8 @@ int main(int argc, char **argv)
 		waitkeymouse(&gtObject);
 		docommand();
 
-		//		sprintf(textbuffer, "jpdebug %x . %x %x", jpdebug, specialnotenames[0], specialnotenames[1]);
-		//		printtext(70, 36, 0xe, textbuffer);
+	//	sprintf(textbuffer, "jpdebug %d", jdebug[0]);	//, specialnotenames[0], specialnotenames[1]);
+	//	printtext(70, 36, 0xe, textbuffer);
 	}
 
 	// Shutdown sound output now
@@ -1653,8 +1654,11 @@ void generalcommands(GTOBJECT *gt)
 
 		// JP - Shift_F1  changed to just turn looping on/off
 		playUntilEnd();
-		initsong(editorInfo.esnum, PLAY_BEGINNING, gt);
-		//	followplay = shiftOrCtrlPressed;
+
+		orderPlayFromPosition(gt, 0, 0, 0, 1);
+
+		//		initsong(editorInfo.esnum, PLAY_BEGINNING, gt);
+				//	followplay = shiftOrCtrlPressed;
 
 		break;
 
@@ -2740,7 +2744,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X-2, TRANSPORT_BAR_Y, 3, 2))
 	{
 		editorInfo.epoctave += change;
 		if (editorInfo.epoctave < 0)
@@ -2751,7 +2755,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 4, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 4-1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;
@@ -2762,7 +2766,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 8, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 8-1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		transportLoopPattern = 1 - transportLoopPattern;
 		return 1;
@@ -2770,7 +2774,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 12, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 12-1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;
@@ -2780,13 +2784,13 @@ int mouseTransportBar(GTOBJECT *gt)
 	}
 
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 16, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 16-1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		recordmode = 1 - recordmode;
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 20, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 20-1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;
@@ -2799,7 +2803,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 24, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 24-1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;

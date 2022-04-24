@@ -1,14 +1,18 @@
-GTUltra v1.1.0
+GTUltra v1.1.4
 ------------------
 Release: 29th March 2022
-Last Update: 1st April 2022
+Last Update: 24th April 2022
 Editor and C64 GT player enhancements - Jason Page / MultiStyle Labs
 
-Beta testing:
+Charset: LMan
+
+Initial beta testing:
 Thanks to Shogoon, Russell Hoy, Jani Väisänen and Egon Sander
 
 Example songs:
 Thanks to Jammer, Linus, LMan, Mibri and Shogoon
+
+
 
 GTUltra features:
 

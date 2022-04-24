@@ -12,10 +12,10 @@
 FILE *charset;
 
 int gfxinitted = 0;
-unsigned *scrbuffer = NULL;
-unsigned *colorbuffer = NULL;
-unsigned *prevscrbuffer = NULL;
-unsigned *prevcolorbuffer = NULL;
+unsigned int *scrbuffer = NULL;
+unsigned int *colorbuffer = NULL;
+unsigned int *prevscrbuffer = NULL;
+unsigned int *prevcolorbuffer = NULL;
 
 unsigned char *chardata = NULL;
 int key = 0;
@@ -44,10 +44,9 @@ unsigned bigwindow = 1;
 void loadexternalpalette(void);
 void initicon(void);
 
-inline void setcharcolor(unsigned *dptr, unsigned *cptr, short ch, short color)
+inline void setcharcolor(unsigned *dptr, unsigned *cptr, int ch, short color)
 {
-	*dptr = (ch & 0xff) | UIUnderline;
-
+	*dptr = (ch & 0x1ff) | UIUnderline;
 	*cptr = color;
 }
 
@@ -85,17 +84,17 @@ int initscreen(void)
 			return 0;
 	}
 
-	scrbuffer = (unsigned*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned));
-	colorbuffer = (unsigned*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned));
+	scrbuffer = (unsigned int*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned int));
+	colorbuffer = (unsigned int*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned int));
 
-	prevscrbuffer = (unsigned*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned));
-	prevcolorbuffer = (unsigned*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned));
+	prevscrbuffer = (unsigned int*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned int));
+	prevcolorbuffer = (unsigned int*)malloc(MAX_COLUMNS * MAX_ROWS * sizeof(unsigned int));
 
 	if ((!scrbuffer) || (!prevscrbuffer)) return 0;
 
 	memset(region, 0, sizeof region);
 
-	chardata = (unsigned char*)malloc(4096);
+	chardata = (unsigned char*)malloc(4096*2);
 	if (!chardata) return 0;
 
 	charset = fopen(charsetFilename, "rb");		//Have we a local copy of the charset? If so, use that. Otherwise, use the one in the wad file..
@@ -103,12 +102,22 @@ int initscreen(void)
 	{
 		handle = io_open("chargen.bin");
 		if (handle == -1) return 0;
-		io_read(handle, &chardata[0], 4096);
+		int s = io_read(handle, &chardata[0], 4096*2);
+		if (s < (4096 * 2))
+			memcpy(&chardata[4096], &chardata[0], 4096);
+		jdebug[0] = s;
 		io_close(handle);
 	}
 	else
 	{
-		fread(chardata, 4096, 1, charset);
+		fseek(charset, 0, SEEK_END);
+		int size = ftell(charset);
+		fseek(charset, 0, SEEK_SET);
+
+		int s=fread(chardata, size, 1, charset);
+		if (size < (4096 * 2))
+			memcpy(&chardata[4096], &chardata[0], 4096);
+		jdebug[0] = size;
 		fclose(charset);
 	}
 
@@ -259,7 +268,7 @@ void printtext(int x, int y, int color, const char *text)
 	}
 }
 
-void printbyterow(int x, int y, int color, char b, int length)
+void printbyterow(int x, int y, int color, unsigned int b, int length)
 {
 	unsigned *dptr = scrbuffer + (x + y * MAX_COLUMNS);
 	unsigned *cptr = colorbuffer + (x + y * MAX_COLUMNS);
@@ -271,7 +280,7 @@ void printbyterow(int x, int y, int color, char b, int length)
 	}
 }
 
-void printbytecol(int x, int y, int color, char b, int length)
+void printbytecol(int x, int y, int color, unsigned int b, int length)
 {
 	unsigned *dptr = scrbuffer + (x + y * MAX_COLUMNS);
 	unsigned *cptr = colorbuffer + (x + y * MAX_COLUMNS);
@@ -284,7 +293,7 @@ void printbytecol(int x, int y, int color, char b, int length)
 }
 
 
-void printbyte(int x, int y, int color, char b)
+void printbyte(int x, int y, int color, unsigned int b)
 {
 	unsigned *dptr = scrbuffer + (x + y * MAX_COLUMNS);
 	unsigned *cptr = colorbuffer + (x + y * MAX_COLUMNS);
@@ -482,11 +491,12 @@ void fliptoscreen(void)
 
 				{
 
-					unsigned char *chptr = &chardata[(*sptr & 0xff) * 16];
+					unsigned char *chptr = &chardata[(*sptr & 0x1ff) * 16];
 					unsigned char *dptr = (unsigned char*)gfx_screen->pixels + y * fontheight * gfx_screen->pitch + x * fontwidth;
 
 					int underline = (*sptr) & UNDERLINE_MASK;
 					int underlineForeground = (*sptr) & UNDERLINE_FOREGROUND_MASK;
+
 					unsigned char bgcolor = (*cptr) >> 8;	// (*sptr) >> 20;
 					unsigned char fgcolor = (*cptr) & 0xff;				//((*sptr) >> 16) & 0xf;
 

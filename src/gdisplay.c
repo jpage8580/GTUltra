@@ -39,8 +39,6 @@ int UIUnderline = 0;
 
 char debugtext[256];
 
-extern int jdebug[16];
-
 
 void printmainscreen(GTOBJECT *gt)
 {
@@ -980,9 +978,9 @@ void displayTransportBar(GTOBJECT *gt)
 	displayTransportBarSIDCount(4, TRANSPORT_BAR_Y);
 	displayTransportBarMasterVolume(8, TRANSPORT_BAR_Y);
 
-	int x = TRANSPORT_BAR_X;	// +1;
+	int x = TRANSPORT_BAR_X-2;	// +1;
 	displayTransportBarOctave(x, TRANSPORT_BAR_Y);
-	x += 4;
+	x += 5;
 	displayTransportBarFollow(x, TRANSPORT_BAR_Y);
 	x += 4;
 	displayTransportBarLoopPattern(x, TRANSPORT_BAR_Y);
@@ -994,7 +992,7 @@ void displayTransportBar(GTOBJECT *gt)
 	displayTransportBarPlaying(gt, x, TRANSPORT_BAR_Y);
 	x += 4;
 	displayTransportBarFastForward(x, TRANSPORT_BAR_Y);
-	x += 4;
+	x += 5;
 	displayTransportBarPolyChannels(x, TRANSPORT_BAR_Y);
 	x += 5;
 	displayTransportBarKeyboard(x, TRANSPORT_BAR_Y);
@@ -1176,20 +1174,27 @@ void displayTransportBarMonoStereo(int x, int y)
 {
 	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
 
-
+	int b = 0x195;
 	if (monomode || maxSIDChannels == 3)
 	{
 		printbyte(x, y + 1, color, 0x20);
 		printbyte(x + 1, y + 1, color, 0x9c);
-		printbyte(x + 2, y + 1, color, 0x20);
-		printtext(x, y, color, "MON");
+		printbyte(x + 2, y + 1, color, 0x20);		
+		
 	}
 	else
 	{
+		b = 0x198;
 		printbyte(x, y + 1, color, 0x9b);
 		printbyte(x + 1, y + 1, color, 0x20);
 		printbyte(x + 2, y + 1, color, 0x9c);
-		printtext(x, y, color, "STE");
+	}
+
+	// Display MON or STE text
+	for (int i = 0;i < 3;i++)
+	{
+		printbyte(x+i, y, color, b);
+		b++;
 	}
 
 //	sprintf(textbuffer, "%.1f", detuneCent + 1);

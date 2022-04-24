@@ -6,6 +6,8 @@
 
 #include "goattrk2.h"
 
+//#define JP_NEW_FEATURES
+
 unsigned char freqtbllo[] = {
   0x17,0x27,0x39,0x4b,0x5f,0x74,0x8a,0xa1,0xba,0xd4,0xf0,0x0e,
   0x2d,0x4e,0x71,0x96,0xbe,0xe8,0x14,0x43,0x74,0xa9,0xe1,0x1c,
@@ -58,6 +60,7 @@ GTOBJECT gtEditorObject;
 GTOBJECT gtLoopObject;
 GTOBJECT gtEditorLoopObject;
 
+int jpd = 0;
 int releasetimes[16] = { 6, 24, 48, 72, 114, 168, 204, 240, 300, 750, 1500, 2400, 3000, 9000, 15000, 24000 };
 
 
@@ -419,8 +422,8 @@ void playroutine(GTOBJECT *gt)
 			if (!cptr->tick)
 				goto TICK0;
 
-						// Tick N
-						// Reload counter
+			// Tick N
+			// Reload counter
 			if (cptr->tick >= 0x80)
 			{
 				if (cptr->tempo >= 2)
@@ -475,6 +478,15 @@ void playroutine(GTOBJECT *gt)
 
 
 					cptr->ptr[WTBL] = iptr->ptr[WTBL];
+					// JP - This appears to have no effect
+			//		cptr->freqBackup = freqtbllo[cptr->newnote] | (freqtblhi[cptr->newnote] << 8);
+
+					int n = cptr->note & 0x7f;
+					//		sprintf(textbuffer, "+ %x", n);
+						//	printtext(60, 36, 0xe, textbuffer);
+
+					cptr->freq = freqtbllo[n] | (freqtblhi[n] << 8);
+
 
 					if (cptr->ptr[WTBL])
 					{
@@ -666,7 +678,50 @@ void playroutine(GTOBJECT *gt)
 						unsigned char param = rtable[WTBL][cptr->ptr[WTBL] - 1];
 						switch (wave & 0xf)
 						{
+
 						case CMD_DONOTHING:
+#ifdef JP_NEW_FEATURES
+
+							// JP - GTUltra Special command $F0.
+							// Data byte dictates function (save pitch / restore pitch...)
+
+							if (param < 3)
+							{
+								cptr->ptr[WTBL]++;
+								// Wavetable jump
+								if (ltable[WTBL][cptr->ptr[WTBL] - 1] == 0xff)
+								{
+									cptr->ptr[WTBL] = rtable[WTBL][cptr->ptr[WTBL] - 1];
+								}
+
+								if (param == 1)
+								{
+									if (jpd < 30)
+									{
+										if (c == 0)
+										{
+											//	sprintf(textbuffer, "+ %x", cptr->freq);
+											//	printtext(60 + jpd, 36, 0xe, textbuffer);
+											jpd += 5;
+											jpd %= 30;
+										}
+									}
+
+									cptr->freqBackup = cptr->freq;
+
+								}
+								else if (param == 2)
+								{
+
+									cptr->freq = cptr->freqBackup;
+								}
+								goto WAVEEXEC;
+							}
+#else
+							stopsong(gt);
+#endif
+							break;
+
 						case CMD_SETWAVEPTR:
 						case CMD_FUNKTEMPO:
 							stopsong(gt);
@@ -853,13 +908,14 @@ void playroutine(GTOBJECT *gt)
 					cptr->ptr[WTBL] = rtable[WTBL][cptr->ptr[WTBL] - 1];
 				}
 
+
 				if ((wave >= WAVECMD) && (wave <= WAVELASTCMD))
 					goto PULSEEXEC;
 
 				if (note != 0x80)
 				{
 					if (note < 0x80)
-						note += cptr->note;
+						note += cptr->note;	// relative offset (arp chord)
 					note &= 0x7f;
 					cptr->freq = freqtbllo[note] | (freqtblhi[note] << 8);
 					cptr->vibtime = 0;
@@ -891,6 +947,8 @@ void playroutine(GTOBJECT *gt)
 						speed >>= rtable[STBL][cptr->cmddata - 1];
 					}
 					cptr->freq += speed;
+
+					cptr->freqBackup += speed;
 				}
 				break;
 
@@ -908,6 +966,8 @@ void playroutine(GTOBJECT *gt)
 						speed >>= rtable[STBL][cptr->cmddata - 1];
 					}
 					cptr->freq -= speed;
+
+					cptr->freqBackup -= speed;
 				}
 				break;
 
@@ -1087,6 +1147,7 @@ void playroutine(GTOBJECT *gt)
 					playingChannelOnKey[c] = -1;
 
 					cptr->newnote = newnote + cptr->trans;
+
 					if ((cptr->newcommand) != CMD_TONEPORTA)
 					{
 						if (!(instr[cptr->instr].gatetimer & 0x40))
@@ -1142,7 +1203,7 @@ void playroutine(GTOBJECT *gt)
 
 	if (gt->noSIDWrites == 0 && gt->loopEnabledFlag  && gt->disableLoopSearch == 0 && gtObject.interPatternLoopEnabledFlag)
 	{
-		int c3 = ((gtObject.interPatternLoopEnabledFlag>>8)&0xff) - 1;
+		int c3 = ((gtObject.interPatternLoopEnabledFlag >> 8) & 0xff) - 1;
 		int markEnd = (gtObject.interPatternLoopEnabledFlag & 0xff);
 		gtObject.interPatternLoopEnabledFlag = 0;
 
@@ -1193,7 +1254,7 @@ void playroutine(GTOBJECT *gt)
 		}
 
 	}
-	
+
 
 	if (gt->noSIDWrites == 0 && gt->disableLoopSearch == 0)	// only the PLAYING GTObject should check for looping. Otherwise, we end up in recursive hell
 	{
@@ -1217,7 +1278,7 @@ void playroutine(GTOBJECT *gt)
 			{
 				if (calcStartofInterPatternLoop(gt->psnum, c3, gt->chn[c3].songptr - 1, &gtLoopObject))
 				{
-					gtObject.interPatternLoopEnabledFlag = (markEnd) + ((c3+1) << 8);	// c3+1 - just to make sure we don't get a 0 flag value
+					gtObject.interPatternLoopEnabledFlag = (markEnd)+((c3 + 1) << 8);	// c3+1 - just to make sure we don't get a 0 flag value
 				}
 				// We don't need to rememeber the end of here.. as we're there already.
 				//			memcpy((char*)&gt->patternLoopEndChn[0], (char*)&gt->chn[0], sizeof(CHN)*MAX_PLAY_CH);
@@ -1234,13 +1295,13 @@ void playroutine(GTOBJECT *gt)
 		{
 			gt->chn[gt->masterLoopChannel].songLoopPtr = gt->chn[gt->masterLoopChannel].songptr;
 
-		//	sprintf(textbuffer, "end song %x", gt->chn[gt->masterLoopChannel].songLoopPtr);
-		//	printtext(70, 36, 0xe, textbuffer);
+			//	sprintf(textbuffer, "end song %x", gt->chn[gt->masterLoopChannel].songLoopPtr);
+			//	printtext(70, 36, 0xe, textbuffer);
 			calculateLoopInfo2(gt->psnum, gt->masterLoopChannel, gt->chn[gt->masterLoopChannel].songptr - 1, &gtLoopObject);
 			gtObject.loopEnabledFlag = 1;
 		}
 
-		
+
 
 	}
 
@@ -1261,7 +1322,7 @@ void sequencer(int c, CHN *cptr, GTOBJECT *gt)
 
 		if (!cptr->advance) goto SEQDONE;
 
-				// Song loop
+		// Song loop
 		if (songorder[jnum][c2][cptr->songptr] == LOOPSONG)
 		{
 			cptr->loopCount++;

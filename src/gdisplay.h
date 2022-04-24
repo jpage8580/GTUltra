@@ -119,6 +119,6 @@ void displayTable(int c);
 void displayWaveformInfo(int x, int y);
 int getWaveforumColour(int bit, int value);
 
-extern int jdebug[16];
+
 
 #endif
