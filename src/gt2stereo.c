@@ -665,7 +665,7 @@ int main(int argc, char **argv)
 	strcpy(filename, getenv("HOME"));
 	strcat(filename, "/.goattrk");
 	mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
-	strcat(filename, "/gt2stereo.cfg");
+	strcat(filename, "/gtultra.cfg");
 #endif
 #endif
 	configfile = fopen(filename, "wt");
