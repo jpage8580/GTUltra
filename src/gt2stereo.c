@@ -2849,9 +2849,9 @@ void handlePressRewind(int doubleClick)
 	else
 	{
 		if (editorInfo.eppos)
-			previousSongPos(&gtObject, 0);
+			previousSongPos(&gtObject, 0);		// move to start of current pattern
 		else
-			previousSongPos(&gtObject, 1);
+			previousSongPos(&gtObject, 1);		// move to start of previous pattern
 	}
 }
 
@@ -2939,8 +2939,8 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 
 void nextSongPos(GTOBJECT *gt)
 {
-	int songNum = getActualSongNumber(editorInfo.esnum, editorInfo.epchn);
-	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);	// 0-12
+	int songNum = getActualSongNumber(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);
+	int ac = getActualChannel(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);	// 0-12
 	int c3 = ac % 6;
 
 	if (gt->songinit == PLAY_STOPPED)
@@ -2967,16 +2967,32 @@ void nextSongPos(GTOBJECT *gt)
 
 void previousSongPos(GTOBJECT *gt, int songDffset)
 {
-	int songNum = getActualSongNumber(editorInfo.esnum, editorInfo.epchn);
-	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);	// 0-12
+	int songNum = getActualSongNumber(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);
+	int ac = getActualChannel(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);	// 0-12
 	int c3 = ac % 6;
 
 	if (gt->songinit == PLAY_STOPPED)
 	{
 
-		editorInfo.eseditpos = gt->editorInfo[ac].espos - songDffset;
+		editorInfo.eseditpos = gt->editorInfo[ac].espos - songDffset;	// move back n positions (0 if just moving to top of pattern. 1 otherwise)
 		if (editorInfo.eseditpos < 0)
 			editorInfo.eseditpos = 0;
+		else if (songDffset)
+		{
+			/*
+			Check if we're on a transpose or repeat. If so, keep moving backwards to a valid pattern
+			*/
+			while ((songorder[songNum][c3][editorInfo.eseditpos] >= REPEAT) && (songorder[songNum][c3][editorInfo.eseditpos] < LOOPSONG))
+			{
+				editorInfo.eseditpos--;
+				if (editorInfo.eseditpos < 0)
+				{
+					editorInfo.eseditpos = 0;
+					break;
+				}
+			}
+		}
+
 		orderSelectPatternsFromSelected(gt);
 
 		if (gt->editorInfo[ac].espos < editorInfo.esview)

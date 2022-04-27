@@ -1148,7 +1148,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 				int sng = getActualSongNumber(editorInfo.esnum, c2);
 
 				ep = gte->chn[c2].songptr - 1;	// -1;
-
+				
 				do
 				{
 					ep2 = ep;
