@@ -625,8 +625,8 @@ int main(int argc, char **argv)
 		waitkeymouse(&gtObject);
 		docommand();
 
-	//	sprintf(textbuffer, "jpdebug %d", jdebug[0]);	//, specialnotenames[0], specialnotenames[1]);
-	//	printtext(70, 36, 0xe, textbuffer);
+		//	sprintf(textbuffer, "jpdebug %d", jdebug[0]);	//, specialnotenames[0], specialnotenames[1]);
+		//	printtext(70, 36, 0xe, textbuffer);
 	}
 
 	// Shutdown sound output now
@@ -2744,7 +2744,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X-2, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X - 2, TRANSPORT_BAR_Y, 3, 2))
 	{
 		editorInfo.epoctave += change;
 		if (editorInfo.epoctave < 0)
@@ -2755,7 +2755,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 4-1, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 4 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;
@@ -2766,7 +2766,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 8-1, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 8 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		transportLoopPattern = 1 - transportLoopPattern;
 		return 1;
@@ -2774,7 +2774,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 12-1, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 12 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;
@@ -2784,13 +2784,13 @@ int mouseTransportBar(GTOBJECT *gt)
 	}
 
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 16-1, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 16 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		recordmode = 1 - recordmode;
 		return 1;
 	}
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 20-1, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 20 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;
@@ -2803,7 +2803,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 
 
-	if (checkMouseRange(TRANSPORT_BAR_X + 24-1, TRANSPORT_BAR_Y, 3, 2))
+	if (checkMouseRange(TRANSPORT_BAR_X + 24 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
 		if (editPaletteMode)
 			return 1;
@@ -3005,7 +3005,28 @@ void previousSongPos(GTOBJECT *gt, int songDffset)
 	else
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr)
-			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr - 1 - songDffset, gt->masterLoopChannel, 0);
+		{
+			int so = gt->chn[gt->masterLoopChannel].songptr - 1 - songDffset;
+
+			if (songDffset)
+			{
+				/*
+				Check if we're on a transpose or repeat. If so, keep moving backwards to a valid pattern
+				*/
+
+				while ((songorder[songNum][c3][so] >= REPEAT) && (songorder[songNum][c3][so] < LOOPSONG))
+				{
+					so--;
+					if (so < 0)
+					{
+						so = 0;
+						break;
+					}
+				}
+			}
+
+			orderPlayFromPosition(gt, 0, so, gt->masterLoopChannel, 0);
+		}
 	}
 }
 
