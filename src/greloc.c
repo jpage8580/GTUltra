@@ -340,12 +340,13 @@ void relocator(GTOBJECT *gt)
 	yPos++;
 
 
-	sidaddress = 0xd420d400;
+	//sidaddress = 0xd420d400;
 
 	int sidAddr1 = sidaddress & 0xffff;
 	int sidAddr2 = (sidaddress >> 16) & 0xffff;
 	int sidAddr3 = sidAddr2 + 0x20;
 	int sidAddr4 = sidAddr3 + 0x20;
+
 
 
 	if (maxSIDChannels > 3)
@@ -392,6 +393,9 @@ void relocator(GTOBJECT *gt)
 		if (selectdone == -1) goto PRCLEANUP;
 
 		yPos++;
+
+		sidaddress = sidAddr1;
+		sidaddress |= (sidAddr2 << 16);
 	}
 
 	if (maxSIDChannels > 6)
