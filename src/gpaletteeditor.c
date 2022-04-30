@@ -34,14 +34,14 @@ char* paletteText[] = {
 	"Table: Foreground 2",
 	"Table: Unused Background",
 	"Table: Unused Foreground",
-	"Table: Current Instr. Background",
 	"Table: Current Instr. Foreground",
+	"Table: Current Instr. Background",
 	"General: Background",
 	"General: Title",
 	"General: Info",
 	"General: Highlight",
+	"TransportBar: Button Background",
 	"TransportBar: Background",
-	"TransportBar: Foreground",
 	"TransportBar: Enabled",
 	"RED (record / Filter Status)",
 	"Pattern Loop Marker Background",
@@ -52,8 +52,33 @@ char* paletteText[] = {
 	"Pattern: First Background 2",
 	"Pattern: First Foreground 2",
 	"Pattern: Index Highlight",
+	"TransportBar: Background2",
+	"Top Bar",
+	"TransportBar: Between Buttons",
+	"Exclamation",
+	"Order/Inst: Background",
+	"Order/Inst: Foreground",
+	"Order/Inst/Table: Edit Foreground",
+	"Orderlist: Transpose/Repeat",
 	"hello"
 };
+
+
+int currentRGB[3];
+int copyRGB[3];
+char copiedPalette[3][MAX_PALETTE_ENTRIES];
+int copyFlag = 0;
+
+
+void copyRGBInfo()
+{
+
+	for (int i = 0;i < 3;i++)
+	{
+		copyRGB[i] = currentRGB[i];
+		copyFlag = 1;
+	}
+}
 
 int getPaletteTextArraySize()
 {
@@ -61,13 +86,82 @@ int getPaletteTextArraySize()
 }
 
 
+void handlePaste(int *cx, GTOBJECT *gt)
+{
+	if (copyFlag == 0)
+		return;
+
+	int jx = *cx;
+	int x = jx / 2;
+	jx &= 1;
+	x += paletteScrollOffset;
+
+	if (copyFlag == 1)
+	{
+
+		for (int y = 0;y < 3;y++)
+		{
+			switch (jx)
+			{
+			case 0:
+
+				paletteRGB[currentPalettePreset][y][x] &= 0x0f;
+				paletteRGB[currentPalettePreset][y][x] |= copyRGB[y] << 4;
+				break;
+
+			case 1:
+				paletteRGB[currentPalettePreset][y][x] &= 0xf0;
+				paletteRGB[currentPalettePreset][y][x] |= copyRGB[y];
+				break;
+			}
+		}
+	}
+	else
+	{
+		for (int i = 0;i < MAX_PALETTE_ENTRIES;i++)
+		{
+			for (int j = 0;j < 3;j++)
+			{
+				paletteRGB[currentPalettePreset][j][i] = copiedPalette[j][i];
+			}
+		}
+	}
+
+	setGFXPaletteRGBFromPaletteRGB(currentPalettePreset, x);
+
+	paletteChanged = 1;
+	displayupdate(gt);
+
+
+}
+
+
+void rememberCurrentRGB(int *cx)
+{
+	int jx = *cx;
+	int x = jx / 2;
+	jx &= 1;
+	x += paletteScrollOffset;
+
+	for (int i = 0;i < 3;i++)
+	{
+		switch (jx)
+		{
+		case 0:
+			currentRGB[i] = (paletteRGB[currentPalettePreset][i][x] >> 4) & 0xf;
+			break;
+		case 1:
+			currentRGB[i] = paletteRGB[currentPalettePreset][i][x] & 0xf;
+			break;
+		}
+	}
+}
 
 int paletteEdit(int *cx, int *cy, GTOBJECT *gt)
 {
 	int jx = *cx;
 	int x = jx / 2;
 	jx &= 1;
-	//	x += (*cx & 1);
 	x += paletteScrollOffset;
 	int y = *cy;
 
@@ -89,13 +183,14 @@ int paletteEdit(int *cx, int *cy, GTOBJECT *gt)
 			break;
 		}
 
+		rememberCurrentRGB(cx);
+
+
 		setGFXPaletteRGBFromPaletteRGB(currentPalettePreset, x);
 
 
 		(*cx)++;
 		paletteChanged = 1;
-		//		gfx_redraw = 1;
-//		printmainscreen(gt);
 		displayupdate(gt);
 
 		return 1;
@@ -138,6 +233,9 @@ void savePalette()
 		fclose(configfile);
 	}
 }
+
+
+
 
 void displayPaletteEditorWindow(GTOBJECT *gt)
 {
@@ -202,12 +300,34 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 					changePalettePreset(1, gt);
 				else if (mouseb & MOUSEB_RIGHT && (!prevmouseb))
 					changePalettePreset(-1, gt);
+				rememberCurrentRGB(&cx);
 			}
-			else if ((mousey == boxY + 1) && (mousex < (boxX + 24)) && (mousex >= (boxX + 20)))
+			else if ((mousey == boxY + 1) && (mousex <= (boxX + 18)) && (mousex >= (boxX + 15)))
 			{
 				if (!prevmouseb)
 					savePalette();
 			}
+			else if ((mousey == boxY + 2) && (mousex >= (boxX + 18)) && (mousex <= (boxX + 22)))
+			{
+				handlePaste(&cx,gt);
+				rememberCurrentRGB(&cx);
+			}
+			else if ((mousey == boxY + 1) && (mousex <= (boxX + 37)) && (mousex >= (boxX + 29)))
+			{
+				copyRGBInfo();
+			}
+			else if ((mousey == boxY + 1) && (mousex <= (boxX + 27)) && (mousex >= (boxX + 20)))
+			{
+				for (int i = 0;i < MAX_PALETTE_ENTRIES;i++)
+				{
+					for (int j = 0;j < 3;j++)
+					{
+						copiedPalette[j][i] = paletteRGB[currentPalettePreset][j][i];
+					}
+				}
+				copyFlag = 2;
+			}
+
 
 			else if ((mousey < boxY) || (mousey >= boxY + boxHeight) || (mousex < boxX) || (mousex >= boxX + boxWidth))
 			{
@@ -238,7 +358,7 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 				cy--;
 			break;
 		case KEY_DOWN:
-			if (cy < 2)
+			if (cy < 2)			
 				cy++;
 			break;
 
@@ -251,6 +371,7 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 					paletteScrollOffset++;
 					cx -= 1;
 				}
+				rememberCurrentRGB(&cx);
 			}
 			break;
 
@@ -263,7 +384,18 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 					cx++;
 					paletteScrollOffset--;
 				}
+				rememberCurrentRGB(&cx);
 			}
+			break;
+
+		case KEY_C:
+			if (ctrlpressed)
+				copyRGBInfo();
+			break;
+
+		case KEY_V:
+			if (ctrlpressed)
+				handlePaste(&cx, gt);
 			break;
 
 		}
@@ -276,7 +408,7 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 
 		drawbox(boxX, boxY, boxColor, boxWidth, boxHeight);
 
-		sprintf(textbuffer, "Palette:%d/3", currentPalettePreset);
+		sprintf(textbuffer, "Palette:%d/%d", currentPalettePreset,(MAX_PALETTE_PRESETS-1));
 		printtext(boxX + 2, boxY + 1, getColor(boxColor, 0), textbuffer);
 
 		int colorOffset = (paletteScrollOffset * 2);
@@ -305,7 +437,11 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 		int cursorX = (cx / 2) * 3 + (cx & 1);
 		printbg(boxX + 4 + cursorX, boxY + 3 + cy, cc, 1);
 
-		printtext(boxX + 20, boxY + 1, getColor(0, boxColor), "SAVE");
+		printtext(boxX + 15, boxY + 1, getColor(0, boxColor), "SAVE");
+		printtext(boxX + 20, boxY + 1, getColor(0, boxColor), "COPY ALL");
+		printtext(boxX + 29, boxY + 1, getColor(0, boxColor), "COPY RGB");
+
+		printtext(boxX + 18, boxY + 2, getColor(0, boxColor), "PASTE");
 
 		fliptoscreen();
 
@@ -313,3 +449,20 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 	printmainscreen(gt);
 }
 
+void process32EntryPalette(int maxPresets, int maxPaletteEntries, char* tempPalette)
+{
+	for (int presetIndex = 0;presetIndex < maxPresets;presetIndex++)
+	{
+		for (int rgb = 0;rgb < 3;rgb++)
+		{
+			for (int paletteIndex = 0;paletteIndex < maxPaletteEntries;paletteIndex++)
+			{
+				for (int i = 0;i < (MAX_PALETTE_PRESETS/maxPresets);i++)	// duplicate first x skins y times, to fill all presets
+				{
+	//				paletteRGB[presetIndex + (i * 4)][rgb][paletteIndex] = *tempPalette;
+				}
+				tempPalette++;
+			}
+		}
+	}
+}

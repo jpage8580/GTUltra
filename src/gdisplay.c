@@ -79,7 +79,7 @@ void printstatus(GTOBJECT *gt)
 
 	if ((mouseb > MOUSEB_LEFT) && (mousey <= 1) && (!eamode)) menu = 1;
 
-	printblankc(0, 0, getColor(15, 1), MAX_COLUMNS);
+	printblankc(0, 0, getColor(15, TOPBAR_BACKGROUND), MAX_COLUMNS);
 
 	int menuInfoXOffset = 38;
 	if (!menu)
@@ -89,47 +89,47 @@ void printstatus(GTOBJECT *gt)
 		else
 			sprintf(textbuffer, "%s - %s", programname, loadedsongfilename);
 		textbuffer[57] = 0;
-		printtext(0, 0, getColor(15, 1), textbuffer);
+		printtext(0, 0, getColor(15, TOPBAR_BACKGROUND), textbuffer);
 
-//		if (monomode)
-//			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "M");
-//		else
-//			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "M");
+		//		if (monomode)
+		//			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "M");
+		//		else
+		//			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "M");
 
 		menuInfoXOffset += 2;
 
 		if (usefinevib)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "FV");
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "FV");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "FV");
+			printtext(menuInfoXOffset + 20, 0, getColor(0, TOPBAR_BACKGROUND), "FV");
 
 		menuInfoXOffset += 3;
 		if (optimizepulse)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "PO");
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "PO");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "PO");
+			printtext(menuInfoXOffset + 20, 0, getColor(0, TOPBAR_BACKGROUND), "PO");
 		menuInfoXOffset += 3;
 
 		if (optimizerealtime)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "RO");
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "RO");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "RO");
+			printtext(menuInfoXOffset + 20, 0, getColor(0, TOPBAR_BACKGROUND), "RO");
 
 		menuInfoXOffset += 3;
 		if (ntsc)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "NTSC");
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "NTSC");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), " PAL");
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), " PAL");
 
 		menuInfoXOffset += 5;
 		if (!sidmodel)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "6581");
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "6581");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "8580");
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "8580");
 
 		menuInfoXOffset += 5;
 		sprintf(textbuffer, "HR:%04X", adparam);
-		printtext(menuInfoXOffset + 20, 0, getColor(15, 1), textbuffer);
+		printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), textbuffer);
 
 		menuInfoXOffset += 3;
 		if (eamode)
@@ -141,16 +141,16 @@ void printstatus(GTOBJECT *gt)
 		if (multiplier)
 		{
 			sprintf(textbuffer, "%2dX", multiplier);
-			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), textbuffer);
+			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), textbuffer);
 		}
-		else printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "25Hz");
+		else printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "25Hz");
 
 		menuInfoXOffset += 5;
-		printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "F12=HELP");
+		printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "F12=HELP");
 	}
 	else
 	{
-		printtext(0, 0, getColor(15, 1), " PLAY | PLAYPOS | PLAYPATT | STOP | LOAD | SAVE | PACK/RL | HELP | CLEAR | QUIT |");
+		printtext(0, 0, getColor(15, TOPBAR_BACKGROUND), " PLAY | PLAYPOS | PLAYPATT | STOP | LOAD | SAVE | PACK/RL | HELP | CLEAR | QUIT |");
 	}
 
 	displayTransportBar(gt);
@@ -204,18 +204,19 @@ void printstatus(GTOBJECT *gt)
 
 	displayPattern(gt);
 
-	printtext(4, 4, getColor(CEDIT, 0), debugtext);
+	printtext(4, 4, getColor(CORDER_INST_TABLE_EDITING, 0), debugtext);
 
 
 	int lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
 
+	UIUnderline = UNDERLINE_FOREGROUND_MASK;
 	sprintf(textbuffer, "CHN  ");
-	printtext(40 + 20, getColor(2, 0), lockPatternColor, textbuffer);
+	printtext(40 + 20, 2, lockPatternColor, textbuffer);
 
 	lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
 
 	sprintf(textbuffer, "ORDERLIST ");
-	printtext(40 + 20 + 5, getColor(2, 0), lockPatternColor, textbuffer);
+	printtext(40 + 20 + 5, 2, lockPatternColor, textbuffer);
 
 
 	//	if (!editPaletteMode)
@@ -223,6 +224,7 @@ void printstatus(GTOBJECT *gt)
 	//	else
 	//		sprintf(textbuffer, "(PALETTE % 02X, POS % 02X)   ", currentPalettePreset, editorInfo.eseditpos);
 	printtext(40 + 20 + 15, getColor(2, 0), getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+	UIUnderline = 0;
 
 	//	if (!editPaletteMode)
 	displayOrderList(gt, cc);
@@ -230,50 +232,52 @@ void printstatus(GTOBJECT *gt)
 	//		displayPaletteInfo(cc);
 
 	sprintf(textbuffer, "                  ", instrumentCount[editorInfo.einum]);
-	printtext(60 + 20, 7 + 3 + 5, getColor(0xe, 0), textbuffer);
+	printtext(60 + 20, 7 + 3 + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
 	sprintf(textbuffer, "USE COUNT: %d", instrumentCount[editorInfo.einum]);
-	printtext(60 + 20, 7 + 3 + 5, getColor(0xe, 0), textbuffer);
+	printtext(60 + 20, 7 + 3 + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
 
-
+	UIUnderline = UNDERLINE_FOREGROUND_MASK;
 	sprintf(textbuffer, "INSTRUMENT NUM. %02X  %-18s", editorInfo.einum, instr[editorInfo.einum].name);
 	printtext(40 + 20, 7 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+	UIUnderline = 0;
 
 	sprintf(textbuffer, "Attack/Decay    %02X  ", instr[editorInfo.einum].ad);
-	if (editorInfo.eipos == 0) color = CEDIT; else color = CNORMAL;
-	printtext(40 + 20, 8 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 0) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(40 + 20, 8 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "Sustain/Release %02X  ", instr[editorInfo.einum].sr);
-	if (editorInfo.eipos == 1) color = CEDIT; else color = CNORMAL;
-	printtext(40 + 20, 9 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 1) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(40 + 20, 9 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "Wavetable Pos   %02X  ", instr[editorInfo.einum].ptr[WTBL]);
-	if (editorInfo.eipos == 2) color = CEDIT; else color = CNORMAL;
-	printtext(40 + 20, 10 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 2) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(40 + 20, 10 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "Pulsetable Pos  %02X  ", instr[editorInfo.einum].ptr[PTBL]);
-	if (editorInfo.eipos == 3) color = CEDIT; else color = CNORMAL;
-	printtext(40 + 20, 11 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 3) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(40 + 20, 11 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "Filtertable Pos %02X  ", instr[editorInfo.einum].ptr[FTBL]);
-	if (editorInfo.eipos == 4) color = CEDIT; else color = CNORMAL;
-	printtext(40 + 20, 12 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 4) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(40 + 20, 12 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "Vibrato Param   %02X", instr[editorInfo.einum].ptr[STBL]);
-	if (editorInfo.eipos == 5) color = CEDIT; else color = CNORMAL;
-	printtext(60 + 20, 8 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 5) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(60 + 20, 8 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "Vibrato Delay   %02X", instr[editorInfo.einum].vibdelay);
-	if (editorInfo.eipos == 6) color = CEDIT; else color = CNORMAL;
-	printtext(60 + 20, 9 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 6) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(60 + 20, 9 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "HR/Gate Timer   %02X", instr[editorInfo.einum].gatetimer);
-	if (editorInfo.eipos == 7) color = CEDIT; else color = CNORMAL;
-	printtext(60 + 20, 10 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 7) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(60 + 20, 10 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
 	sprintf(textbuffer, "1stFrame Wave   %02X", instr[editorInfo.einum].firstwave);
-	if (editorInfo.eipos == 8) color = CEDIT; else color = CNORMAL;
-	printtext(60 + 20, 11 + 3, getColor(color, 0), textbuffer);
+	if (editorInfo.eipos == 8) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(60 + 20, 11 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 
+	// cursor
 	if (editorInfo.editmode == EDIT_INSTRUMENT)
 	{
 		if (editorInfo.eipos < 9)
@@ -402,21 +406,21 @@ void displayOrderList(GTOBJECT *gt, int cc)
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 		int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
 
-		printtext(40 + 20 + 3, 3 + c, getColor(15, 0), "  ");
+		printtext(40 + 20 + 3, 3 + c, getColor(15, CORDER_INST_BACKGROUND), "  ");
 
 		sprintf(textbuffer, " %d ", c2);	// c + 1);
-		printtext(40 + 20, 3 + c, getColor(15, 0), textbuffer);
+		printtext(40 + 20, 3 + c, getColor(15, CORDER_INST_BACKGROUND), textbuffer);
 
 		if (c2 == gt->masterLoopChannel)
 		{
-			printbyte(40 + 23, 3 + c, getColor(14, 0), 19);
-			printbyte(40 + 23 + 1, 3 + c, getColor(14, 0), 20);
+			printbyte(40 + 23, 3 + c, getColor(14, CORDER_INST_BACKGROUND), 19);
+			printbyte(40 + 23 + 1, 3 + c, getColor(14, CORDER_INST_BACKGROUND), 20);
 		}
 
 		for (int d = 0; d < VISIBLEORDERLIST; d++)
 		{
 			int p = editorInfo.esview + d;
-			color = CNORMAL;
+			color = CORDER_INST_FOREGROUND;
 			if (isplaying(gt))
 			{
 				int chnpos = gt->chn[c2].songptr;
@@ -432,13 +436,13 @@ void displayOrderList(GTOBJECT *gt, int cc)
 
 			}
 			if (p == gt->editorInfo[c2].espos)
-				color = CEDIT;
+				color = CORDER_INST_TABLE_EDITING;
 
 			if ((gt->editorInfo[c2].esend) && (p == gt->editorInfo[c2].esend))
-				color = CEDIT;
+				color = CORDER_INST_TABLE_EDITING;
 
 			if (c2 >= maxSIDChannels)
-				color = 0;	// CMUTE;
+				color = CORDER_INST_BACKGROUND;	// Hide channels 3-6 if SID set to 1 or 3
 
 
 			if ((p < 0) || (p > (songlen[editorInfo.esnum][c] + 1)) || (p > MAX_SONGLEN + 1))
@@ -457,26 +461,26 @@ void displayOrderList(GTOBJECT *gt, int cc)
 							printtext(70, 36, 0xe, textbuffer);
 						}
 						sprintf(textbuffer, "%02X ", songorder[editorInfo.esnum][c][p]);
-						if ((p >= songlen[editorInfo.esnum][c]) && (color == CNORMAL)) color = CCOMMAND;
+						if ((p >= songlen[editorInfo.esnum][c]) && (color == CORDER_INST_FOREGROUND)) color = CORDER_TRANS_REPEAT;
 					}
 					else
 					{
 						if (songorder[editorInfo.esnum][c][p] >= TRANSUP)
 						{
 							sprintf(textbuffer, "+%01X ", songorder[editorInfo.esnum][c][p] & 0xf);
-							if (color == CNORMAL) color = CCOMMAND;
+							if (color == CORDER_INST_FOREGROUND) color = CORDER_TRANS_REPEAT;
 						}
 						else
 						{
 							if (songorder[editorInfo.esnum][c][p] >= TRANSDOWN)
 							{
 								sprintf(textbuffer, "-%01X ", 16 - (songorder[editorInfo.esnum][c][p] & 0x0f));
-								if (color == CNORMAL) color = CCOMMAND;
+								if (color == CORDER_INST_FOREGROUND) color = CORDER_TRANS_REPEAT;
 							}
 							else
 							{
 								sprintf(textbuffer, "R%01X ", (songorder[editorInfo.esnum][c][p] + 1) & 0x0f);
-								if (color == CNORMAL) color = CCOMMAND;
+								if (color == CORDER_INST_FOREGROUND) color = CORDER_TRANS_REPEAT;
 							}
 						}
 					}
@@ -484,10 +488,10 @@ void displayOrderList(GTOBJECT *gt, int cc)
 				if (songorder[editorInfo.esnum][c][p] == LOOPSONG)
 				{
 					sprintf(textbuffer, "RST");
-					if (color == CNORMAL) color = CCOMMAND;
+					if (color == CORDER_INST_FOREGROUND) color = CORDER_TRANS_REPEAT;
 				}
 			}
-			printtext(45 + 20 + d * 3, 3 + c, getColor(color, 0), textbuffer);
+			printtext(45 + 20 + d * 3, 3 + c, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 			if (c == editorInfo.esmarkchn)
 			{
 				if (editorInfo.esmarkstart <= editorInfo.esmarkend)
@@ -649,9 +653,10 @@ void displayPattern(GTOBJECT *gt)
 
 		if (d == 0)
 		{
-			color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
-			printbyte(PATTERN_X, PATTERN_Y, color, 0xff);
-			printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 0xff);	// header sepearator 
+		//	color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
+			color = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
+			printbyte(PATTERN_X, PATTERN_Y, color, 32);
+			printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 32);	// header sepearator 
 		}
 	}
 
@@ -717,6 +722,7 @@ void displayPattern(GTOBJECT *gt)
 			sprintf(textbuffer, "LO BN HI  CUT:%02X  RES:%01X", getFilterCutoff(gt, c2), getFilterResonance(gt, c2));
 			printtext(PATTERN_X + 6 + c * 9, PATTERN_Y - 1, headerColor, textbuffer);
 
+			// Filter info
 			for (int i = 0;i < 2;i++)
 			{
 				printbyte(PATTERN_X + 6 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe0 + i);
@@ -967,8 +973,8 @@ void displayTransportBar(GTOBJECT *gt)
 
 	for (int i = 0;i < 59;i++)
 	{
-		printbyte(i, TRANSPORT_BAR_Y, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND), 0xbd);
-		printbyte(i, TRANSPORT_BAR_Y + 1, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND), 0xdd);
+		printbyte(i, TRANSPORT_BAR_Y, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BETWEEN_BUTTONS), 0xbd);
+		printbyte(i, TRANSPORT_BAR_Y + 1, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BETWEEN_BUTTONS), 0xdd);
 
 	}
 
@@ -978,7 +984,7 @@ void displayTransportBar(GTOBJECT *gt)
 	displayTransportBarSIDCount(4, TRANSPORT_BAR_Y);
 	displayTransportBarMasterVolume(8, TRANSPORT_BAR_Y);
 
-	int x = TRANSPORT_BAR_X-2;	// +1;
+	int x = TRANSPORT_BAR_X - 2;	// +1;
 	displayTransportBarOctave(x, TRANSPORT_BAR_Y);
 	x += 5;
 	displayTransportBarFollow(x, TRANSPORT_BAR_Y);
@@ -1046,7 +1052,7 @@ void displayTransportBar(GTOBJECT *gt)
 
 void displayTransportBarFastForward(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
 	for (int i = 0;i < 0x3;i++)
 	{
@@ -1057,7 +1063,7 @@ void displayTransportBarFastForward(int x, int y)
 
 void displayTransportBarRewind(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
 	for (int i = 0;i < 0x3;i++)
 	{
@@ -1074,7 +1080,7 @@ void displayTransportBarPolyChannels(int x, int y)
 		int yoffset = p / 2;
 		int xoffset = (p & 1) * 2;
 
-		int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+		int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 		if (transportPolySIDEnabled[p])
 		{
 			imageOffset = 0x19;
@@ -1090,7 +1096,7 @@ void displayTransportBarPolyChannels(int x, int y)
 
 void displayTransportBarKeyboard(int x, int y)
 {
-	int color = getColor(CTRANSPORT_BACKGROUND, CTRANSPORT_FOREGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_BACKGROUND, CTRANSPORT_FOREGROUND);
 	if (transportShowKeyboard)
 		color = getColor(CTRANSPORT_ENABLED, CTRANSPORT_FOREGROUND);
 
@@ -1106,7 +1112,7 @@ void displayTransportBarKeyboard(int x, int y)
 void displayTransportBarPlaying(GTOBJECT *gt, int x, int y)
 {
 	int imageOffset = 12;
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (gt->songinit == PLAY_PLAYING)
 		imageOffset = 22;
 
@@ -1118,9 +1124,9 @@ void displayTransportBarPlaying(GTOBJECT *gt, int x, int y)
 }
 void displayTransportBarRecord(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (recordmode)
-		color = getColor(CCOLOR_RED, CTRANSPORT_BACKGROUND);
+		color = getColor(CCOLOR_RED, CTRANSPORT_BUTTON_BACKGROUND);
 
 	for (int i = 0;i < 0x3;i++)
 	{
@@ -1132,7 +1138,7 @@ void displayTransportBarRecord(int x, int y)
 
 void displayTransportBarMasterVolume(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 21 + i);
@@ -1146,7 +1152,7 @@ void displayTransportBarMasterVolume(int x, int y)
 
 void displayTransportBarOctave(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 0xe6 + i);
@@ -1159,7 +1165,7 @@ void displayTransportBarOctave(int x, int y)
 
 void displayTransportBarDetune(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 0x9d + i);
@@ -1172,15 +1178,15 @@ void displayTransportBarDetune(int x, int y)
 
 void displayTransportBarMonoStereo(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
 	int b = 0x195;
 	if (monomode || maxSIDChannels == 3)
 	{
 		printbyte(x, y + 1, color, 0x20);
 		printbyte(x + 1, y + 1, color, 0x9c);
-		printbyte(x + 2, y + 1, color, 0x20);		
-		
+		printbyte(x + 2, y + 1, color, 0x20);
+
 	}
 	else
 	{
@@ -1193,18 +1199,18 @@ void displayTransportBarMonoStereo(int x, int y)
 	// Display MON or STE text
 	for (int i = 0;i < 3;i++)
 	{
-		printbyte(x+i, y, color, b);
+		printbyte(x + i, y, color, b);
 		b++;
 	}
 
-//	sprintf(textbuffer, "%.1f", detuneCent + 1);
-//	printtext(x + 0, y + 1, color, textbuffer);
+	//	sprintf(textbuffer, "%.1f", detuneCent + 1);
+	//	printtext(x + 0, y + 1, color, textbuffer);
 
 }
 
 void displayTransportBarSIDCount(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	printbyte(x, y, color, 0xbe);
 	printbyte(x + 1, y, color, 0xbf);
 	printbyte(x + 2, y, color, 0xde);
@@ -1220,7 +1226,7 @@ void displayTransportBarSIDCount(int x, int y)
 void displayTransportBarSkinning(int x, int y)
 {
 
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (editPaletteMode)
 		color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_ENABLED);
 	for (int i = 0;i < 0x3;i++)
@@ -1236,7 +1242,7 @@ void displayTransportBarSkinning(int x, int y)
 
 void displayTransportBarFollow(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (followplay)
 		color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_ENABLED);
 
@@ -1249,7 +1255,7 @@ void displayTransportBarFollow(int x, int y)
 
 void displayTransportBarLoopPattern(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BACKGROUND);
+	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (transportLoopPattern)
 		color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_ENABLED);
 
@@ -1403,7 +1409,7 @@ int getTableTitleColour(int c)
 		return getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);
 
 	if (editorInfo.editTableMode == c)
-		return getColor(0xe, CGENERAL_BACKGROUND);
+		return getColor(CCOLOR_EXCLAMATION, CGENERAL_BACKGROUND);
 
 	sprintf(textbuffer, "        ");
 	return getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);
@@ -1680,10 +1686,10 @@ void displayDetailedWaveTable(int cc)
 						sprintf(textbuffer, "+%02X", r2);
 						printtext(40 + 41, 15 + 3 + d, color, textbuffer);
 					}
-					printbg(40 + 41, 15 + 3 + d, getColor(0xe, CTABLE_UNUSED_BACKGROUND), 1);
+					printbg(40 + 41, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 				}
 				//				if (rhighlight >= 0)
-				printbg(40 + 30 + rhighlight, 15 + 3 + d, getColor(0xe, CTABLE_UNUSED_BACKGROUND), 1);
+				printbg(40 + 30 + rhighlight, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 			}
 			else
 			{
@@ -1701,7 +1707,7 @@ void displayDetailedWaveTable(int cc)
 
 		UIUnderline = 0;
 
-		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(0xe, CTABLE_UNUSED_BACKGROUND), 1);
+		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 
 
 		if (editorInfo.etmarknum == 0)
@@ -1903,7 +1909,7 @@ void displayDetailedFilterTable(int cc)
 			printtext(xpos + 8, 15 + 3 + d, color, "--");
 
 
-		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(0xe, CTABLE_UNUSED_BACKGROUND), 1);
+		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 
 		if (displayRightTable == 1)	// 1 = display Modulation speed (signed 8bit)
 		{
@@ -1928,7 +1934,7 @@ void displayDetailedFilterTable(int cc)
 				sprintf(textbuffer, "-%02X", r2);
 				printtext(xpos + 11, 15 + 3 + d, color, textbuffer);
 			}
-			printbg(xpos + 11, 15 + 3 + d, getColor(0xe, CTABLE_UNUSED_BACKGROUND), 1);
+			printbg(xpos + 11, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 		}
 		else if (displayRightTable == 2)
 		{
@@ -2111,7 +2117,7 @@ void displayDetailedPulseTable(int cc)
 			printtext(xpos + 8, 15 + 3 + d, color, " --");
 
 
-		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(0xe, CTABLE_UNUSED_BACKGROUND), 1);
+		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 
 
 		if (displayRightTable == 1)	// 1 = display Modulation speed (signed 8bit)
@@ -2146,7 +2152,7 @@ void displayDetailedPulseTable(int cc)
 			printtext(xpos + 12, 15 + 3 + d, color, " --");
 			UIUnderline = ut;
 		}
-		printbg(xpos + 12, 15 + 3 + d, getColor(0xe, 0), 1);
+		printbg(xpos + 12, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, 0), 1);
 
 		UIUnderline = 0;
 
@@ -2235,12 +2241,13 @@ void displayTable(int c)
 
 
 		if ((p == editorInfo.etpos) && (editorInfo.etnum == c))
-			color = CEDIT;
+			color = CORDER_INST_TABLE_EDITING;
 
 
 		sprintf(textbuffer, "%02X:%02X %02X", p + 1, ltable[c][p], rtable[c][p]);
 		printtext(40 + 20 + 10 * c, 15 + 3 + d, color, textbuffer);
 
+		UIUnderline = 0;
 		if (c < 3)
 		{
 			printtext(40 + 20 + (10 * (c + 1)) - 2, 15 + 3 + d, getColor(0, CTABLE_UNUSED_BACKGROUND), "  ");
@@ -2267,7 +2274,7 @@ void displayTable(int c)
 int getWaveforumColour(int bit, int value)
 {
 	int cOFF = getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND);
-	int cON = getColor(0xe, CTABLE_UNUSED_BACKGROUND);
+	int cON = getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND);
 
 	if (value & bit)
 		return cON;

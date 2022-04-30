@@ -97,7 +97,7 @@ char skinFilename[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.1.5";
+char *programname = "$VER: GTUltra V1.1.6";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -183,15 +183,46 @@ int main(int argc, char **argv)
 	configfile = fopen(skinFilename, "rb");		// rb read binary. Does file exist?
 	if (configfile)
 	{
-		fread(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
-		fclose(configfile);
+		fseek(configfile, 0, SEEK_END);
+		int size = ftell(configfile);
+		fseek(configfile, 0, SEEK_SET);
+		if (size == 384)
+		{
+			char *tempPalette = malloc(size);
+			fread(tempPalette, 384,1,configfile);
+			process32EntryPalette(4,32,tempPalette);
+			free(tempPalette);
+			fclose(configfile);
+		}
+		else
+		{
+			fread(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
+			fclose(configfile);
+		}
 	}
 	else
 	{
 		int handle = io_open("gtskins.bin");
 		if (handle == -1) return 0;
-		io_read(handle, &paletteRGB, 384);
-		io_close(handle);
+
+		int size = io_lseek(handle, 0, SEEK_END);
+		io_lseek(handle, 0, SEEK_SET);
+
+		if (size == 384)	// original 32 palette entry, 4 preset version (current new version = 64 palette entries & 16 presets)
+		{
+			char *tempPalette = malloc(size);
+			io_read(handle, tempPalette, 384);
+			io_close(handle);
+			process32EntryPalette(4,32,tempPalette);
+			free(tempPalette);
+		}
+		else
+		{
+			io_read(handle, &paletteRGB, size);
+			io_close(handle);
+		}
+
+
 	}
 
 	//	swapPalettes(1, 2);
@@ -480,7 +511,7 @@ int main(int argc, char **argv)
 
 	// Validate parameters
 
-	if (currentPalettePreset > 3)
+	if (currentPalettePreset >=MAX_PALETTE_PRESETS)
 		currentPalettePreset = 0;
 
 	if (maxSIDChannels != 3 && maxSIDChannels != 6 && maxSIDChannels != 9 && maxSIDChannels != 12)
@@ -2586,7 +2617,8 @@ void setTableColour(int instrumentTablePtr, int t, int startTableOffset, int end
 	{
 		if (highlightTableBuffer[j])
 		{
-			color &= 0xff;
+//			color &= 0xff;
+			color = CTABLE_SELECTED_INSTRUMENT_FOREGROUND;
 			color |= (CTABLE_SELECTED_INSTRUMENT_BACKGROUND << 8);
 		}
 		tableBackgroundColors[t][j] = color;

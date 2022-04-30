@@ -61,8 +61,8 @@
 
 #define PGUPDNREPEAT 8
 
-#define MAX_PALETTE_ENTRIES 32
-#define MAX_PALETTE_PRESETS 4
+#define MAX_PALETTE_ENTRIES 64
+#define MAX_PALETTE_PRESETS 16
 
 #ifndef GOATTRK2_C
 extern int menu;
