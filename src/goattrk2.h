@@ -61,10 +61,13 @@
 
 #define PGUPDNREPEAT 8
 
-#define MAX_PALETTE_ENTRIES 64
+#define MAX_PALETTE_ENTRIES 0x100-FIRST_UI_COLOR-1 //	255 - 32 for first valid palette (FIRST_UI_COLOR). 255 = WHITE for cursor
+#define MAX_PALETTE_LOAD_ENTRIES 64
 #define MAX_PALETTE_PRESETS 16
 
 #ifndef GOATTRK2_C
+
+extern char appFileName[MAX_PATHNAME];
 extern int menu;
 //extern int editmode;
 extern int recordmode;
@@ -121,8 +124,12 @@ extern unsigned char datafile[];
 extern char charsetFilename[MAX_PATHNAME];
 extern char skinFilename[MAX_PATHNAME];
 extern int jdebug[16];
+extern char palettefilter[MAX_FILENAME];
+extern char palettepath[MAX_FILENAME];
+extern char paletteFileName[MAX_FILENAME];
 
 //unsigned short paletteUIDisplay[MAX_PALETTE_ENTRIES];
+extern unsigned char paletteLoadRGB[MAX_PALETTE_PRESETS][3][MAX_PALETTE_LOAD_ENTRIES];
 
 extern float masterVolume;
 extern unsigned int lmanMode;
@@ -150,6 +157,7 @@ extern WAVEFORM_INFO waveformDisplayInfo;
 
 
 extern int selectedMIDIPort;
+extern unsigned int enableAntiAlias;
 
 
 extern float detuneCent;

@@ -27,6 +27,7 @@ void initpaths(void)
   memset(packedpath, 0, sizeof packedpath);
   strcpy(songfilter, "*.sng");
   strcpy(instrfilter, "*.ins");
+  strcpy(palettefilter, "*.gtp");
 
   getcwd(songpath, MAX_PATHNAME);
   strcpy(instrpath, songpath);

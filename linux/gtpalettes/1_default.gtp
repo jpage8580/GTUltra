@@ -1,0 +1,53 @@
+;GTUltra Palette: 5_default.gtp
+
+PALETTEDATA:
+00:A0,A0,A0	Pattern: Background 1
+01:A0,A0,A0	Pattern: Foreground 1
+02:C0,C0,C0	Pattern: Background 2
+03:C0,C0,C0	Pattern: Foreground 2
+04:00,D0,A0	Pattern: Highlight Background
+05:70,70,70	Pattern: Highlight Foreground
+06:00,00,00	Pattern: Note Foreground
+07:70,40,A0	Pattern: Command Foreground
+08:60,60,60	Pattern: Vertical Line
+09:00,F0,00	Pattern: Playing Line Background
+0A:00,F0,00	Pattern: Playing Line Foreground
+0B:10,30,40	Pattern: Unused Background
+0C:60,60,60	Pattern: Unused Foreground
+0D:00,F0,F0	Select: Background
+0E:00,00,30	Select: Foreground
+0F:00,00,00	Table: Background 1
+10:40,A0,B0	Table: Foreground 1
+11:00,00,00	Table: Background 2
+12:E0,40,A0	Table: Foreground 2
+13:20,20,20	Table: Unused Background
+14:80,80,80	Table: Unused Foreground
+15:F0,F0,F0	Table: Current Instr. Foreground
+16:40,40,E0	Table: Current Instr. Background
+17:40,50,60	General: Background
+18:D0,D0,D0	General: Title
+19:00,D0,40	General: Info
+1A:C0,C0,C0	General: Highlight
+1B:80,80,80	TransportBar: Button Background
+1C:20,20,30	TransportBar: Background
+1D:90,C0,80	TransportBar: Enabled
+1E:D0,00,00	RED (record / Filter Status)
+1F:F0,F0,00	Pattern Loop Marker Background
+20:00,00,00	Pattern Loop Marker Foreground
+21:00,70,70	Pattern: Instrument Foreground
+22:A0,A0,A0	Pattern: First Background 1
+23:A0,A0,A0	Pattern: First Foreground 1
+24:C0,C0,C0	Pattern: First Background 2
+25:C0,C0,C0	Pattern: First Foreground 2
+26:80,30,30	Pattern: Index Highlight
+27:00,00,00	TransportBar: Background2
+28:30,50,70	Top Bar: Background
+29:30,50,70	TransportBar: Between Buttons
+2A:E0,C0,30	Exclamation
+2B:10,20,30	Order/Inst: Background
+2C:B0,B0,B0	Order/Inst: Foreground
+2D:E0,C0,30	Order/Inst/Table: Edit Foreground
+2E:30,E0,D0	Orderlist: Transpose/Repeat
+2F:F0,F0,F0	Top Bar: Foreground
+30:00,00,00	Top Bar: Foreground OFF
+31:00,00,00	TransportBar: Button Foreground

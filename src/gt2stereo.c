@@ -43,6 +43,8 @@ int paletteChanged = 0;
 int leftKeyTicksDelta = 0;
 int leftKeyTicks = 0;
 
+char appFileName[MAX_PATHNAME];
+
 unsigned keypreset = KEY_TRACKER;
 unsigned playerversion = 0;
 int fileformat = FORMAT_PRG;
@@ -78,6 +80,7 @@ int checkUndoFlag = 0;
 unsigned int lmanMode = 1;
 unsigned int editPaletteMode = 0;
 unsigned int enablekeyrepeat = 0;
+unsigned int enableAntiAlias = 1;
 
 float masterVolume = 1.0f;
 float detuneCent = 0;
@@ -90,6 +93,11 @@ char songfilter[MAX_FILENAME];
 char songpath[MAX_PATHNAME];
 char instrfilename[MAX_FILENAME];
 char instrfilter[MAX_FILENAME];
+char palettefilter[MAX_FILENAME];
+char palettepath[MAX_FILENAME];
+char paletteFileName[MAX_FILENAME] = { "palette_" };
+
+
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
@@ -97,7 +105,7 @@ char skinFilename[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.1.6";
+char *programname = "$VER: GTUltra V1.1.7";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -127,7 +135,9 @@ extern unsigned char datafile[];
 int currentPalettePreset = 0;
 
 unsigned char backupPaletteSong[MAX_CHN][MAX_SONGLEN + 2];
+
 unsigned char paletteRGB[MAX_PALETTE_PRESETS][3][MAX_PALETTE_ENTRIES];
+unsigned char paletteLoadRGB[MAX_PALETTE_PRESETS][3][MAX_PALETTE_LOAD_ENTRIES];
 
 unsigned short tableBackgroundColors[MAX_TABLES][MAX_TABLELEN];
 unsigned char paletteR[256];
@@ -146,7 +156,7 @@ WAVEFORM_INFO waveformDisplayInfo;
 
 int main(int argc, char **argv)
 {
-	char filename[MAX_PATHNAME];
+
 
 	//	char palettename[MAX_PATHNAME];
 
@@ -165,72 +175,50 @@ int main(int argc, char **argv)
 
 	// Load configuration
 #ifdef __WIN32__
-	GetModuleFileName(NULL, filename, MAX_PATHNAME);
-	filename[strlen(filename) - 3] = 'c';
-	filename[strlen(filename) - 2] = 'f';
-	filename[strlen(filename) - 1] = 'g';
+	GetModuleFileName(NULL, appFileName, MAX_PATHNAME);
+	appFileName[strlen(appFileName) - 3] = 'c';
+	appFileName[strlen(appFileName) - 2] = 'f';
+	appFileName[strlen(appFileName) - 1] = 'g';
 #elif __amigaos__
-	strcpy(filename, "PROGDIR:gtultra.cfg");
+	strcpy(appFileName, "PROGDIR:gtultra.cfg");
 #else
-	strcpy(filename, getenv("HOME"));
-	strcat(filename, "/.goattrk/gtultra.cfg");
+	strcpy(appFileName, getenv("HOME"));
+	strcat(appFileName, "/.goattrk/gtultra.cfg");
 #endif
 
-	createFilename(filename, skinFilename, "gtskins.bin");
-	createFilename(filename, charsetFilename, "charset.bin");
+	createFilename(appFileName, skinFilename, "jpdf123abc");	//"gtskins.bin");
+	createFilename(appFileName, charsetFilename, "charset.bin");
 
-	// load palette
-	configfile = fopen(skinFilename, "rb");		// rb read binary. Does file exist?
-	if (configfile)
+	// load the default palette from the WAD file and then save again to disk...Nasty. Sorry.
+	int handle = io_open("default.gtp");
+	if (handle == -1) return 0;
+
+	int size = io_lseek(handle, 0, SEEK_END);
+	io_lseek(handle, 0, SEEK_SET);
+	char *mem = malloc(size);
+	io_read(handle, mem, size);
+	io_close(handle);
+
+	FILE *defaultPaletteHandle = NULL;
+	defaultPaletteHandle = fopen(skinFilename, "wb");
+	if (defaultPaletteHandle)
+		fwrite(mem, size, 1, defaultPaletteHandle);
+	free(mem);
+	fclose(defaultPaletteHandle);
+	
+	// First, load the default palette and fill all 16 slots with it
+	currentLoadedPresetIndex = 0;
+	for (int i = 0;i < 16;i++)
 	{
-		fseek(configfile, 0, SEEK_END);
-		int size = ftell(configfile);
-		fseek(configfile, 0, SEEK_SET);
-		if (size == 384)
-		{
-			char *tempPalette = malloc(size);
-			fread(tempPalette, 384,1,configfile);
-			process32EntryPalette(4,32,tempPalette);
-			free(tempPalette);
-			fclose(configfile);
-		}
-		else
-		{
-			fread(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
-			fclose(configfile);
-		}
+		loadPalette(skinFilename);
 	}
-	else
-	{
-		int handle = io_open("gtskins.bin");
-		if (handle == -1) return 0;
+	remove(skinFilename);
 
-		int size = io_lseek(handle, 0, SEEK_END);
-		io_lseek(handle, 0, SEEK_SET);
+	// Now load all palettes from the gtpalettes folder
+	currentLoadedPresetIndex = 0;
+	loadPalettes();
 
-		if (size == 384)	// original 32 palette entry, 4 preset version (current new version = 64 palette entries & 16 presets)
-		{
-			char *tempPalette = malloc(size);
-			io_read(handle, tempPalette, 384);
-			io_close(handle);
-			process32EntryPalette(4,32,tempPalette);
-			free(tempPalette);
-		}
-		else
-		{
-			io_read(handle, &paletteRGB, size);
-			io_close(handle);
-		}
-
-
-	}
-
-	//	swapPalettes(1, 2);
-	//	swapPalettes(1, 0);
-
-
-
-	configfile = fopen(filename, "rt");
+	configfile = fopen(appFileName, "rt");
 	if (configfile)
 	{
 		getparam(configfile, &b);
@@ -279,6 +267,7 @@ int main(int argc, char **argv)
 		getfloatparam(configfile, &detuneCent);
 		getparam(configfile, &enablekeyrepeat);
 		getparam(configfile, &selectedMIDIPort);
+		getparam(configfile, &enableAntiAlias);
 		fclose(configfile);
 	}
 
@@ -339,8 +328,9 @@ int main(int argc, char **argv)
 				printtext(0, y++, getColor(15, 0), "-pxx set UI Skin (0-3) DEFAULT=0");
 				printtext(0, y++, getColor(15, 0), "-vxx Master Volume (floating point) DEFAULT=1(large values may cause clipping / distortion)");
 				printtext(0, y++, getColor(15, 0), "-dxxx Detune Pitchtable (-1 > 1 0 = no detune. -1 = -1 semitone 1 = +1 semitone");
-				printtext(0, y++, getColor(15, 0), "-kx   Enable key repeat (0=only on selected keys. 1= on everything (DEFAULT 0)");
-				printtext(0, y++, getColor(15, 0), "-mxx  MIDI Port (DEFAULT 0)");
+				printtext(0, y++, getColor(15, 0), "-kx  Enable key repeat (0=only on selected keys. 1= on everything (DEFAULT 0)");
+				printtext(0, y++, getColor(15, 0), "-mxx MIDI Port (DEFAULT 0)");
+				printtext(0, y++, getColor(15, 0), "-ax  enable antialiasing (0=off. 1 = on. DEFAULT=1)");
 				printtext(0, y++, getColor(15, 0), "-?   Show this info again");
 				printtext(0, y++, getColor(15, 0), "-??  Standalone online help window");
 				waitkeynoupdate();
@@ -473,6 +463,9 @@ int main(int argc, char **argv)
 
 			case 'm':
 				sscanf(&argv[c][2], "%d", &selectedMIDIPort);
+
+			case'a':
+				sscanf(&argv[c][2], "%d", &enableAntiAlias);
 			}
 		}
 		else
@@ -511,7 +504,7 @@ int main(int argc, char **argv)
 
 	// Validate parameters
 
-	if (currentPalettePreset >=MAX_PALETTE_PRESETS)
+	if (currentPalettePreset >= MAX_PALETTE_PRESETS)
 		currentPalettePreset = 0;
 
 	if (maxSIDChannels != 3 && maxSIDChannels != 6 && maxSIDChannels != 9 && maxSIDChannels != 12)
@@ -643,6 +636,9 @@ int main(int argc, char **argv)
 
 #endif
 
+		
+
+
 	playUntilEnd();	// Get length of time of loaded or empty song
 
 	// Start editor mainloop
@@ -655,6 +651,7 @@ int main(int argc, char **argv)
 
 		waitkeymouse(&gtObject);
 		docommand();
+
 
 		//	sprintf(textbuffer, "jpdebug %d", jdebug[0]);	//, specialnotenames[0], specialnotenames[1]);
 		//	printtext(70, 36, 0xe, textbuffer);
@@ -691,15 +688,15 @@ int main(int argc, char **argv)
 		// Save configuration
 #ifndef __WIN32__
 #ifdef __amigaos__
-	strcpy(filename, "PROGDIR:goattrk2.cfg");
+	strcpy(appFileName, "PROGDIR:goattrk2.cfg");
 #else
-	strcpy(filename, getenv("HOME"));
-	strcat(filename, "/.goattrk");
-	mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
-	strcat(filename, "/gtultra.cfg");
+	strcpy(appFileName, getenv("HOME"));
+	strcat(appFileName, "/.goattrk");
+	mkdir(appFileName, S_IRUSR | S_IWUSR | S_IXUSR);
+	strcat(appFileName, "/gtultra.cfg");
 #endif
 #endif
-	configfile = fopen(filename, "wt");
+	configfile = fopen(appFileName, "wt");
 	if (configfile)
 	{
 		fprintf(configfile, ";------------------------------------------------------------------------------\n"
@@ -752,7 +749,8 @@ int main(int argc, char **argv)
 			";Master Volume scaler (1 = normal volume. 2 = twice as loud 0.5 = half volume..)\n%f\n\n"
 			";Detune Cent (0-2... 1 = no detune. 0 =-100 cents. 2=+100 cents)\n%f\n\n"
 			";Enable Key repeat (0-1... 0=only on specific keys. 1=on all keys)\n%d\n\n"
-			";MIDI Port\n%d\n\n",
+			";MIDI Port\n%d\n\n"
+			";Enable Antialias\n%d\n\n",
 			b,
 			mr,
 			hardsid,
@@ -798,7 +796,9 @@ int main(int argc, char **argv)
 			masterVolume,
 			detuneCent,
 			enablekeyrepeat,
-			selectedMIDIPort);
+			selectedMIDIPort,
+			enableAntiAlias
+		);
 
 		fclose(configfile);
 	}
@@ -878,6 +878,12 @@ void waitkeymouse(GTOBJECT *gt)
 		Allow MIDI Jamming if not editing PATTERN (so also enable if we've got cursor on other areas)
 		*/
 		gMIDINote = -1;
+
+//		sprintf(textbuffer, "%x,%x,%x", jdebug[1], jdebug[2], jdebug[3]);
+//		printtext(70, 36, 0xe, textbuffer);
+
+//		sprintf(textbuffer, "hello: %s", paletteStringBuffer);	// paletteFolderEntry->d_name);
+//		printtext(5, 37, 0xe, textbuffer);
 
 		if (!jdebugPlaying)
 		{
@@ -1315,7 +1321,6 @@ void mousecommands(GTOBJECT *gt)
 			int m = mousebDoubleClick;
 			int s = shiftOrCtrlPressed;
 
-
 			if (((mouseheld > HOLDDELAY) || (s != 0) && !editPaletteMode))
 			{
 				editorInfo.eschn = newchn;
@@ -1330,7 +1335,6 @@ void mousecommands(GTOBJECT *gt)
 				editorInfo.eschn = newchn;
 				editorInfo.eseditpos = newpos;
 				editorInfo.escolumn = newcolumn;
-
 				setMasterLoopChannel(gt);
 				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
 
@@ -1715,7 +1719,17 @@ void generalcommands(GTOBJECT *gt)
 	case KEY_F3:
 		if (editPaletteMode)
 			break;
-		playFromCurrentPosition(gt);
+
+		if (editorInfo.editmode == EDIT_ORDERLIST)	// 1.1.7: Fast select / playback when in OrderList. Just press F3 to play from the cursor pos
+		{
+
+			orderSelectPatternsFromSelected(gt);
+			orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
+		}
+		else
+		{
+			playFromCurrentPosition(gt);
+		}
 		break;
 
 	case KEY_F4:
@@ -2452,23 +2466,28 @@ void setGFXPaletteRGBFromPaletteRGB(int presetIndex, int paletteIndex)
 	int g = paletteRGB[presetIndex][1][paletteIndex];
 	int b = paletteRGB[presetIndex][2][paletteIndex];
 
-	int r1 = r & 0xf0;
-	int g1 = g & 0xf0;
-	int b1 = b & 0xf0;
-	int r2 = (r << 4) & 0xf0;
-	int g2 = (g << 4) & 0xf0;
-	int b2 = (b << 4) & 0xf0;
+	gfx_setPaletteRGB(FIRST_UI_COLOR + paletteIndex, r, g, b);
+	paletteR[FIRST_UI_COLOR + paletteIndex] = r;
+	paletteG[FIRST_UI_COLOR + paletteIndex] = g;
+	paletteB[FIRST_UI_COLOR + paletteIndex] = b;
 
-	gfx_setPaletteRGB(FIRST_UI_COLOR + (paletteIndex * 2), r1, g1, b1);
-	gfx_setPaletteRGB(FIRST_UI_COLOR + (paletteIndex * 2) + 1, r2, g2, b2);
+	//	int r1 = r & 0xf0;
+	//	int g1 = g & 0xf0;
+	//	int b1 = b & 0xf0;
+	//	int r2 = (r << 4) & 0xf0;
+	//	int g2 = (g << 4) & 0xf0;
+	//	int b2 = (b << 4) & 0xf0;
 
-	paletteR[FIRST_UI_COLOR + (paletteIndex * 2)] = r1;
-	paletteG[FIRST_UI_COLOR + (paletteIndex * 2)] = g1;
-	paletteB[FIRST_UI_COLOR + (paletteIndex * 2)] = b1;
+//	gfx_setPaletteRGB(FIRST_UI_COLOR + (paletteIndex * 2), r1, g1, b1);
+//	gfx_setPaletteRGB(FIRST_UI_COLOR + (paletteIndex * 2) + 1, r2, g2, b2);
 
-	paletteR[FIRST_UI_COLOR + (paletteIndex * 2) + 1] = r2;
-	paletteG[FIRST_UI_COLOR + (paletteIndex * 2) + 1] = g2;
-	paletteB[FIRST_UI_COLOR + (paletteIndex * 2) + 1] = b2;
+//	paletteR[FIRST_UI_COLOR + (paletteIndex * 2)] = r1;
+//	paletteG[FIRST_UI_COLOR + (paletteIndex * 2)] = g1;
+//	paletteB[FIRST_UI_COLOR + (paletteIndex * 2)] = b1;
+
+//	paletteR[FIRST_UI_COLOR + (paletteIndex * 2) + 1] = r2;
+//	paletteG[FIRST_UI_COLOR + (paletteIndex * 2) + 1] = g2;
+//	paletteB[FIRST_UI_COLOR + (paletteIndex * 2) + 1] = b2;
 }
 
 
@@ -2617,7 +2636,7 @@ void setTableColour(int instrumentTablePtr, int t, int startTableOffset, int end
 	{
 		if (highlightTableBuffer[j])
 		{
-//			color &= 0xff;
+			//			color &= 0xff;
 			color = CTABLE_SELECTED_INSTRUMENT_FOREGROUND;
 			color |= (CTABLE_SELECTED_INSTRUMENT_BACKGROUND << 8);
 		}
@@ -2969,6 +2988,8 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 
 }
 
+int jcc = 0;
+
 void nextSongPos(GTOBJECT *gt)
 {
 	int songNum = getActualSongNumber(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);
@@ -2992,7 +3013,11 @@ void nextSongPos(GTOBJECT *gt)
 	else
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr < songlen[songNum][c3])
+		{
+			sprintf(textbuffer, "cnt: %d\n", jcc++);
+			printtext(70, 36, 0xe, textbuffer);
 			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr, gt->masterLoopChannel, 0);
+		}
 	}
 }
 

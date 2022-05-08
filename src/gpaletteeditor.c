@@ -6,11 +6,19 @@
 
 #include "goattrk2.h"
 #include "gpaletteeditor.h"
+#include <stdio.h>
+#include <dirent.h>
 
 
 char *RGBText[3] = { "R","G","B" };
 int paletteScrollOffset = 0;
 
+/*
+TO DO:
+1. DEFAULT all 16 palettes to a default palette stored in the .exe
+2. Remove gtskin loading
+3. Add older palettes (original GT, SIDTracker..)
+*/
 
 char* paletteText[] = {
 	"Pattern: Background 1",
@@ -53,14 +61,16 @@ char* paletteText[] = {
 	"Pattern: First Foreground 2",
 	"Pattern: Index Highlight",
 	"TransportBar: Background2",
-	"Top Bar",
+	"Top Bar: Background",
 	"TransportBar: Between Buttons",
 	"Exclamation",
 	"Order/Inst: Background",
 	"Order/Inst: Foreground",
 	"Order/Inst/Table: Edit Foreground",
 	"Orderlist: Transpose/Repeat",
-	"hello"
+	"Top Bar: Foreground",
+	"Top Bar: Foreground OFF",
+	"TransportBar: Button Foreground"
 };
 
 
@@ -68,6 +78,9 @@ int currentRGB[3];
 int copyRGB[3];
 char copiedPalette[3][MAX_PALETTE_ENTRIES];
 int copyFlag = 0;
+struct dirent *paletteFolderEntry;
+
+char *paletteNames[16];
 
 
 void copyRGBInfo()
@@ -91,9 +104,8 @@ void handlePaste(int *cx, GTOBJECT *gt)
 	if (copyFlag == 0)
 		return;
 
-	int jx = *cx;
-	int x = jx / 2;
-	jx &= 1;
+//	int jx = *cx;
+	int x = *cx / 2;
 	x += paletteScrollOffset;
 
 	if (copyFlag == 1)
@@ -101,19 +113,7 @@ void handlePaste(int *cx, GTOBJECT *gt)
 
 		for (int y = 0;y < 3;y++)
 		{
-			switch (jx)
-			{
-			case 0:
-
-				paletteRGB[currentPalettePreset][y][x] &= 0x0f;
-				paletteRGB[currentPalettePreset][y][x] |= copyRGB[y] << 4;
-				break;
-
-			case 1:
-				paletteRGB[currentPalettePreset][y][x] &= 0xf0;
-				paletteRGB[currentPalettePreset][y][x] |= copyRGB[y];
-				break;
-			}
+			paletteRGB[currentPalettePreset][y][x] = copyRGB[y];
 		}
 	}
 	else
@@ -138,30 +138,30 @@ void handlePaste(int *cx, GTOBJECT *gt)
 
 void rememberCurrentRGB(int *cx)
 {
-	int jx = *cx;
-	int x = jx / 2;
-	jx &= 1;
+//	int jx = *cx;
+	int x = *cx / 2;
+	//jx &= 1;
 	x += paletteScrollOffset;
 
 	for (int i = 0;i < 3;i++)
 	{
-		switch (jx)
-		{
-		case 0:
-			currentRGB[i] = (paletteRGB[currentPalettePreset][i][x] >> 4) & 0xf;
-			break;
-		case 1:
-			currentRGB[i] = paletteRGB[currentPalettePreset][i][x] & 0xf;
-			break;
-		}
+		//	switch (jx)
+		//	{
+		//	case 0:
+		currentRGB[i] = (paletteRGB[currentPalettePreset][i][x]);	// >> 4) & 0xf;
+//		break;
+//	case 1:
+//		currentRGB[i] = paletteRGB[currentPalettePreset][i][x]);	// &0xf;
+//		break;
+//		}
 	}
 }
 
 int paletteEdit(int *cx, int *cy, GTOBJECT *gt)
 {
-	int jx = *cx;
-	int x = jx / 2;
-	jx &= 1;
+	int jx = *cx & 1;
+	int x = *cx / 2;
+//	jx &= 1;
 	x += paletteScrollOffset;
 	int y = *cy;
 
@@ -222,7 +222,7 @@ void changePalettePreset(int change, GTOBJECT *gt)
 	}
 }
 
-void savePalette()
+void quickSavePalette()
 {
 	FILE *configfile;
 
@@ -262,7 +262,8 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 			cursorflash &= 3;
 		}
 
-		sprintf(textbuffer, "%d %s", FIRST_UI_COLOR + cx + (paletteScrollOffset * 2), paletteText[cx + (paletteScrollOffset * 2)]);
+		// Display Info
+		sprintf(textbuffer, "%d %s", FIRST_UI_COLOR + (cx / 2) + (paletteScrollOffset * 1), paletteText[(cx / 2) + (paletteScrollOffset * 1)]);
 
 		printbyterow(6, TRANSPORT_BAR_Y + 2, getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND), 32, 40);
 		printtext(6, TRANSPORT_BAR_Y + 2, getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND), textbuffer);
@@ -282,9 +283,9 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 
 		int boxColor = 0xe;
 		int boxWidth = 39;
-		int boxHeight = 8;
+		int boxHeight = 9;
 		int boxX = 60;
-		int boxY = 2;
+		int boxY = 1;
 
 
 		if ((mouseb) && (!prevmouseb))
@@ -294,7 +295,7 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 		}
 		if (mouseb)
 		{
-			if ((mousey == boxY + 1) && (mousex < (boxX + 2 + 11)) && (mousex >= (boxX + 2 + 8)))
+			if ((mousey == boxY + 2) && (mousex < (boxX + 2 + 11)) && (mousex >= (boxX + 2 + 8)))
 			{
 				if (mouseb & MOUSEB_LEFT && (!prevmouseb))
 					changePalettePreset(1, gt);
@@ -302,21 +303,25 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 					changePalettePreset(-1, gt);
 				rememberCurrentRGB(&cx);
 			}
-			else if ((mousey == boxY + 1) && (mousex <= (boxX + 18)) && (mousex >= (boxX + 15)))
+			else if ((mousey == boxY + 2) && (mousex <= (boxX + 18)) && (mousex >= (boxX + 15)))
 			{
 				if (!prevmouseb)
-					savePalette();
+				{
+					savePalette(gt);
+					rawkey = 0;	// Stops ENTER / ESC key from quitting palette view too
+//					quickSavePalette();
+				}
 			}
-			else if ((mousey == boxY + 2) && (mousex >= (boxX + 18)) && (mousex <= (boxX + 22)))
+			else if ((mousey == boxY + 3) && (mousex >= (boxX + 18)) && (mousex <= (boxX + 22)))
 			{
-				handlePaste(&cx,gt);
+				handlePaste(&cx, gt);
 				rememberCurrentRGB(&cx);
 			}
-			else if ((mousey == boxY + 1) && (mousex <= (boxX + 37)) && (mousex >= (boxX + 29)))
+			else if ((mousey == boxY + 2) && (mousex <= (boxX + 37)) && (mousex >= (boxX + 29)))
 			{
 				copyRGBInfo();
 			}
-			else if ((mousey == boxY + 1) && (mousex <= (boxX + 27)) && (mousex >= (boxX + 20)))
+			else if ((mousey == boxY + 2) && (mousex <= (boxX + 27)) && (mousex >= (boxX + 20)))
 			{
 				for (int i = 0;i < MAX_PALETTE_ENTRIES;i++)
 				{
@@ -336,6 +341,13 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 			}
 		}
 
+	//	int jx = cx;
+		int x = cx / 2;
+		//		jx &= 1;
+		x += paletteScrollOffset;
+
+		//		jdebug[1] = x;
+
 		switch (rawkey)
 		{
 		case KEY_ESC:
@@ -349,7 +361,7 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 		case KEY_S:
 			if (ctrlpressed)
 			{
-				savePalette();
+				quickSavePalette();
 			}
 			break;
 
@@ -358,12 +370,14 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 				cy--;
 			break;
 		case KEY_DOWN:
-			if (cy < 2)			
+			if (cy < 2)
 				cy++;
 			break;
 
 		case KEY_RIGHT:
-			if ((cx + (paletteScrollOffset * 2) < maxPaletteEntries - 1))
+
+
+			if (x < maxPaletteEntries - 1)
 			{
 				cx++;
 				if (cx > (11 * 2) - 1)
@@ -376,7 +390,7 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 			break;
 
 		case KEY_LEFT:
-			if (cx + (paletteScrollOffset * 2))
+			if (cx + (paletteScrollOffset * 1))
 			{
 				cx--;
 				if (cx < 0)
@@ -408,14 +422,23 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 
 		drawbox(boxX, boxY, boxColor, boxWidth, boxHeight);
 
-		sprintf(textbuffer, "Palette:%d/%d", currentPalettePreset,(MAX_PALETTE_PRESETS-1));
+		sprintf(textbuffer, "Palette:%d/%d", currentPalettePreset, (MAX_PALETTE_PRESETS - 1));
+		printtext(boxX + 2, boxY + 2, getColor(boxColor, 0), textbuffer);
+
+		if (paletteNames[currentPalettePreset] != NULL)
+		{
+			sprintf(textbuffer, "%s", paletteNames[currentPalettePreset]);
+		}
+		else
+			sprintf(textbuffer, "<Undefined>");
+
 		printtext(boxX + 2, boxY + 1, getColor(boxColor, 0), textbuffer);
 
-		int colorOffset = (paletteScrollOffset * 2);
+		int colorOffset = (paletteScrollOffset * 1);
 		for (int y = 0;y < 3;y++)
 		{
 			sprintf(textbuffer, "%s", RGBText[y]);
-			printtext(boxX + 2, boxY + 3 + y, getColor(boxColor, 0), textbuffer);
+			printtext(boxX + 2, boxY + 4 + y, getColor(boxColor, 0), textbuffer);
 
 			for (int x = 0;x < 11;x++)
 			{
@@ -424,24 +447,24 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 
 
 				sprintf(textbuffer, "%02X ", paletteRGB[currentPalettePreset][y][p]);
-				printtext(boxX + 4 + (x * 3), boxY + 3 + y, getColor(boxColor, 0), textbuffer);
+				printtext(boxX + 4 + (x * 3), boxY + 4 + y, getColor(boxColor, 0), textbuffer);
 				if (y == 0)
 				{
-					printtext(boxX + 4 + (x * 3), boxY + 3 + 3, getColor(0, colorOffset + FIRST_UI_COLOR), " ");
-					printtext(boxX + 5 + (x * 3), boxY + 3 + 3, getColor(0, colorOffset + 1 + FIRST_UI_COLOR), " ");
-					colorOffset += 2;
+					printtext(boxX + 4 + (x * 3), boxY + 4 + 3, getColor(0, colorOffset + FIRST_UI_COLOR), "  ");
+					//					printtext(boxX + 5 + (x * 3), boxY + 3 + 3, getColor(0, colorOffset + 1 + FIRST_UI_COLOR), " ");
+					colorOffset += 1;
 				}
 
 			}
 		}
 		int cursorX = (cx / 2) * 3 + (cx & 1);
-		printbg(boxX + 4 + cursorX, boxY + 3 + cy, cc, 1);
+		printbg(boxX + 4 + cursorX, boxY + 4 + cy, cc, 1);
 
-		printtext(boxX + 15, boxY + 1, getColor(0, boxColor), "SAVE");
-		printtext(boxX + 20, boxY + 1, getColor(0, boxColor), "COPY ALL");
-		printtext(boxX + 29, boxY + 1, getColor(0, boxColor), "COPY RGB");
+		printtext(boxX + 15, boxY + 2, getColor(0, boxColor), "SAVE");
+		printtext(boxX + 20, boxY + 2, getColor(0, boxColor), "COPY ALL");
+		printtext(boxX + 29, boxY + 2, getColor(0, boxColor), "COPY RGB");
 
-		printtext(boxX + 18, boxY + 2, getColor(0, boxColor), "PASTE");
+		printtext(boxX + 18, boxY + 3, getColor(0, boxColor), "PASTE");
 
 		fliptoscreen();
 
@@ -457,12 +480,236 @@ void process32EntryPalette(int maxPresets, int maxPaletteEntries, char* tempPale
 		{
 			for (int paletteIndex = 0;paletteIndex < maxPaletteEntries;paletteIndex++)
 			{
-				for (int i = 0;i < (MAX_PALETTE_PRESETS/maxPresets);i++)	// duplicate first x skins y times, to fill all presets
+				for (int i = 0;i < (MAX_PALETTE_PRESETS / maxPresets);i++)	// duplicate first x skins y times, to fill all presets
 				{
-	//				paletteRGB[presetIndex + (i * 4)][rgb][paletteIndex] = *tempPalette;
+					paletteLoadRGB[presetIndex + (i * 4)][rgb][paletteIndex] = *tempPalette;
 				}
 				tempPalette++;
 			}
 		}
 	}
+}
+
+void convert4BitPaletteTo8Bit()
+{
+	//	return;
+
+	for (int presetIndex = 0;presetIndex < MAX_PALETTE_PRESETS;presetIndex++)
+	{
+		for (int rgb = 0;rgb < 3;rgb++)
+		{
+			int c = 0;
+			for (int paletteIndex = 0;paletteIndex < MAX_PALETTE_LOAD_ENTRIES;paletteIndex++)
+			{
+				int colr = paletteLoadRGB[presetIndex][rgb][paletteIndex];	// colr = 2 nybbles of 4bit color.			
+
+				paletteRGB[presetIndex][rgb][c] = colr & 0xf0;	// convert to 2* 8bit values
+				c++;
+				paletteRGB[presetIndex][rgb][c] = (colr & 0xf) << 4;
+				c++;
+
+			}
+		}
+	}
+}
+
+
+
+int savePalette(GTOBJECT *gt)
+{
+	int done;
+	int c;
+	char ident[] = { 'G', 'T', 'P', 'A' };
+	FILE *handle;
+
+
+
+	if (fileselector(paletteFileName, palettepath, palettefilter, "SAVE PALETTE", 3, gt, 12))
+	{
+		//		done = saveinstrument();
+
+		if (strlen(paletteFileName) < MAX_FILENAME - 6)
+		{
+			int extfound = 0;
+			for (c = strlen(paletteFileName) - 1; c >= 0; c--)
+			{
+				if (paletteFileName[c] == '.')
+					extfound = 1;
+			}
+			if (!extfound)
+				strcat(paletteFileName, ".gtp");
+		}
+
+		handle = fopen(paletteFileName, "wt");
+		if (handle)
+		{
+			fprintf(handle, ";GTUltra Palette: %s\n\nPALETTEDATA:\n", paletteFileName);
+
+			int size = getPaletteTextArraySize();
+			//		size--;	// remove "hello"
+			for (int i = 0;i < size;i++)
+			{
+				int c = i + FIRST_UI_COLOR;
+				fprintf(handle, "%02X:%02X,%02X,%02X\t%s\n", i, paletteR[c], paletteG[c], paletteB[c], paletteText[i]);
+			}
+
+			fclose(handle);
+			win_quitted = 0;
+			return 1;
+		}
+	}
+	win_quitted = 0;
+	return 0;
+}
+
+
+char paletteFile[256];
+char paletteStringBuffer[MAX_PATHNAME];
+int currentLoadedPresetIndex = 0;
+
+
+int loadPalette(char *paletteName)
+{
+	if (currentLoadedPresetIndex >= MAX_PALETTE_PRESETS)
+		return -1;	// Already loaded max number of preset palettes
+
+	FILE *handle = fopen(paletteName, "rt");
+
+	if (handle == NULL)
+	{
+		jdebug[2] = 0xab;
+		return 0;
+	}
+
+	int lines = 0;
+	int foundPaletteInfo = 0;
+	for (;;)
+	{
+
+		if (feof(handle))
+		{
+			if (foundPaletteInfo)
+				currentLoadedPresetIndex++;	// palette loaded. Next time load to the next preset
+			fclose(handle);
+			return 1;
+		}
+
+		fgets(paletteStringBuffer, MAX_PATHNAME, handle);
+
+		if (foundPaletteInfo == 0)
+		{
+			if (strcmp(paletteStringBuffer, "PALETTEDATA:\n") == 0)
+			{
+				foundPaletteInfo++;	// we know that the next line will be palette entry info
+			}
+		}
+		else
+		{
+			char *token;
+
+			/* get the first token */
+			token = strtok(paletteStringBuffer, ":");
+			if (token != NULL)
+			{
+				int paletteIndex = convertStringToHex(token);
+
+				token = strtok(NULL, ",");
+				if (token == NULL)
+					break;
+				int red = convertStringToHex(token);
+				token = strtok(NULL, ",");
+				if (token == NULL)
+					break;
+				int green = convertStringToHex(token);
+				token = strtok(NULL, "\t");
+				if (token == NULL)
+					break;
+				int blue = convertStringToHex(token);
+
+				paletteRGB[currentLoadedPresetIndex][0][paletteIndex] = red;
+				paletteRGB[currentLoadedPresetIndex][1][paletteIndex] = green;
+				paletteRGB[currentLoadedPresetIndex][2][paletteIndex] = blue;
+
+				/*
+				if (paletteIndex == 0x2f)
+				{
+					// temp
+					jdebug[1] = 255;	//red;
+					jdebug[2] = green;
+					jdebug[3] = blue;
+				}
+				*/
+			}
+		}
+
+	}
+
+	if (foundPaletteInfo)
+		currentLoadedPresetIndex++;	// palette loaded. Next time load to the next preset
+
+	jdebug[1] = lines;
+	fclose(handle);
+
+	return 0;
+
+}
+
+
+int convertStringToHex(char *str)
+{
+	int value = 0;
+	for (;;)
+	{
+		char c = tolower(*str++);
+		int h = -1;
+
+		if ((c >= 'a') && (c <= 'f'))
+			h = c - 'a' + 10;
+		if ((c >= '0') && (c <= '9'))
+			h = c - '0';
+
+		if (h >= 0)
+		{
+			value *= 16;
+			value += h;
+		}
+		else break;
+	}
+	return value;
+}
+
+
+
+int loadPalettes()
+{
+	DIR *folder;
+
+	createFilename(appFileName, paletteFile, "gtpalettes");
+
+
+	folder = opendir(paletteFile);
+	if (folder == NULL)
+	{
+		perror("Unable to read directory");
+		return(1);
+	}
+
+	while ((paletteFolderEntry = readdir(folder)))
+	{
+		if (paletteFolderEntry->d_name[0] == '.')	// skip . and .. (first two folder entries)
+			continue;
+
+		createFilename(appFileName, paletteFile, "gtpalettes");
+		strcat(paletteFile, "\\");
+		strcat(paletteFile, paletteFolderEntry->d_name);	// create full path
+
+		paletteNames[currentLoadedPresetIndex] = malloc(sizeof(paletteFolderEntry->d_name));
+		strcpy(paletteNames[currentLoadedPresetIndex], paletteFolderEntry->d_name);	// copy filename. This is saved in the cfg file
+
+		loadPalette(paletteFile);
+	}
+
+	closedir(folder);
+
+	return(0);
 }

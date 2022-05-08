@@ -22,7 +22,7 @@ SDL_Window *win_window = NULL;
 
 // Prototypes
 
-int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon);
+int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon, int enableAntiAlias);
 void win_closewindow(void);
 void win_messagebox(char *string);
 void win_checkmessages(void);
@@ -54,9 +54,24 @@ static int win_currenttime = 0;
 static int win_framecounter = 0;
 static int win_activateclick = 0;
 
-int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon)
+float xscale;
+float xmouseScale;
+float ymouseScale;
+float originalWidth;
+float originalHeight;
+
+
+int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon,int enableAntiAlias)
 {
-	Uint32 flags = win_fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
+	Uint32 flags = win_fullscreen ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN;	// Enable resizable window
+
+	xscale = (float)xsize / (float)ysize;
+
+	xmouseScale = 1;
+	ymouseScale = 1;
+
+	originalWidth = xsize;
+	originalHeight = ysize;
 
 	if (!win_windowinitted)
 	{
@@ -68,8 +83,9 @@ int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon)
 		win_windowinitted = 1;
 	}
 
-	//SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-	//SDL_EnableUNICODE(1);
+	if (enableAntiAlias)
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");	// enable anti alias.
+
 	win_window = SDL_CreateWindow(appname,
 								SDL_WINDOWPOS_UNDEFINED,
 								SDL_WINDOWPOS_UNDEFINED,
@@ -134,6 +150,28 @@ int win_getspeed(int framerate)
 	return frames;
 }
 
+/*
+void resizeWindow(int windowWidth, int windowHeight) {
+//	logFileStderr("MESSAGE: Window width, height ... %d, %d\n", windowWidth, windowHeight);
+	m_camera->resizeWindow(windowWidth, windowHeight);
+	glViewport(0, 0, windowWidth, windowHeight);
+}
+
+void resize(int width, int height)
+{
+	if (height <= 0)    height = 1;
+
+	glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(60.0f, float(width) / float(height), 1.0f, 100.0f);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+*/
+
 // This is the "message pump". Called by following functions:
 // win_getspeed();
 // kbd_waitkey();
@@ -154,6 +192,21 @@ void win_checkmessages(void)
 	{
 		switch (event.type)
 		{
+
+		case SDL_WINDOWEVENT:
+
+			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+				float xsize = (float)event.window.data2*xscale;
+				SDL_SetWindowSize(win_window, xsize, event.window.data2);
+				gfx_resize(xsize, event.window.data2);
+
+				xmouseScale = originalWidth / xsize;
+				ymouseScale = originalHeight/(float)event.window.data2;
+
+		//		logFileStderr("MESSAGE:Resizing window...\n");
+		//		resizeWindow(event.window.data1, event.window.data2);
+			}
+
 		case SDL_JOYBUTTONDOWN:
 			joybuttons[event.jbutton.which] |= 1 << event.jbutton.button;
 			break;

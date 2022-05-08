@@ -79,7 +79,7 @@ void printstatus(GTOBJECT *gt)
 
 	if ((mouseb > MOUSEB_LEFT) && (mousey <= 1) && (!eamode)) menu = 1;
 
-	printblankc(0, 0, getColor(15, TOPBAR_BACKGROUND), MAX_COLUMNS);
+	printblankc(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), MAX_COLUMNS);
 
 	int menuInfoXOffset = 38;
 	if (!menu)
@@ -89,7 +89,7 @@ void printstatus(GTOBJECT *gt)
 		else
 			sprintf(textbuffer, "%s - %s", programname, loadedsongfilename);
 		textbuffer[57] = 0;
-		printtext(0, 0, getColor(15, TOPBAR_BACKGROUND), textbuffer);
+		printtext(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
 
 		//		if (monomode)
 		//			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "M");
@@ -99,37 +99,37 @@ void printstatus(GTOBJECT *gt)
 		menuInfoXOffset += 2;
 
 		if (usefinevib)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "FV");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "FV");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(0, TOPBAR_BACKGROUND), "FV");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "FV");
 
 		menuInfoXOffset += 3;
 		if (optimizepulse)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "PO");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "PO");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(0, TOPBAR_BACKGROUND), "PO");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "PO");
 		menuInfoXOffset += 3;
 
 		if (optimizerealtime)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "RO");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "RO");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(0, TOPBAR_BACKGROUND), "RO");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "RO");
 
 		menuInfoXOffset += 3;
 		if (ntsc)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "NTSC");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "NTSC");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), " PAL");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), " PAL");
 
 		menuInfoXOffset += 5;
 		if (!sidmodel)
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "6581");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "6581");
 		else
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "8580");
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "8580");
 
 		menuInfoXOffset += 5;
 		sprintf(textbuffer, "HR:%04X", adparam);
-		printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), textbuffer);
+		printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
 
 		menuInfoXOffset += 3;
 		if (eamode)
@@ -141,21 +141,21 @@ void printstatus(GTOBJECT *gt)
 		if (multiplier)
 		{
 			sprintf(textbuffer, "%2dX", multiplier);
-			printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), textbuffer);
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
 		}
-		else printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "25Hz");
+		else printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "25Hz");
 
 		menuInfoXOffset += 5;
-		printtext(menuInfoXOffset + 20, 0, getColor(15, TOPBAR_BACKGROUND), "F12=HELP");
+		printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "F12=HELP");
 	}
 	else
 	{
-		printtext(0, 0, getColor(15, TOPBAR_BACKGROUND), " PLAY | PLAYPOS | PLAYPATT | STOP | LOAD | SAVE | PACK/RL | HELP | CLEAR | QUIT |");
+		printtext(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), " PLAY | PLAYPOS | PLAYPATT | STOP | LOAD | SAVE | PACK/RL | HELP | CLEAR | QUIT |");
 	}
 
 	displayTransportBar(gt);
 
-	if ((followplay) && (isplaying(gt)))
+	if ((followplay) && (!transportLoopPattern) && (isplaying(gt)))	// 1.1.7 FIX (added !transportLoopPattern) 3/5/2022
 	{
 		for (c = 0; c < maxSIDChannels; c++)
 		{
@@ -179,14 +179,17 @@ void printstatus(GTOBJECT *gt)
 			newpos--;
 			if (newpos < 0)
 				newpos = 0;
-			if (newpos > songlen[playingSong][c2])
-				newpos = songlen[playingSong][c2];
+			if (newpos > songlen[playingSong][c2 % 6])	// 1.1.7 FIX (added %6) 3/5/2022
+				newpos = songlen[playingSong][c2 % 6];	// 1.1.7 FIX (added %6) 3/5/2022
 
 
 			gt->editorInfo[c2].espos = gt->chn[c2].songptr - 1;
 
 			if ((c2 == gt->masterLoopChannel) && (gt->chn[c2].advance) && (playingSong == editorInfo.esnum))
 			{
+		//		sprintf(textbuffer, "cursorpos: %d\n", newpos);
+		//		printtext(70, 36, 0xe, textbuffer);
+
 				editorInfo.eseditpos = newpos;
 				if (newpos - editorInfo.esview < 0)
 				{
@@ -197,8 +200,6 @@ void printstatus(GTOBJECT *gt)
 					editorInfo.esview = newpos - VISIBLEORDERLIST + 1;
 				}
 			}
-
-
 		}
 	}
 
@@ -209,7 +210,7 @@ void printstatus(GTOBJECT *gt)
 
 	int lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
 
-	UIUnderline = UNDERLINE_FOREGROUND_MASK;
+//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
 	sprintf(textbuffer, "CHN  ");
 	printtext(40 + 20, 2, lockPatternColor, textbuffer);
 
@@ -224,9 +225,9 @@ void printstatus(GTOBJECT *gt)
 	//	else
 	//		sprintf(textbuffer, "(PALETTE % 02X, POS % 02X)   ", currentPalettePreset, editorInfo.eseditpos);
 	printtext(40 + 20 + 15, getColor(2, 0), getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-	UIUnderline = 0;
+	//	UIUnderline = 0;
 
-	//	if (!editPaletteMode)
+		//	if (!editPaletteMode)
 	displayOrderList(gt, cc);
 	//	else
 	//		displayPaletteInfo(cc);
@@ -236,10 +237,10 @@ void printstatus(GTOBJECT *gt)
 	sprintf(textbuffer, "USE COUNT: %d", instrumentCount[editorInfo.einum]);
 	printtext(60 + 20, 7 + 3 + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
 
-	UIUnderline = UNDERLINE_FOREGROUND_MASK;
+	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
 	sprintf(textbuffer, "INSTRUMENT NUM. %02X  %-18s", editorInfo.einum, instr[editorInfo.einum].name);
 	printtext(40 + 20, 7 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-	UIUnderline = 0;
+	//	UIUnderline = 0;
 
 	sprintf(textbuffer, "Attack/Decay    %02X  ", instr[editorInfo.einum].ad);
 	if (editorInfo.eipos == 0) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
@@ -400,6 +401,7 @@ void clearOrderListDisplay()
 void displayOrderList(GTOBJECT *gt, int cc)
 {
 	int color;
+
 
 	for (int c = 0; c < MAX_CHN; c++)
 	{
@@ -564,6 +566,8 @@ void displayPaletteInfo(int cc)
 }
 
 
+
+
 void displayPattern(GTOBJECT *gt)
 {
 	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, VISIBLEPATTROWS + 2);
@@ -591,7 +595,7 @@ void displayPattern(GTOBJECT *gt)
 	if (gt->editorInfo[editorInfo.highlightLoopChannel].epnum == editorInfo.highlightLoopPatternNumber)
 		highlightPatternLoop = 1;
 
-	printtext(PATTERN_X + 1, PATTERN_Y, getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND), "POS");
+	printtext(PATTERN_X + 0, PATTERN_Y, getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND), " POS");
 	for (int d = 0; d < VISIBLEPATTROWS; d++)
 	{
 		int p = editorInfo.epview + d;
@@ -610,7 +614,7 @@ void displayPattern(GTOBJECT *gt)
 		color |= CPATTERN_DIVIDER_LINE;
 
 		int colort = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
-		printbyte(PATTERN_X + (MAX_CHN * 9) + 4, PATTERN_Y + 1 + d, colort, 0xff);
+		printbyte(PATTERN_X + (MAX_CHN * 9) + 4, PATTERN_Y + 1 + d, colort, 0x20);	//0xff);
 
 		color &= 0xff00;
 		//		if ((p% stepsize) == 0)
@@ -622,13 +626,13 @@ void displayPattern(GTOBJECT *gt)
 		{
 			color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 			sprintf(textbuffer, "   ");
-			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0xff);
-			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
+			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0x20);	//ff);
+//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
 		}
 		else
 		{
-			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0xff);
-			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
+			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0x20);	//ff);
+//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
 
 
 			color &= 0xff00;
@@ -653,10 +657,9 @@ void displayPattern(GTOBJECT *gt)
 
 		if (d == 0)
 		{
-		//	color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
-			color = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
-			printbyte(PATTERN_X, PATTERN_Y, color, 32);
-			printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 32);	// header sepearator 
+			color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
+	//		printbyte(PATTERN_X, PATTERN_Y, color, 0xff);
+	//		printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 0xff);	// header sepearator 
 		}
 	}
 
@@ -703,7 +706,7 @@ void displayPattern(GTOBJECT *gt)
 		if (c >= maxChan)
 			invalidColumn = 1;
 
-		sprintf(textbuffer, " CH%01X   %02X", c2 + 1, gt->editorInfo[c2].epnum);
+		sprintf(textbuffer, " CH%01X   %02X ", c2 + 1, gt->editorInfo[c2].epnum);
 
 		int headerColor = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
 		if (c >= maxChan)
@@ -719,16 +722,20 @@ void displayPattern(GTOBJECT *gt)
 		headerColor = getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND);
 		if (!(c % 3))
 		{
+			int t = UIUnderline;
+			UIUnderline = 0;
+
 			sprintf(textbuffer, "LO BN HI  CUT:%02X  RES:%01X", getFilterCutoff(gt, c2), getFilterResonance(gt, c2));
 			printtext(PATTERN_X + 6 + c * 9, PATTERN_Y - 1, headerColor, textbuffer);
 
-			// Filter info
 			for (int i = 0;i < 2;i++)
 			{
 				printbyte(PATTERN_X + 6 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe0 + i);
 				printbyte(PATTERN_X + 9 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe2 + i);
 				printbyte(PATTERN_X + 12 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe4 + i);
 			}
+
+			UIUnderline = t;
 
 			int filterTypeOffColor = getColor(CUNUSED_MUTED_FOREGROUND, CTRANSPORT_FOREGROUND);
 			int filterEnabledType = getFilterType(gt, c2);
@@ -959,6 +966,420 @@ void displayPattern(GTOBJECT *gt)
 
 }
 
+/*
+void displayPattern2(GTOBJECT *gt)
+{
+	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, VISIBLEPATTROWS + 2);
+
+	printbyterow(PATTERN_X, PATTERN_Y - 1, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_FOREGROUND), 0x20, 59);
+
+	int cc = cursorcolortable[cursorflash];
+	int maxpattlen = 0;
+	UIUnderline = UNDERLINE_MASK;
+
+	int highlightPatternLoop = 0;
+
+	int maxChan = MAX_CHN;
+	if ((editorInfo.esnum & 1 && maxSIDChannels == 9) || maxSIDChannels == 3)
+		maxChan = 3;
+
+	for (int c = 0; c < maxChan; c++)
+	{
+		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+
+		if (pattlen[gt->editorInfo[c2].epnum] > maxpattlen)
+			maxpattlen = pattlen[gt->editorInfo[c2].epnum];
+	}
+
+	if (gt->editorInfo[editorInfo.highlightLoopChannel].epnum == editorInfo.highlightLoopPatternNumber)
+		highlightPatternLoop = 1;
+
+	printtext(PATTERN_X + 1, PATTERN_Y, getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND), "POS");
+	for (int d = 0; d < VISIBLEPATTROWS; d++)
+	{
+		int p = editorInfo.epview + d;
+		int color = getColor(CPATTERN_FOREGROUND1, CPATTERN_BACKGROUND1);
+		if ((p % (stepsize * 2)) < stepsize)
+		{
+			if ((p% stepsize) == 0)
+				color = getColor(CPATTERN_FIRST_FOREGROUND2, CPATTERN_FIRST_BACKGROUND2);
+			else
+				color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+		}
+		else if ((p% stepsize) == 0)
+			color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
+
+		color &= 0xff00;
+		color |= CPATTERN_DIVIDER_LINE;
+
+		int tunderline = UIUnderline;
+		UIUnderline = 0;
+		int colort = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
+		printbyte(PATTERN_X + (MAX_CHN * 9) + 4, PATTERN_Y + 1 + d, colort, 0x20);
+		UIUnderline = tunderline;
+
+		color &= 0xff00;
+		//		if ((p% stepsize) == 0)
+		//			color |= CPATTERN_INDEX_HIGHLIGHT;
+		//		else
+		color |= CPATTERN_NOTE_FOREGROUND;
+
+
+
+		if ((p < 0) || (p > maxpattlen))
+		{
+			color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
+			sprintf(textbuffer, "   ");
+			//			int tempUnderline = UIUnderline;
+			//			UIUnderline = 0;
+			//			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0xff);
+			//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
+			//			UIUnderline = tempUnderline;
+		}
+		else
+		{
+			//			int tempUnderline = UIUnderline;
+			//			UIUnderline = 0;
+			//			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0xff);
+			//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
+			//			UIUnderline = tempUnderline;
+
+
+			color &= 0xff00;
+			if ((p% stepsize) == 0)
+				color |= CPATTERN_INDEX_HIGHLIGHT;
+			else
+				color |= CPATTERN_NOTE_FOREGROUND;
+
+			
+
+			if (!(patterndispmode & 1))
+			{
+				if (p < 100)
+					sprintf(textbuffer, " %02d", p);
+				else
+					sprintf(textbuffer, "%03d", p);
+			}
+			else
+				sprintf(textbuffer, " %02X", p);
+		}
+		UIUnderline = UNDERLINE_MASK;
+		printtext(PATTERN_X + 1, PATTERN_Y + 1 + d, color, textbuffer);
+
+
+		if (d == 0)
+		{
+			//	color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
+			color = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
+			printbyte(PATTERN_X, PATTERN_Y, color, 32);
+			printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 32);	// header sepearator 
+		}
+	}
+
+	for (int c = 0; c < MAX_CHN; c++)
+	{
+		for (int d = 0; d < VISIBLEPATTROWS; d++)
+		{
+			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+			int p = editorInfo.epview + d;
+
+			int color = getColor(CPATTERN_FOREGROUND1, CPATTERN_BACKGROUND1);
+			if ((p % (stepsize * 2)) < stepsize)
+			{
+				if ((p% stepsize) == 0)
+					color = getColor(CPATTERN_FIRST_FOREGROUND2, CPATTERN_FIRST_BACKGROUND2);
+				else
+					color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+			}
+			else if ((p% stepsize) == 0)
+				color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
+
+			if ((p < 0) || (p > pattlen[gt->editorInfo[c2].epnum]) || c2 >= maxSIDChannels || c >= maxChan)
+			{
+				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
+
+			}
+
+			int cl = color & 0xff00;
+			cl |= CPATTERN_DIVIDER_LINE;
+
+			printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y + 1 + d, cl, 0xff);
+			if (d == 0)
+				printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y, getColor(CPATTERN_DIVIDER_LINE, CUNUSED_MUTED_BACKGROUND), 0xff);
+		}
+	}
+
+	for (int c = 0; c < MAX_CHN; c++)
+	{
+		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+		int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
+
+
+		int invalidColumn = 0;
+		if (c >= maxChan)
+			invalidColumn = 1;
+
+		sprintf(textbuffer, " CH%01X   %02X", c2 + 1, gt->editorInfo[c2].epnum);
+
+		int headerColor = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
+		if (c >= maxChan)
+			headerColor = getColor(CUNUSED_MUTED_FOREGROUND, CTRANSPORT_FOREGROUND);
+
+		printtext(PATTERN_X + 4 + c * 9, PATTERN_Y, headerColor, textbuffer);
+
+		if (getFilterOnOff(gt, c2))
+			headerColor = getColor(CCOLOR_RED, CGENERAL_BACKGROUND);
+		printbyte(PATTERN_X + 9 + c * 9, PATTERN_Y, headerColor, 0xf3);	// Filter on/off marker
+
+
+		headerColor = getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND);
+		if (!(c % 3))
+		{
+			UIUnderline = 0;
+			sprintf(textbuffer, "LO BN HI  CUT:%02X  RES:%01X", getFilterCutoff(gt, c2), getFilterResonance(gt, c2));
+			printtext(PATTERN_X + 6 + c * 9, PATTERN_Y - 1, headerColor, textbuffer);
+
+			// Filter info
+			for (int i = 0;i < 2;i++)
+			{
+				printbyte(PATTERN_X + 6 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe0 + i);
+				printbyte(PATTERN_X + 9 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe2 + i);
+				printbyte(PATTERN_X + 12 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe4 + i);
+			}
+
+			int filterTypeOffColor = getColor(CUNUSED_MUTED_FOREGROUND, CTRANSPORT_FOREGROUND);
+			int filterEnabledType = getFilterType(gt, c2);
+
+			for (int i = 0;i < 2;i++)
+			{
+				for (int j = 0;j < 3;j++)
+				{
+					if (!(filterEnabledType&(1 << j)))
+					{
+						printbg(PATTERN_X + 6 + i + (j * 3) + c * 9, PATTERN_Y - 1, filterTypeOffColor, 2);
+					}
+				}
+			}
+
+		}
+
+
+		int colorNoChange = 0;
+
+
+		for (int d = 0; d < VISIBLEPATTROWS; d++)
+		{
+			int notEmpty = 0;
+			colorNoChange = 0;
+
+			int p = editorInfo.epview + d;
+
+			int color = getColor(CPATTERN_FOREGROUND1, CPATTERN_BACKGROUND1);
+			if ((p % (stepsize * 2)) < stepsize)
+			{
+				if ((p% stepsize) == 0)
+					color = getColor(CPATTERN_FIRST_FOREGROUND2, CPATTERN_FIRST_BACKGROUND2);
+				else
+					color = getColor(CPATTERN_FOREGROUND2, CPATTERN_BACKGROUND2);
+			}
+			else if ((p% stepsize) == 0)
+				color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
+
+			if (gt->chn[c2].lastpattptr == 0x7ffffffff)
+			{
+				// Not sure what this will do in this case, so let's see what the screen shows...
+				color = 2;
+				colorNoChange = 1;
+			}
+
+			if ((gt->editorInfo[c2].epnum == gt->chn[c2].lastpattnum) && (isplaying(gt)))
+			{
+				int chnrow = gt->chn[c2].lastpattptr / 4;
+				if (chnrow > pattlen[gt->chn[c2].lastpattnum])
+					chnrow = pattlen[gt->chn[c2].lastpattnum];
+				if (chnrow == p - 1 && !invalidColumn)
+				{
+					color = getColor(CPATTERN_HIGHLIGHT_PLAYING_LINE_FOREGROUND, CPATTERN_HIGHLIGHT_PLAYING_LINE_BACKGROUND);
+				}
+			}
+
+			if (gt->chn[c2].mute)
+			{
+				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
+				colorNoChange = 1;
+			}
+
+			//UIUnderline = 1;
+			UIUnderline = UNDERLINE_FOREGROUND_MASK;
+
+			if ((p < 0) || (p > pattlen[gt->editorInfo[c2].epnum]) || c2 >= maxSIDChannels || invalidColumn)
+			{
+				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
+				colorNoChange = 1;
+				sprintf(textbuffer, "        ");
+			}
+			else
+			{
+				if (pattern[gt->editorInfo[c2].epnum][p * 4] == ENDPATT)
+				{
+					sprintf(textbuffer, "PATT.END");
+					if (colorNoChange == 0)
+					{
+						color &= 0xff00;	// keep background (stripes)
+						color |= CPATTERN_NOTE_FOREGROUND;
+						colorNoChange++;
+						//				notEmpty++;
+					}
+				}
+				else
+				{
+					sprintf(textbuffer, "%s%02X%01X%02X",
+						notename[pattern[gt->editorInfo[c2].epnum][p * 4] - FIRSTNOTE],
+						pattern[gt->editorInfo[c2].epnum][p * 4 + 1],
+						pattern[gt->editorInfo[c2].epnum][p * 4 + 2],
+						pattern[gt->editorInfo[c2].epnum][p * 4 + 3]);
+
+					if (patterndispmode & 2)
+					{
+						if (!pattern[gt->editorInfo[c2].epnum][p * 4 + 1])
+							memset(&textbuffer[3], '.', 2);
+						if (!pattern[gt->editorInfo[c2].epnum][p * 4 + 2])
+							memset(&textbuffer[5], '.', 3);
+					}
+				}
+			}
+
+			int displayCursor = 0;
+			if (p == editorInfo.eppos && !invalidColumn)
+			{
+				displayCursor++;
+				color = (color & 0xff00) | CPATTERN_HIGHLIGHT_FOREGROUND;
+			}
+
+			int color3 = color;
+			int color2 = color;
+			int color4 = color;
+			int color5 = color;
+
+
+			if (colorNoChange == 0)
+			{
+				int n = pattern[gt->editorInfo[c2].epnum][p * 4] - FIRSTNOTE;
+
+				int noteColor = color & 0xff00;	// keep background (stripes)
+				noteColor |= CPATTERN_NOTE_FOREGROUND;
+				int commandColor = color & 0xff00;	// keep background (stripes)
+				commandColor |= CPATTERN_COMMAND_FOREGROUND;
+
+				int instrumentColor = color & 0xff00;	// keep background (stripes)
+				instrumentColor |= CPATTERN_INSTRUMENT_FOREGROUND;
+
+				if (n != 93)
+				{
+					color2 = noteColor; // note
+					notEmpty++;
+				}
+
+				if (pattern[gt->editorInfo[c2].epnum][p * 4 + 1] != 0)
+				{
+					color3 = instrumentColor;	// instrument
+					notEmpty++;
+				}
+				if (pattern[gt->editorInfo[c2].epnum][p * 4 + 2] != 0)
+				{
+					notEmpty++;
+					color4 = commandColor;	// command
+
+					if (pattern[gt->editorInfo[c2].epnum][p * 4 + 2] != 0)
+						color5 = noteColor;		// data
+				}
+			}
+
+			int dispCursorLine = 1;
+
+			// Display highlight line where cursor is
+			if (p == editorInfo.eppos && dispCursorLine && !invalidColumn && !followplay)
+			{
+				color2 &= 0xff;
+				color2 |= (CPATTERN_HIGHLIGHT_BACKGROUND << 8);
+				color3 &= 0xff;
+				color3 |= (CPATTERN_HIGHLIGHT_BACKGROUND << 8);
+				color4 &= 0xff;
+				color4 |= (CPATTERN_HIGHLIGHT_BACKGROUND << 8);
+				color5 &= 0xff;
+				color5 |= (CPATTERN_HIGHLIGHT_BACKGROUND << 8);
+			}
+			else
+			{
+				if (!notEmpty)
+				{
+					if (isMatchingRGB(currentPalettePreset, color))
+					{
+						sprintf(textbuffer, "        ");
+					}
+				}
+			}
+
+			UIUnderline = 0;
+
+			printtext(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, color2, textbuffer);
+			printtext(PATTERN_X + 8 + c * 9, PATTERN_Y + 1 + d, color3, &textbuffer[3]);
+			printtext(PATTERN_X + 10 + c * 9, PATTERN_Y + 1 + d, color4, &textbuffer[5]);
+			printtext(PATTERN_X + 11 + c * 9, PATTERN_Y + 1 + d, color5, &textbuffer[6]);
+
+			if (c == editorInfo.epmarkchn)
+			{
+				if (editorInfo.epmarkstart <= editorInfo.epmarkend)
+				{
+					if ((p >= editorInfo.epmarkstart) && (p <= editorInfo.epmarkend))
+					{
+						printbg(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 8);
+
+						if (transportLoopPattern)
+						{
+							printbg(PATTERN_X + 4 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+							printbg(PATTERN_X + 4 + 9 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+						}
+					}
+
+				}
+				else
+				{
+					if ((p <= editorInfo.epmarkstart) && (p >= editorInfo.epmarkend))
+					{
+						printbg(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 8);
+
+						if (transportLoopPattern)
+						{
+							printbg(PATTERN_X + 4 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+							printbg(PATTERN_X + 4 + 9 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+						}
+					}
+
+				}
+			}
+
+			if ((displayCursor) && (editorInfo.editmode == EDIT_PATTERN) && (editorInfo.epchn == c))
+			{
+				switch (editorInfo.epcolumn)
+				{
+				case 0:
+					if (!eamode) printbg(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, cc << 8, 3);
+					break;
+
+				default:
+					if (!eamode) printbg(PATTERN_X + 5 + c * 9 + 2 + editorInfo.epcolumn, PATTERN_Y + 1 + d, cc << 8, 1);
+					break;
+				}
+			}
+		}
+	}
+
+	UIUnderline = 0;
+
+}
+*/
+
 
 
 void displayTransportBar(GTOBJECT *gt)
@@ -1052,7 +1473,7 @@ void displayTransportBar(GTOBJECT *gt)
 
 void displayTransportBarFastForward(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
 	for (int i = 0;i < 0x3;i++)
 	{
@@ -1063,7 +1484,7 @@ void displayTransportBarFastForward(int x, int y)
 
 void displayTransportBarRewind(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
 	for (int i = 0;i < 0x3;i++)
 	{
@@ -1080,7 +1501,7 @@ void displayTransportBarPolyChannels(int x, int y)
 		int yoffset = p / 2;
 		int xoffset = (p & 1) * 2;
 
-		int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+		int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 		if (transportPolySIDEnabled[p])
 		{
 			imageOffset = 0x19;
@@ -1096,7 +1517,7 @@ void displayTransportBarPolyChannels(int x, int y)
 
 void displayTransportBarKeyboard(int x, int y)
 {
-	int color = getColor(CTRANSPORT_BUTTON_BACKGROUND, CTRANSPORT_FOREGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_BACKGROUND, CTRANSPORT_BUTTON_FOREGROUND);
 	if (transportShowKeyboard)
 		color = getColor(CTRANSPORT_ENABLED, CTRANSPORT_FOREGROUND);
 
@@ -1112,7 +1533,7 @@ void displayTransportBarKeyboard(int x, int y)
 void displayTransportBarPlaying(GTOBJECT *gt, int x, int y)
 {
 	int imageOffset = 12;
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (gt->songinit == PLAY_PLAYING)
 		imageOffset = 22;
 
@@ -1124,7 +1545,7 @@ void displayTransportBarPlaying(GTOBJECT *gt, int x, int y)
 }
 void displayTransportBarRecord(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (recordmode)
 		color = getColor(CCOLOR_RED, CTRANSPORT_BUTTON_BACKGROUND);
 
@@ -1138,7 +1559,7 @@ void displayTransportBarRecord(int x, int y)
 
 void displayTransportBarMasterVolume(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 21 + i);
@@ -1152,7 +1573,7 @@ void displayTransportBarMasterVolume(int x, int y)
 
 void displayTransportBarOctave(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 0xe6 + i);
@@ -1165,7 +1586,7 @@ void displayTransportBarOctave(int x, int y)
 
 void displayTransportBarDetune(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 0x9d + i);
@@ -1178,7 +1599,7 @@ void displayTransportBarDetune(int x, int y)
 
 void displayTransportBarMonoStereo(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
 	int b = 0x195;
 	if (monomode || maxSIDChannels == 3)
@@ -1210,7 +1631,7 @@ void displayTransportBarMonoStereo(int x, int y)
 
 void displayTransportBarSIDCount(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	printbyte(x, y, color, 0xbe);
 	printbyte(x + 1, y, color, 0xbf);
 	printbyte(x + 2, y, color, 0xde);
@@ -1226,9 +1647,9 @@ void displayTransportBarSIDCount(int x, int y)
 void displayTransportBarSkinning(int x, int y)
 {
 
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (editPaletteMode)
-		color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_ENABLED);
+		color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_ENABLED);
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 0xed + i);
@@ -1242,9 +1663,9 @@ void displayTransportBarSkinning(int x, int y)
 
 void displayTransportBarFollow(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (followplay)
-		color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_ENABLED);
+		color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_ENABLED);
 
 	for (int i = 0;i < 0x3;i++)
 	{
@@ -1255,9 +1676,9 @@ void displayTransportBarFollow(int x, int y)
 
 void displayTransportBarLoopPattern(int x, int y)
 {
-	int color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
+	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (transportLoopPattern)
-		color = getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_ENABLED);
+		color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_ENABLED);
 
 	for (int i = 0;i < 0x3;i++)
 	{
@@ -1459,7 +1880,7 @@ void displayTables()
 
 	int cc = cursorcolortable[cursorflash];
 
-	UIUnderline = UNDERLINE_FOREGROUND_MASK;
+	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
 	sprintf(textbuffer, "WAVE TBL");
 	printtext(40 + 20, 14 + 3, getTableTitleColour(EDIT_TABLE_WAVE), textbuffer);
 
@@ -1483,7 +1904,7 @@ void displayTables()
 	printtext(40 + 20 + 8, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
 	printtext(40 + 20 + 10 + 8, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
 	printtext(40 + 20 + 20 + 8, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
-	UIUnderline = 0;
+	//	UIUnderline = 0;
 
 	if (editorInfo.editTableMode == EDIT_TABLE_NONE)
 	{
@@ -2073,7 +2494,7 @@ void displayDetailedPulseTable(int cc)
 
 			// Will need to check ltable[p] to know how to set final value 
 			detailedTableLValue[p] = v2;			// current L value. Modify this with HexInput
-			detailedTableMaxLValue[p] = 0x3ff;		// 0x3ff -- ignored anyway. maximum possible value (min is always 0)
+			detailedTableMaxLValue[p] = 0xff;		// 0x3ff -- ignored anyway. maximum possible value (min is always 0)
 			detailedTableMinLValue[p] = 0;
 			detailedTableBaseLValue[p] = 0x0;		// base value to add to current to get new tableL[p] value (will need to check ltable[p] initially to see if we need to massage data further)
 
@@ -2241,7 +2662,10 @@ void displayTable(int c)
 
 
 		if ((p == editorInfo.etpos) && (editorInfo.etnum == c))
-			color = CORDER_INST_TABLE_EDITING;
+		{
+			color &= 0xff00;
+			color |= CORDER_INST_TABLE_EDITING;
+		}
 
 
 		sprintf(textbuffer, "%02X:%02X %02X", p + 1, ltable[c][p], rtable[c][p]);

@@ -104,6 +104,7 @@ void initsong(int num, int mode, GTOBJECT *gt)
 	else if (editorInfo.editmode == EDIT_ORDERLIST)
 		loopChannel = editorInfo.eschn;
 
+	loopChannel = getActualChannel(editorInfo.esnum, loopChannel);	// 1.1.7 FIX (need 0-11 for masterloop) 3/5/2022
 	gt->masterLoopChannel = loopChannel;
 
 	gt->loopEnabledFlag = 0;
@@ -1257,34 +1258,42 @@ void playroutine(GTOBJECT *gt)
 
 
 	if (gt->noSIDWrites == 0 && gt->disableLoopSearch == 0)	// only the PLAYING GTObject should check for looping. Otherwise, we end up in recursive hell
-	{
-
+	{		
 		if (transportLoopPattern)
 		{
 
 			int markStart = editorInfo.epmarkstart;
 			int markEnd = editorInfo.epmarkend;
 
-			if (markEnd < markStart)
+			if (markStart != markEnd)// 1.1.7 FIX (only check for inter-pattern looping if area is selected) 3/5/2022
 			{
-				markStart = markEnd;
-				markEnd = editorInfo.epmarkstart;
-			}
-			// THIS PART NEEDS TO MOVE TO THE MAIN PLAY ROUTINE - WHERE THE CODE THAT CHECKS END OF PATTERN LOOP IS.
-			// THAT CODE SHOULD THEN CALL THIS ROUTINE TO FIND THE LOOP START INFO
-			//-------------
-			int c3 = getActualChannel(gt->psnum, editorInfo.epmarkchn);
-			if (gt->chn[c3].pattptr == (markEnd + 0) * 4)
-			{
-				if (calcStartofInterPatternLoop(gt->psnum, c3, gt->chn[c3].songptr - 1, &gtLoopObject))
-				{
-					gtObject.interPatternLoopEnabledFlag = (markEnd)+((c3 + 1) << 8);	// c3+1 - just to make sure we don't get a 0 flag value
-				}
-				// We don't need to rememeber the end of here.. as we're there already.
-				//			memcpy((char*)&gt->patternLoopEndChn[0], (char*)&gt->chn[0], sizeof(CHN)*MAX_PLAY_CH);
 
+				if (markEnd < markStart)
+				{
+					markStart = markEnd;
+					markEnd = editorInfo.epmarkstart;
+				}
+				// THIS PART NEEDS TO MOVE TO THE MAIN PLAY ROUTINE - WHERE THE CODE THAT CHECKS END OF PATTERN LOOP IS.
+				// THAT CODE SHOULD THEN CALL THIS ROUTINE TO FIND THE LOOP START INFO
+				//-------------
+				int c3 = getActualChannel(gt->psnum, editorInfo.epmarkchn);
+
+		//		sprintf(textbuffer, "master: %d\n", c3);
+		//		printtext(70, 36, 0xe, textbuffer);
+
+				if (gt->chn[c3].pattptr == (markEnd + 0) * 4)
+				{
+					if (calcStartofInterPatternLoop(gt->psnum, c3, gt->chn[c3].songptr - 1, &gtLoopObject))
+					{
+						gtObject.interPatternLoopEnabledFlag = (markEnd)+((c3 + 1) << 8);	// c3+1 - just to make sure we don't get a 0 flag value
+					}
+					// We don't need to rememeber the end of here.. as we're there already.
+					//			memcpy((char*)&gt->patternLoopEndChn[0], (char*)&gt->chn[0], sizeof(CHN)*MAX_PLAY_CH);
+
+				}
 			}
 		}
+		
 		//-------------
 
 

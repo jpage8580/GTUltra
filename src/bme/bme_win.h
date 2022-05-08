@@ -1,6 +1,6 @@
 // BME windows, input & timing module header file
 
-int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon);
+int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon, int enableAntiAlias);
 void win_closewindow(void);
 void win_messagebox(char *string);
 void win_checkmessages(void);
@@ -8,6 +8,9 @@ int win_getspeed(int framerate);
 void win_setmousemode(int mode);
 void win_enableKeyRepeat(void);
 void win_disableKeyRepeat(void);
+
+extern float xmouseScale;
+extern float ymouseScale;
 
 extern int win_windowinitted;
 extern int win_quitted;

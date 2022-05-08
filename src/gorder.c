@@ -1031,7 +1031,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, int focusChannel, int enableSIDWrites)
 {
 
-	if (startSongPos < songlen[editorInfo.esnum][focusChannel])
+	if (startSongPos < songlen[editorInfo.esnum][focusChannel % 6])	// 1.1.7 FIX (added %6) 3/5/2022
 	{
 		int c2 = getActualChannel(editorInfo.esnum, focusChannel);
 		int sng = getActualSongNumber(editorInfo.esnum, c2);
@@ -1148,7 +1148,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 				int sng = getActualSongNumber(editorInfo.esnum, c2);
 
 				ep = gte->chn[c2].songptr - 1;	// -1;
-				
+
 				do
 				{
 					ep2 = ep;

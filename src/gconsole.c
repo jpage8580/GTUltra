@@ -73,7 +73,7 @@ int initscreen(void)
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0)
 		return 0;
-	win_openwindow(xsize, ysize, "GoatTracker Ultra - (Enhanced GoatTracker Stereo V2.76 - Jason Page / MSL)", NULL);
+	win_openwindow(xsize, ysize, "GoatTracker Ultra - (Enhanced GoatTracker Stereo V2.76 - Jason Page / MSL)", NULL,enableAntiAlias);
 	win_setmousemode(MOUSE_ALWAYS_HIDDEN);
 	initicon();
 
@@ -183,7 +183,7 @@ void loadexternalpalette(void)
 
 void initicon(void)
 {
-	int handle = io_open("goattrk2.bmp");
+	int handle = io_open("goat32.png");	
 	if (handle != -1)
 	{
 		SDL_RWops *rw;
@@ -757,8 +757,14 @@ void getkey(void)
 	prevmouseb = mouseb;
 
 	mou_getpos(&mousepixelx, &mousepixely);
+
+	mousepixelx = (float)mousepixelx*xmouseScale;	// xmouseScale changes if user modifies size of window
+	mousepixely = (float)mousepixely*ymouseScale;
+
 	mouseb = mou_getbuttons();
 	mousex = mousepixelx / fontwidth;
+
+	
 	mousey = mousepixely / fontheight;
 
 	if (mouseb)
