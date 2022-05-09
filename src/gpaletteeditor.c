@@ -220,17 +220,20 @@ void changePalettePreset(int change, GTOBJECT *gt)
 	{
 		setSkin(currentPalettePreset);
 		displayupdate(gt);
+		allowPaletteQuickSave = 0;	// changed preset. Stop CTRL-S from quick saving. Otherwise you can easily overwrite the wrong palette
 	}
 }
 
-void quickSavePalette()
+int quickSavePalette()
 {
 	FILE *configfile;
 
 	if (allowPaletteQuickSave)
 	{
 		savePaletteText();
+		return 1;
 	}
+	return 0;		
 }
 
 
@@ -243,6 +246,8 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 	int exitPaletteEditor = 1;
 	int maxPaletteEntries = getPaletteTextArraySize();
 
+
+	allowPaletteQuickSave = 0;
 
 	int cx = 0;
 	int cy = 0;
@@ -360,7 +365,8 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 		case KEY_S:
 			if (ctrlpressed)
 			{
-				quickSavePalette();
+				if (!quickSavePalette())
+					savePalette(gt);
 			}
 			break;
 
