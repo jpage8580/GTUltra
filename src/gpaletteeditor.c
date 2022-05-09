@@ -82,6 +82,7 @@ struct dirent *paletteFolderEntry;
 
 char *paletteNames[16];
 
+int allowPaletteQuickSave = 0;
 
 void copyRGBInfo()
 {
@@ -226,11 +227,9 @@ void quickSavePalette()
 {
 	FILE *configfile;
 
-	configfile = fopen(skinFilename, "wb");		// wb write binary. wt = write text
-	if (configfile)
+	if (allowPaletteQuickSave)
 	{
-		fwrite(&paletteRGB, MAX_PALETTE_PRESETS * 3 * MAX_PALETTE_ENTRIES, 1, configfile);
-		fclose(configfile);
+		savePaletteText();
 	}
 }
 
@@ -520,9 +519,6 @@ int savePalette(GTOBJECT *gt)
 	int done;
 	int c;
 	char ident[] = { 'G', 'T', 'P', 'A' };
-	FILE *handle;
-
-
 
 	if (fileselector(paletteFileName, palettepath, palettefilter, "SAVE PALETTE", 3, gt, 12))
 	{
@@ -540,25 +536,37 @@ int savePalette(GTOBJECT *gt)
 				strcat(paletteFileName, ".gtp");
 		}
 
-		handle = fopen(paletteFileName, "wt");
-		if (handle)
+		if (savePaletteText())
 		{
-			fprintf(handle, ";GTUltra Palette: %s\n\nPALETTEDATA:\n", paletteFileName);
-
-			int size = getPaletteTextArraySize();
-			//		size--;	// remove "hello"
-			for (int i = 0;i < size;i++)
-			{
-				int c = i + FIRST_UI_COLOR;
-				fprintf(handle, "%02X:%02X,%02X,%02X\t%s\n", i, paletteR[c], paletteG[c], paletteB[c], paletteText[i]);
-			}
-
-			fclose(handle);
+			allowPaletteQuickSave = 1;
 			win_quitted = 0;
 			return 1;
 		}
+		else
+			allowPaletteQuickSave = 0;
 	}
 	win_quitted = 0;
+	return 0;
+}
+
+int savePaletteText()
+{
+	FILE *handle;
+
+	handle = fopen(paletteFileName, "wt");
+	if (handle)
+	{
+		fprintf(handle, ";GTUltra Palette: %s\n\nPALETTEDATA:\n", paletteFileName);
+
+		int size = getPaletteTextArraySize();
+		for (int i = 0;i < size;i++)
+		{
+			int c = i + FIRST_UI_COLOR;
+			fprintf(handle, "%02X:%02X,%02X,%02X\t%s\n", i, paletteR[c], paletteG[c], paletteB[c], paletteText[i]);
+		}
+		fclose(handle);
+		return 1;
+	}
 	return 0;
 }
 

@@ -24,5 +24,6 @@ void convert4BitPaletteTo8Bit();
 int convertStringToHex(char *str);
 int loadPalette(char *paletteName);
 int loadPalettes();
+int savePaletteText();
 
 #endif
