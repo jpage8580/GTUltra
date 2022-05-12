@@ -105,7 +105,7 @@ char skinFilename[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.1.7";
+char *programname = "$VER: GTUltra V1.2.0";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -660,7 +660,7 @@ int main(int argc, char **argv)
 	// Shutdown sound output now
 	sound_uninit();
 
-
+/*
 #ifndef __WIN32__
 #ifdef __amigaos__
 	strcpy(filename, "PROGDIR:gtskins.bin");
@@ -672,7 +672,7 @@ int main(int argc, char **argv)
 #endif
 #endif
 
-
+*/
 	//	paletteChanged = 0;	// JP TEST TO REMOVE SAVE 
 	//	if (paletteChanged)
 	//	{
