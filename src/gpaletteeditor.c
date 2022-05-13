@@ -105,7 +105,7 @@ void handlePaste(int *cx, GTOBJECT *gt)
 	if (copyFlag == 0)
 		return;
 
-//	int jx = *cx;
+	//	int jx = *cx;
 	int x = *cx / 2;
 	x += paletteScrollOffset;
 
@@ -139,7 +139,7 @@ void handlePaste(int *cx, GTOBJECT *gt)
 
 void rememberCurrentRGB(int *cx)
 {
-//	int jx = *cx;
+	//	int jx = *cx;
 	int x = *cx / 2;
 	//jx &= 1;
 	x += paletteScrollOffset;
@@ -162,7 +162,7 @@ int paletteEdit(int *cx, int *cy, GTOBJECT *gt)
 {
 	int jx = *cx & 1;
 	int x = *cx / 2;
-//	jx &= 1;
+	//	jx &= 1;
 	x += paletteScrollOffset;
 	int y = *cy;
 
@@ -233,7 +233,7 @@ int quickSavePalette()
 		savePaletteText();
 		return 1;
 	}
-	return 0;		
+	return 0;
 }
 
 
@@ -345,7 +345,7 @@ void displayPaletteEditorWindow(GTOBJECT *gt)
 			}
 		}
 
-	//	int jx = cx;
+		//	int jx = cx;
 		int x = cx / 2;
 		//		jx &= 1;
 		x += paletteScrollOffset;
@@ -599,13 +599,13 @@ int loadPalette(char *paletteName)
 	int size = ftell(handle);
 	fseek(handle, 0, SEEK_SET);
 
-	char *paletteMem = malloc(size+1);
+	char *paletteMem = malloc(size + 1);
 	int s = fread(paletteMem, size, 1, handle);
 	fclose(handle);
 	paletteMem[size] = 0;	// end marker
 
 	// Read palette data from text buffer
-	int ret=readPaletteData(paletteMem);
+	int ret = readPaletteData(paletteMem);
 	free(paletteMem);
 
 	return ret;
@@ -694,7 +694,7 @@ I then check for <=0xd for a carriage return to cover 0xd,0xa combinations, rath
 */
 
 // https://stackoverflow.com/questions/20299987/loop-through-char-array-line-by-line
-char *sgets(char *s, int n,  char **strp) {
+char *sgets(char *s, int n, char **strp) {
 	if (**strp == 0)	// We expect a 0 as a terminator for the char buffer
 		return NULL;
 	int i;
@@ -702,7 +702,8 @@ char *sgets(char *s, int n,  char **strp) {
 		s[i] = **strp;
 		if (**strp == 0)
 			break;
-		if (**strp == 0xd){	//'\n') {
+		if ((**strp == 0xa) || (**strp == 0xd))
+		{
 			s[i] = '\n';
 			s[i + 1] = '\0';
 
@@ -712,7 +713,7 @@ char *sgets(char *s, int n,  char **strp) {
 					break;
 				++(*strp);
 			}
-//			++(*strp);
+			//			++(*strp);
 			break;
 		}
 	}
@@ -756,8 +757,10 @@ int loadPalettes()
 	folder = opendir(paletteFile);
 	if (folder == NULL)
 	{
+//		printf("%s\n", paletteFile);
+
 		jdebug[0] = 0xff;
-		perror("Unable to read directory");
+		perror(paletteFile);
 		return(1);
 	}
 
