@@ -590,7 +590,7 @@ int loadPalette(char *paletteName)
 	FILE *handle = fopen(paletteName, "rb");	// Have to use RB instead of RT as the default file is within the binary wad..grrr
 	if (handle == NULL)
 	{
-		jdebug[2] = 0xab;
+		jdebug[0] = 0xfe;
 		return 0;
 	}
 
@@ -753,10 +753,10 @@ int loadPalettes()
 
 	createFilename(appFileName, paletteFile, "gtpalettes");
 
-
 	folder = opendir(paletteFile);
 	if (folder == NULL)
 	{
+		jdebug[0] = 0xff;
 		perror("Unable to read directory");
 		return(1);
 	}
@@ -767,7 +767,7 @@ int loadPalettes()
 			continue;
 
 		createFilename(appFileName, paletteFile, "gtpalettes");
-		strcat(paletteFile, "\\");
+		strcat(paletteFile, "/");	//"\\");	// Changed to / to hopefully allow both Windows + Linux loading work
 		strcat(paletteFile, paletteFolderEntry->d_name);	// create full path
 
 		paletteNames[currentLoadedPresetIndex] = malloc(sizeof(paletteFolderEntry->d_name));
