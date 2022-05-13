@@ -25,5 +25,7 @@ int convertStringToHex(char *str);
 int loadPalette(char *paletteName);
 int loadPalettes();
 int savePaletteText();
+int readPaletteData(char *paletteMem);
+char *sgets(char *s, int n, char **strp);
 
 #endif

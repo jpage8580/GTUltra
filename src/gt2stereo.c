@@ -101,7 +101,6 @@ char paletteFileName[MAX_FILENAME] = { "palette_" };
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
 
-char skinFilename[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
@@ -186,33 +185,27 @@ int main(int argc, char **argv)
 	strcat(appFileName, "/.goattrk/gtultra.cfg");
 #endif
 
-	createFilename(appFileName, skinFilename, "jpdf123abc");	//"gtskins.bin");
 	createFilename(appFileName, charsetFilename, "charset.bin");
 
 	// load the default palette from the WAD file and then save again to disk...Nasty. Sorry.
 	int handle = io_open("default.gtp");
-	if (handle == -1) return 0;
+	if (handle == -1)
+		return 0;
 
 	int size = io_lseek(handle, 0, SEEK_END);
 	io_lseek(handle, 0, SEEK_SET);
-	char *mem = malloc(size);
-	io_read(handle, mem, size);
+	char *paletteMem = malloc(size+1);
+	io_read(handle, paletteMem, size);
 	io_close(handle);
+	paletteMem[size] = 0;	// end marker
 
-	FILE *defaultPaletteHandle = NULL;
-	defaultPaletteHandle = fopen(skinFilename, "wb");
-	if (defaultPaletteHandle)
-		fwrite(mem, size, 1, defaultPaletteHandle);
-	free(mem);
-	fclose(defaultPaletteHandle);
-	
 	// First, load the default palette and fill all 16 slots with it
 	currentLoadedPresetIndex = 0;
 	for (int i = 0;i < 16;i++)
 	{
-		loadPalette(skinFilename);
+		readPaletteData(paletteMem);
 	}
-	remove(skinFilename);
+	free(paletteMem);
 
 	// Now load all palettes from the gtpalettes folder
 	currentLoadedPresetIndex = 0;

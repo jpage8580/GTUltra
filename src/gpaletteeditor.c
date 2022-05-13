@@ -587,28 +587,47 @@ int loadPalette(char *paletteName)
 	if (currentLoadedPresetIndex >= MAX_PALETTE_PRESETS)
 		return -1;	// Already loaded max number of preset palettes
 
-	FILE *handle = fopen(paletteName, "rt");
-
+	FILE *handle = fopen(paletteName, "rb");	// Have to use RB instead of RT as the default file is within the binary wad..grrr
 	if (handle == NULL)
 	{
 		jdebug[2] = 0xab;
 		return 0;
 	}
 
+	// Read palette text file
+	fseek(handle, 0, SEEK_END);
+	int size = ftell(handle);
+	fseek(handle, 0, SEEK_SET);
+
+	char *paletteMem = malloc(size+1);
+	int s = fread(paletteMem, size, 1, handle);
+	fclose(handle);
+	paletteMem[size] = 0;	// end marker
+
+	// Read palette data from text buffer
+	int ret=readPaletteData(paletteMem);
+	free(paletteMem);
+
+	return ret;
+}
+
+int readPaletteData(char *paletteMem)
+{
+
 	int lines = 0;
 	int foundPaletteInfo = 0;
+
+	char **p = &paletteMem;
+
 	for (;;)
 	{
-
-		if (feof(handle))
+		// Get text line
+		if (sgets(paletteStringBuffer, MAX_PATHNAME, p) == NULL)
 		{
 			if (foundPaletteInfo)
 				currentLoadedPresetIndex++;	// palette loaded. Next time load to the next preset
-			fclose(handle);
 			return 1;
 		}
-
-		fgets(paletteStringBuffer, MAX_PATHNAME, handle);
 
 		if (foundPaletteInfo == 0)
 		{
@@ -662,10 +681,44 @@ int loadPalette(char *paletteName)
 		currentLoadedPresetIndex++;	// palette loaded. Next time load to the next preset
 
 	jdebug[1] = lines;
-	fclose(handle);
 
 	return 0;
 
+}
+
+
+/*
+Had to modify this to handle \n manually due to not being able to open "rt".
+I add a 0 at the end of the loaded file buffer as a terminator.
+I then check for <=0xd for a carriage return to cover 0xd,0xa combinations, rather than =='\n'
+*/
+
+// https://stackoverflow.com/questions/20299987/loop-through-char-array-line-by-line
+char *sgets(char *s, int n,  char **strp) {
+	if (**strp == 0)	// We expect a 0 as a terminator for the char buffer
+		return NULL;
+	int i;
+	for (i = 0;i < n - 1;++i, ++(*strp)) {
+		s[i] = **strp;
+		if (**strp == 0)
+			break;
+		if (**strp == 0xd){	//'\n') {
+			s[i] = '\n';
+			s[i + 1] = '\0';
+
+			while (**strp <= 0xd)	// skip past 0xd,0xa or whatever
+			{
+				if (**strp == 0)	// end of file?
+					break;
+				++(*strp);
+			}
+//			++(*strp);
+			break;
+		}
+	}
+	if (i == n - 1)
+		s[i] = '\0';
+	return s;
 }
 
 

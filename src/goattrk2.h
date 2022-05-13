@@ -122,7 +122,6 @@ extern char textbuffer[MAX_PATHNAME];
 extern unsigned char hexkeytbl[16];
 extern unsigned char datafile[];
 extern char charsetFilename[MAX_PATHNAME];
-extern char skinFilename[MAX_PATHNAME];
 extern int jdebug[16];
 extern char palettefilter[MAX_FILENAME];
 extern char palettepath[MAX_FILENAME];
