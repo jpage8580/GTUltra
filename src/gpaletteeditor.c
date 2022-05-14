@@ -779,7 +779,11 @@ int loadPalettes()
 	folder = opendir(paletteFile);
 	if (folder == NULL)
 	{
+#ifdef __WIN32__
 		mkdir(paletteFile);	// default palette folder didn't exist in config file location. It now does..
+#else
+		mkdir(paletteFile, 0777);
+#endif
 		return 0;
 	}
 
