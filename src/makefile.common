@@ -37,7 +37,7 @@ $(PREFIX)ss2stereo$(SUFFIX): ss2stereo.o bme/bme_end.o
 	$(CC) -o $@ $^
 	strip $@
 
-gt2stereo.dat: player.s altplayer.s player3.s altplayer3.s default.gtp chargen.bin palette.bin cursor.bin bcursor.bin goattrk2.bmp gt2stereo.seq
+gt2stereo.dat: player.s altplayer.s player3.s altplayer3.s 0default.gtp 1default.gtp 2default.gtp 3default.gtp 4default.gtp 5default.gtp 6default.gtp 7default.gtp 8default.gtp chargen.bin palette.bin cursor.bin bcursor.bin goattrk2.bmp gt2stereo.seq
 	./bme/datafile $@ gt2stereo.seq
 
 goatdata.c: gt2stereo.dat

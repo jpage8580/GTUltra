@@ -22,10 +22,11 @@ void rememberCurrentRGB(int *cx);
 int savePalette(GTOBJECT *gt);
 void convert4BitPaletteTo8Bit();
 int convertStringToHex(char *str);
-int loadPalette(char *paletteName);
+int loadPalette(char *palettePath, char *paletteFileName);
 int loadPalettes();
 int savePaletteText();
-int readPaletteData(char *paletteMem);
+int readPaletteData(char *paletteMem, char *paletteName);
 char *sgets(char *s, int n, char **strp);
+void setPaletteName(char* paletteName, int index);
 
 #endif

@@ -109,6 +109,8 @@ char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
 
+char startPaletteName[MAX_PATHNAME];
+
 
 
 char textbuffer[MAX_PATHNAME];
@@ -187,28 +189,47 @@ int main(int argc, char **argv)
 
 	createFilename(appFileName, charsetFilename, "charset.bin");
 
-	// load the default palette from the WAD file and then save again to disk...Nasty. Sorry.
-	int handle = io_open("default.gtp");
-	if (handle == -1)
-		return 0;
-
-	int size = io_lseek(handle, 0, SEEK_END);
-	io_lseek(handle, 0, SEEK_SET);
-	char *paletteMem = malloc(size+1);
-	io_read(handle, paletteMem, size);
-	io_close(handle);
-	paletteMem[size] = 0;	// end marker
 
 	// First, load the default palette and fill all 16 slots with it
 	currentLoadedPresetIndex = 0;
-	for (int i = 0;i < 16;i++)
-	{
-		readPaletteData(paletteMem);
-	}
-	free(paletteMem);
+	int maxPresetPalettes = 9;
 
-	// Now load all palettes from the gtpalettes folder
-	currentLoadedPresetIndex = 0;
+	for (int i = 0;i < maxPresetPalettes;i++)
+	{
+		paletteNames[i] = NULL;
+	}
+
+	for (int i = 0;i < maxPresetPalettes;i++)
+	{
+		sprintf(textbuffer, "%ddefault.gtp", i);
+		//	printf("palette:%s\n", textbuffer);
+		int handle = io_open(textbuffer);
+		if (handle == -1)
+			return 0;
+
+		int size = io_lseek(handle, 0, SEEK_END);
+		io_lseek(handle, 0, SEEK_SET);
+		char *paletteMem = malloc(size + 1);
+		io_read(handle, paletteMem, size);
+		io_close(handle);
+		paletteMem[size] = 0;	// end marker
+
+
+		if (i == 0)
+		{
+			for (int j = 0;j < 16;j++)
+			{
+				readPaletteData(paletteMem, textbuffer);
+			}
+			currentLoadedPresetIndex = 1;
+		}
+		else
+			readPaletteData(paletteMem, textbuffer);
+
+		free(paletteMem);
+	}
+
+	// Now load palettes from the gtpalettes folder to fill all 16 slots
 	loadPalettes();
 
 	configfile = fopen(appFileName, "rt");
@@ -255,7 +276,8 @@ int main(int argc, char **argv)
 		getstringparam(configfile, specialnotenames);
 		getstringparam(configfile, scalatuningfilepath);
 		getparam(configfile, &maxSIDChannels);
-		getparam(configfile, &currentPalettePreset);
+		getstringparam(configfile, startPaletteName);
+//		getparam(configfile, &currentPalettePreset);
 		getfloatparam(configfile, &masterVolume);
 		getfloatparam(configfile, &detuneCent);
 		getparam(configfile, &enablekeyrepeat);
@@ -493,12 +515,21 @@ int main(int argc, char **argv)
 	}
 
 
-
-
 	// Validate parameters
 
-	if (currentPalettePreset >= MAX_PALETTE_PRESETS)
-		currentPalettePreset = 0;
+	// Search to see if any of the palettes match the name in the cfg file. If so, use that one
+	currentPalettePreset = 0;
+	for (int i = 0;i < MAX_PALETTE_PRESETS;i++)
+	{
+		if (!strcmp(startPaletteName, paletteNames[i]))
+		{
+			currentPalettePreset = i;
+			break;
+		}
+	}
+
+//	if (currentPalettePreset >= MAX_PALETTE_PRESETS)
+//		currentPalettePreset = 0;
 
 	if (maxSIDChannels != 3 && maxSIDChannels != 6 && maxSIDChannels != 9 && maxSIDChannels != 12)
 		maxSIDChannels = 6;
@@ -625,11 +656,11 @@ int main(int argc, char **argv)
 			return 0;
 		}
 
-	}
+}
 
 #endif
 
-		
+
 
 
 	playUntilEnd();	// Get length of time of loaded or empty song
@@ -653,19 +684,19 @@ int main(int argc, char **argv)
 	// Shutdown sound output now
 	sound_uninit();
 
-/*
-#ifndef __WIN32__
-#ifdef __amigaos__
-	strcpy(filename, "PROGDIR:gtskins.bin");
-#else
-	strcpy(filename, getenv("HOME"));
-	strcat(filename, "/.goattrk");
-	mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
-	strcat(filename, "/gtskins.bin");
-#endif
-#endif
+	/*
+	#ifndef __WIN32__
+	#ifdef __amigaos__
+		strcpy(filename, "PROGDIR:gtskins.bin");
+	#else
+		strcpy(filename, getenv("HOME"));
+		strcat(filename, "/.goattrk");
+		mkdir(filename, S_IRUSR | S_IWUSR | S_IXUSR);
+		strcat(filename, "/gtskins.bin");
+	#endif
+	#endif
 
-*/
+	*/
 	//	paletteChanged = 0;	// JP TEST TO REMOVE SAVE 
 	//	if (paletteChanged)
 	//	{
@@ -738,12 +769,12 @@ int main(int argc, char **argv)
 			";Special note names (2 chars for every note in an octave/cycle)\n%s\n\n"
 			";Path to a Scala tuning file .scl\n%s\n\n"
 			";Default SID channel playback\n%d\n\n"
-			";UI Skin\n%d\n\n"
+			";Default palette name\n%s\n\n"
 			";Master Volume scaler (1 = normal volume. 2 = twice as loud 0.5 = half volume..)\n%f\n\n"
 			";Detune Cent (0-2... 1 = no detune. 0 =-100 cents. 2=+100 cents)\n%f\n\n"
 			";Enable Key repeat (0-1... 0=only on specific keys. 1=on all keys)\n%d\n\n"
 			";MIDI Port\n%d\n\n"
-			";Enable Antialias\n%d\n\n",
+			";Enable Antialias\n%d\n\n",	
 			b,
 			mr,
 			hardsid,
@@ -785,12 +816,12 @@ int main(int argc, char **argv)
 			specialnotenames,
 			scalatuningfilepath,
 			maxSIDChannels,
-			currentPalettePreset,
+			paletteNames[currentPalettePreset],
 			masterVolume,
 			detuneCent,
 			enablekeyrepeat,
 			selectedMIDIPort,
-			enableAntiAlias
+			enableAntiAlias			
 		);
 
 		fclose(configfile);
@@ -800,7 +831,7 @@ int main(int argc, char **argv)
 
 	// Exit
 	return 0;
-}
+	}
 
 void waitkey(GTOBJECT *gt)
 {
@@ -872,11 +903,11 @@ void waitkeymouse(GTOBJECT *gt)
 		*/
 		gMIDINote = -1;
 
-//		sprintf(textbuffer, "%x,%x,%x", jdebug[1], jdebug[2], jdebug[3]);
-//		printtext(70, 36, 0xe, textbuffer);
+		//		sprintf(textbuffer, "%x,%x,%x", jdebug[1], jdebug[2], jdebug[3]);
+		//		printtext(70, 36, 0xe, textbuffer);
 
-//		sprintf(textbuffer, "hello: %s", paletteStringBuffer);	// paletteFolderEntry->d_name);
-//		printtext(5, 37, 0xe, textbuffer);
+		//		sprintf(textbuffer, "hello: %s", paletteStringBuffer);	// paletteFolderEntry->d_name);
+		//		printtext(5, 37, 0xe, textbuffer);
 
 		if (!jdebugPlaying)
 		{

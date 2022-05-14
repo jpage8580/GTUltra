@@ -1,0 +1,53 @@
+;GTUltra Palette: 07_soundmonitor.gtp
+
+PALETTEDATA:
+00:8B,8B,8B	Pattern: Background 1
+01:4A,4A,4A	Pattern: Foreground 1
+02:7B,7B,7B	Pattern: Background 2
+03:4A,4A,4A	Pattern: Foreground 2
+04:4A,4A,4A	Pattern: Highlight Background
+05:FF,FF,FF	Pattern: Highlight Foreground
+06:B2,B2,B2	Pattern: Note Foreground
+07:B2,B2,B2	Pattern: Command Foreground
+08:4A,4A,4A	Pattern: Vertical Line
+09:B2,B2,B2	Pattern: Playing Line Background
+0A:00,00,00	Pattern: Playing Line Foreground
+0B:4A,4A,4A	Pattern: Unused Background
+0C:4A,4A,4A	Pattern: Unused Foreground
+0D:75,CE,C8	Select: Background
+0E:4A,4A,4A	Select: Foreground
+0F:4A,4A,4A	Table: Background 1
+10:7B,7B,7B	Table: Foreground 1
+11:4A,4A,4A	Table: Background 2
+12:7B,7B,7B	Table: Foreground 2
+13:4A,4A,4A	Table: Unused Background
+14:00,00,00	Table: Unused Foreground
+15:70,6D,EB	Table: Current Instr. Foreground
+16:4A,4A,4A	Table: Current Instr. Background
+17:4A,4A,4A	General: Background
+18:56,AC,4D	General: Title
+19:B2,B2,B2	General: Info
+1A:4A,4A,4A	General: Highlight
+1B:7B,7B,7B	TransportBar: Button Background
+1C:4A,4A,4A	TransportBar: Background
+1D:56,AC,4D	TransportBar: Enabled
+1E:81,33,38	RED (record / Filter Status)
+1F:ED,F1,71	Pattern Loop Marker Background
+20:70,6D,EB	Pattern Loop Marker Foreground
+21:75,CE,C8	Pattern: Instrument Foreground
+22:8B,8B,8B	Pattern: First Background 1
+23:4A,4A,4A	Pattern: First Foreground 1
+24:7B,7B,7B	Pattern: First Background 2
+25:4A,4A,4A	Pattern: First Foreground 2
+26:FF,FF,FF	Pattern: Index Highlight
+27:00,00,00	TransportBar: Background2
+28:4A,4A,4A	Top Bar: Background
+29:4A,4A,4A	TransportBar: Between Buttons
+2A:ED,F1,71	Exclamation
+2B:4A,4A,4A	Order/Inst: Background
+2C:70,6D,EB	Order/Inst: Foreground
+2D:ED,F1,71	Order/Inst/Table: Edit Foreground
+2E:75,CE,C8	Orderlist: Transpose/Repeat
+2F:75,CE,C8	Top Bar: Foreground
+30:70,6D,EB	Top Bar: Foreground OFF
+31:00,00,00	TransportBar: Button Foreground

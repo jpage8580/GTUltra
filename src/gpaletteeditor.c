@@ -564,6 +564,8 @@ int savePaletteText()
 	{
 		fprintf(handle, ";GTUltra Palette: %s\n\nPALETTEDATA:\n", paletteFileName);
 
+		setPaletteName(paletteFileName, currentPalettePreset);
+
 		int size = getPaletteTextArraySize();
 		for (int i = 0;i < size;i++)
 		{
@@ -582,12 +584,12 @@ char paletteStringBuffer[MAX_PATHNAME];
 int currentLoadedPresetIndex = 0;
 
 
-int loadPalette(char *paletteName)
+int loadPalette(char *palettePath,char *paletteFileName)
 {
 	if (currentLoadedPresetIndex >= MAX_PALETTE_PRESETS)
 		return -1;	// Already loaded max number of preset palettes
 
-	FILE *handle = fopen(paletteName, "rb");	// Have to use RB instead of RT as the default file is within the binary wad..grrr
+	FILE *handle = fopen(palettePath, "rb");	// Have to use RB instead of RT as the default file is within the binary wad..grrr
 	if (handle == NULL)
 	{
 		jdebug[0] = 0xfe;
@@ -605,17 +607,29 @@ int loadPalette(char *paletteName)
 	paletteMem[size] = 0;	// end marker
 
 	// Read palette data from text buffer
-	int ret = readPaletteData(paletteMem);
+	int ret = readPaletteData(paletteMem,paletteFileName);
 	free(paletteMem);
 
 	return ret;
 }
 
-int readPaletteData(char *paletteMem)
+void setPaletteName(char* paletteName, int index)
+{
+	if (paletteNames[index] != NULL)
+	{
+		free(paletteNames[index]);
+	}
+	paletteNames[index] = malloc(strlen(paletteName));
+	strcpy(paletteNames[index], paletteName);	// copy filename. This is saved in the cfg file as the one to start up with
+}
+
+int readPaletteData(char *paletteMem, char *paletteName)
 {
 
 	int lines = 0;
 	int foundPaletteInfo = 0;
+
+	setPaletteName(paletteName, currentLoadedPresetIndex);
 
 	char **p = &paletteMem;
 
@@ -752,16 +766,21 @@ int loadPalettes()
 {
 	DIR *folder;
 
+
+//JP - NOT TESTED ! SETTING DIFFERENT PATH FOR LINUX FOR READING PALETTES FROM .EXE LOCATION INSTEAD OF .CFG
+#ifdef __WIN32__
 	createFilename(appFileName, paletteFile, "gtpalettes");
+#else
+	strcpy(paletteFile, getenv("HOME"));
+	strcat(paletteFile, "/.goattrk/gtpalettes");
+#endif
+
 
 	folder = opendir(paletteFile);
 	if (folder == NULL)
 	{
-//		printf("%s\n", paletteFile);
-
-		jdebug[0] = 0xff;
-		perror(paletteFile);
-		return(1);
+		mkdir(paletteFile);	// default palette folder didn't exist in config file location. It now does..
+		return 0;
 	}
 
 	while ((paletteFolderEntry = readdir(folder)))
@@ -769,14 +788,18 @@ int loadPalettes()
 		if (paletteFolderEntry->d_name[0] == '.')	// skip . and .. (first two folder entries)
 			continue;
 
+#ifdef __WIN32__
 		createFilename(appFileName, paletteFile, "gtpalettes");
-		strcat(paletteFile, "/");	//"\\");	// Changed to / to hopefully allow both Windows + Linux loading work
+		strcat(paletteFile, "\\");
+#else
+		strcpy(paletteFile, getenv("HOME"));
+		strcat(paletteFile, "/.goattrk/gtpalettes/");
+#endif
+
 		strcat(paletteFile, paletteFolderEntry->d_name);	// create full path
 
-		paletteNames[currentLoadedPresetIndex] = malloc(sizeof(paletteFolderEntry->d_name));
-		strcpy(paletteNames[currentLoadedPresetIndex], paletteFolderEntry->d_name);	// copy filename. This is saved in the cfg file
 
-		loadPalette(paletteFile);
+		loadPalette(paletteFile, paletteFolderEntry->d_name);
 	}
 
 	closedir(folder);

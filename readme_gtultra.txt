@@ -11,6 +11,9 @@ Thanks to Shogoon, Russell Hoy, Jani Väisänen and Egon Sander
 Example songs:
 Thanks to MultiStyle Labs (Jammer, Linus, LMan, Mibri and Shogoon)
 
+Linus help:
+Special thanks to tlr and theK
+
 V 1.2.0
 
 FIXES:
