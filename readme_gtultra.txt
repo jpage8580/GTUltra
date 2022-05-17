@@ -1,7 +1,7 @@
 GTUltra v1.2.0
 ------------------
 Release: 29th March 2022
-Last Update: 7th May 2022
+Last Update: 17th May 2022
 Editor and C64 GT player enhancements - Jason Page / MultiStyle Labs
 Charset & additional palettes: LMan
 
@@ -17,8 +17,9 @@ Special thanks to tlr and theK
 V 1.2.0
 
 FIXES:
-Playback / editor lockup fixes for 3+4 SIDs 
+Fixed playback / editor lockups when looping sections 
 Can now step backwards in orderlist if reaching a transpose or repeat marker
+Linux support - many fixes (thank you tlr and theK)
 
 CHANGES:
 Window can be resized (dragging bottom corner) - Window width/height ratio is retained (scaled by window height)
@@ -26,12 +27,17 @@ Antialias display option added (can be enabled/disabled from .cfg file entry)
 F3 in order list now selects correct patterns for patttern view
 New palette system, replacing the single gtskins.bin file
 (Up to 16 Individual, human readable palette files are loaded at startup from gtpalette folder)
-Palette editor changed to full 8 bit resolution
+Palette changed to full 8 bit resolution
 Palette editor saves individual palette files
-Increased palette skinning options
+Increased palette skinning options to 16
 Increased charset size to 2 banks of 256 chars
 New charset (thank you to LMan)
 New skins (thank you to LMan and Jammer)
+SDL2 support
+Added MIDI port selection window (Shift-Click on the keyboard icon)
+ctrl-Left / ctrl-Right to select previous / next position (emulating clicking the buttons on the transport bar)
+
+
 
 
 
