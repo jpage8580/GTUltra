@@ -747,7 +747,10 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 			editorInfo.eseditpos = 0;		// Reset cursor position in order list
 			editorInfo.esview = 0;			// reset scroll position in order list
 		}
-		stopsong(gt);
+		if (gt->songinit != PLAY_STOPPED)
+		{
+			stopsong(gt);
+		}
 
 		lastInfoPatternCh = -1;	// force text
 		displayPatternInfo(gt);
@@ -1039,7 +1042,10 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 		if (c2 >= maxSIDChannels)
 			return;
 
-		stopsong(gt);
+		if (gt->songinit != PLAY_STOPPED)
+		{
+			stopsong(gt);
+		}
 		bypassPlayRoutine = 1;	// Stop interrupt from updating play routine. We're going to do it manually
 		SDL_Delay(50);
 

@@ -2517,7 +2517,10 @@ void setGFXPaletteRGBFromPaletteRGB(int presetIndex, int paletteIndex)
 
 void handlePaletteDisplay(GTOBJECT *gt, int palettePreset)
 {
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 	SDL_Delay(50);
 
 
@@ -2768,7 +2771,10 @@ int mouseTransportBar(GTOBJECT *gt)
 		{
 			if (bothShiftAndCtrlPressed)
 			{
-				stopsong(gt);
+				if (gt->songinit != PLAY_STOPPED)
+				{
+					stopsong(gt);
+				}
 				displayCharWindow();
 				return 1;
 			}
@@ -2872,7 +2878,12 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (gt->songinit == PLAY_STOPPED)
 			playFromCurrentPosition(gt);
 		else
-			stopsong(gt);
+		{
+			if (gt->songinit != PLAY_STOPPED)
+			{
+				stopsong(gt);
+			}
+		}
 		return 1;
 	}
 
@@ -2940,7 +2951,10 @@ int checkMouseRange(int x, int y, int w, int h)
 
 void handleSIDChannelCountChange(GTOBJECT *gt)
 {
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 	SDL_Delay(100);	// ensure that GT player has done an update, so that playing channels are now silent prior to setting new channel count
 
 //	if (gt->masterLoopChannel >= maxSIDChannels)

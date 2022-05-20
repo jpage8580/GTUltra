@@ -1058,7 +1058,10 @@ void loadinstrument(GTOBJECT *gt)
 	handle = fopen(instrfilename, "rb");
 	if (handle)
 	{
-		stopsong(gt);
+		if (gt->songinit != PLAY_STOPPED)
+		{
+			stopsong(gt);
+		}
 		fread(ident, 4, 1, handle);
 
 		if ((!memcmp(ident, "GTI3", 4)) || (!memcmp(ident, "GTI4", 4)) || (!memcmp(ident, "GTI5", 4)))
@@ -1435,7 +1438,10 @@ void clearsong(int cs, int cp, int ci, int ct, int cn, GTOBJECT *gt)
 
 	if (!(cs | cp | ci | ct | cn)) return;
 
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 
 	gt->masterfader = 0x0f;
 	editorInfo.epmarkchn = -1;
@@ -1769,7 +1775,10 @@ void optimizeeverything(int oi, int ot, GTOBJECT *gt)
 {
 	int c, d, e;
 
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 
 	findduplicatepatterns(gt);
 

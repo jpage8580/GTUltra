@@ -330,8 +330,8 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 
 		if (newnote >= 0)
 		{
-	//		sprintf(textbuffer, "note: %x", newnote);
-	//		printtext(70, 36, 0xe, textbuffer);
+			//		sprintf(textbuffer, "note: %x", newnote);
+			//		printtext(70, 36, 0xe, textbuffer);
 
 			if ((recordmode) && (editorInfo.eppos < pattlen[gt->editorInfo[c2].epnum]))
 			{
@@ -1362,8 +1362,10 @@ void shrinkpattern(GTOBJECT *gt)
 
 	if (pattlen[c] < 2) return;
 
-	stopsong(gt);
-
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 	for (d = 0; d < nl; d++)
 	{
 		pattern[c][d * 4] = pattern[c][d * 2 * 4];
@@ -1395,7 +1397,10 @@ void expandpattern(GTOBJECT *gt)
 	if (nl > MAX_PATTROWS) return;
 	memset(temp, 0, sizeof temp);
 
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 
 	for (d = 0; d <= nl; d++)
 	{
@@ -1435,7 +1440,10 @@ void splitpattern(GTOBJECT *gt)
 	if (editorInfo.eppos == 0) return;
 	if (editorInfo.eppos == l) return;
 
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 	updateUndoBuffer(UNDO_AREA_CHANNEL_EDITOR_INFO);
 	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, 0, UNDO_AREA_DIRTY_CHECK);
 	if (insertpattern(c, gt))
@@ -1495,7 +1503,10 @@ void joinpattern(GTOBJECT *gt)
 
 	if (pattlen[c] + pattlen[d] > MAX_PATTROWS) return;
 
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 	updateUndoBuffer(UNDO_AREA_CHANNEL_EDITOR_INFO);
 	undoAreaSetCheckForChange(UNDO_AREA_CHANNEL_EDITOR_INFO, 0, UNDO_AREA_DIRTY_CHECK);
 
@@ -1585,7 +1596,7 @@ void handleShiftSpace(GTOBJECT *gt, int c2, int startPatternPos, int follow, int
 		}
 	}
 
-	orderPlayFromPosition(gt, startPatternPos, editorInfo.eseditpos, editorInfo.eschn,1);
+	orderPlayFromPosition(gt, startPatternPos, editorInfo.eseditpos, editorInfo.eschn, 1);
 	gt->loopEnabledFlag = enableLoop;	// Set this AFTER play starts, as init clears it.
 	followplay = follow;
 }
@@ -1813,8 +1824,8 @@ void calculateNoteOffsets()
 		sprintf(&keyOffsetText[c + 6], "(");
 		c++;
 
-//		if (noteIndex > 6)
-//			noteIndex = 6;
+		//		if (noteIndex > 6)
+		//			noteIndex = 6;
 		for (int i = 0;i < noteIndex;i++)
 		{
 			sprintf(&keyOffsetText[c + 6], "%s,", notenameTableView[noteList[i]]);
@@ -1825,7 +1836,7 @@ void calculateNoteOffsets()
 	}
 
 	if (checkAnyPolyPlaying() == 1)	// only have one note pressed. So don't display chord
-		sprintf(&keyOffsetText[0], "Note: %02X (%s)                                         ", firstNote - FIRSTNOTE, notenameTableView[firstNote-FIRSTNOTE]);
+		sprintf(&keyOffsetText[0], "Note: %02X (%s)                                         ", firstNote - FIRSTNOTE, notenameTableView[firstNote - FIRSTNOTE]);
 }
 
 

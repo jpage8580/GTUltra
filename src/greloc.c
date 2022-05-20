@@ -170,7 +170,10 @@ void relocator(GTOBJECT *gt)
 	nonormalspeed = 1;
 	nozerospeed = 1;
 
-	stopsong(gt);
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+	}
 
 
 
