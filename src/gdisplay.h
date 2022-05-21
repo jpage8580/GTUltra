@@ -4,7 +4,7 @@
 #ifndef GDISPLAY_C
 extern char debugtext[256];
 extern char* paletteText[];
-
+extern int displayOriginal3Channel;
 extern int timemin;
 extern int timesec;
 extern int timeframe;
@@ -107,7 +107,8 @@ void displayDetailedPulseTable(int cc);
 
 
 void displayPattern(GTOBJECT *gt);
-void displayPolyEnabledInfo();
+void displayPattern3Chn(GTOBJECT *gt);
+void displayPattern6Chn(GTOBJECT *gt);
 void printmainscreen(GTOBJECT *gt);
 void displayupdate(GTOBJECT *gt);
 void printstatus(GTOBJECT *gt);

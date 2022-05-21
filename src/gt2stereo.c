@@ -104,7 +104,7 @@ char packedpath[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.2.0";
+char *programname = "$VER: GTUltra V1.2.1";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
 		getstringparam(configfile, scalatuningfilepath);
 		getparam(configfile, &maxSIDChannels);
 		getstringparam(configfile, startPaletteName);
-//		getparam(configfile, &currentPalettePreset);
+		//		getparam(configfile, &currentPalettePreset);
 		getfloatparam(configfile, &masterVolume);
 		getfloatparam(configfile, &detuneCent);
 		getparam(configfile, &enablekeyrepeat);
@@ -528,8 +528,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-//	if (currentPalettePreset >= MAX_PALETTE_PRESETS)
-//		currentPalettePreset = 0;
+	//	if (currentPalettePreset >= MAX_PALETTE_PRESETS)
+	//		currentPalettePreset = 0;
 
 	if (maxSIDChannels != 3 && maxSIDChannels != 6 && maxSIDChannels != 9 && maxSIDChannels != 12)
 		maxSIDChannels = 6;
@@ -656,7 +656,7 @@ int main(int argc, char **argv)
 			return 0;
 		}
 
-}
+	}
 
 #endif
 
@@ -774,7 +774,7 @@ int main(int argc, char **argv)
 			";Detune Cent (0-2... 1 = no detune. 0 =-100 cents. 2=+100 cents)\n%f\n\n"
 			";Enable Key repeat (0-1... 0=only on specific keys. 1=on all keys)\n%d\n\n"
 			";MIDI Port\n%d\n\n"
-			";Enable Antialias\n%d\n\n",	
+			";Enable Antialias\n%d\n\n",
 			b,
 			mr,
 			hardsid,
@@ -821,7 +821,7 @@ int main(int argc, char **argv)
 			detuneCent,
 			enablekeyrepeat,
 			selectedMIDIPort,
-			enableAntiAlias			
+			enableAntiAlias
 		);
 
 		fclose(configfile);
@@ -831,7 +831,7 @@ int main(int argc, char **argv)
 
 	// Exit
 	return 0;
-	}
+}
 
 void waitkey(GTOBJECT *gt)
 {
@@ -1243,14 +1243,23 @@ void mousecommands(GTOBJECT *gt)
 		}
 		else
 		{
-			if ((mousey >= PATTERN_Y) && (mousey <= PATTERN_Y + VISIBLEPATTROWS + 0) && (mousex >= PATTERN_X + 5 + c * 9) && (mousex <= PATTERN_X + 12 + c * 9))
+			int patternWidth = 9;
+			int patternTextWidth = 7;
+			if (displayOriginal3Channel)
+			{
+				patternWidth = 13;
+				patternTextWidth = 10;
+			}
+
+
+			if ((mousey >= PATTERN_Y) && (mousey <= PATTERN_Y + VISIBLEPATTROWS + 0) && (mousex >= PATTERN_X + 5 + c * patternWidth) && (mousex <= PATTERN_X + 5 + patternTextWidth + c * patternWidth))
 			{
 				if (!mouseb)
 					return;
 				if (editorInfo.editmode != EDIT_PATTERN && prevmouseb)	// Don't allow hold/drag to select another panel
 					return;
 
-				int x = mousex - (PATTERN_X + 5) - c * 9;
+				int x = mousex - (PATTERN_X + 5) - c * patternWidth;
 				int newpos = mousey - PATTERN_Y + 1 + 12 + editorInfo.epview - VISIBLEPATTROWS / 2;
 
 				if (newpos < 0) newpos = 0;
@@ -1272,7 +1281,23 @@ void mousecommands(GTOBJECT *gt)
 				{
 					editorInfo.epchn = c;
 					if (x < 3) editorInfo.epcolumn = 0;
-					if (x >= 3) editorInfo.epcolumn = x - 2;
+					if (x >= 3)
+					{
+						if (!displayOriginal3Channel)
+							editorInfo.epcolumn = x - 2;
+						else
+						{
+						//	sprintf(textbuffer, "%d", x);
+						//	printtext(70, 36, 0xe, textbuffer);
+
+							if (x >= 4 && x <= 5)
+								editorInfo.epcolumn = 1 + (x - 4);	// instrument
+							else if (x == 7)
+								editorInfo.epcolumn = 3;	// instruction
+							else if (x >= 9 && x <= 10)
+								editorInfo.epcolumn = 4 + (x - 9);	// data
+						}
+					}
 
 					setMasterLoopChannel(gt);
 				}

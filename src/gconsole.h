@@ -20,7 +20,7 @@ void printblankc(int x, int y, int color, int length);
 void drawbox(int x, int y, int color, int sx, int sy);
 void printbg(int x, int y, int color, int length);
 void getkey(void);
-void drawLine(int x, int y, int w, int h, int colr);
+void fillArea(int x, int y, int width, int height, int color, int fillchar);
 
 void printbyte(int x, int y, int color, unsigned int b);
 void printbyterow(int x, int y, int color, unsigned int b, int length);

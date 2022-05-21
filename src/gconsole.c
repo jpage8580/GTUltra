@@ -280,6 +280,15 @@ void printbyterow(int x, int y, int color, unsigned int b, int length)
 	}
 }
 
+
+void fillArea(int x, int y, int width, int height, int color,int fillchar)
+{
+	for (int i = 0;i < height;i++)
+	{
+		printbyterow(x, y + i, color, fillchar, width);
+	}
+}
+
 void printbytecol(int x, int y, int color, unsigned int b, int length)
 {
 	unsigned *dptr = scrbuffer + (x + y * MAX_COLUMNS);

@@ -187,8 +187,8 @@ void printstatus(GTOBJECT *gt)
 
 			if ((c2 == gt->masterLoopChannel) && (gt->chn[c2].advance) && (playingSong == editorInfo.esnum))
 			{
-		//		sprintf(textbuffer, "cursorpos: %d\n", newpos);
-		//		printtext(70, 36, 0xe, textbuffer);
+				//		sprintf(textbuffer, "cursorpos: %d\n", newpos);
+				//		printtext(70, 36, 0xe, textbuffer);
 
 				editorInfo.eseditpos = newpos;
 				if (newpos - editorInfo.esview < 0)
@@ -566,9 +566,34 @@ void displayPaletteInfo(int cc)
 }
 
 
+int displayOriginal3Channel = 0;
 
-
+int lastDisplayChanCount = 0;
 void displayPattern(GTOBJECT *gt)
+{
+	int maxChan = MAX_CHN;
+	if ((editorInfo.esnum & 1 && maxSIDChannels == 9) || maxSIDChannels == 3)
+		maxChan = 3;
+
+	if (maxChan != lastDisplayChanCount)	// clear pattern display area if swapping between 3/6 channel views
+	{
+		lastDisplayChanCount = maxChan;
+		fillArea(PATTERN_X, PATTERN_Y, 60, 30, 0, ' ');
+	}
+
+	if (maxChan == MAX_CHN)
+	{
+		displayPattern6Chn(gt);
+		displayOriginal3Channel = 0;
+	}
+	else
+	{
+		displayPattern3Chn(gt);
+		displayOriginal3Channel = 1;
+	}
+}
+
+void displayPattern6Chn(GTOBJECT *gt)
 {
 	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, VISIBLEPATTROWS + 2);
 
@@ -658,8 +683,8 @@ void displayPattern(GTOBJECT *gt)
 		if (d == 0)
 		{
 			color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
-	//		printbyte(PATTERN_X, PATTERN_Y, color, 0xff);
-	//		printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 0xff);	// header sepearator 
+			//		printbyte(PATTERN_X, PATTERN_Y, color, 0xff);
+			//		printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 0xff);	// header sepearator 
 		}
 	}
 
@@ -966,8 +991,7 @@ void displayPattern(GTOBJECT *gt)
 
 }
 
-/*
-void displayPattern2(GTOBJECT *gt)
+void displayPattern3Chn(GTOBJECT *gt)
 {
 	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, VISIBLEPATTROWS + 2);
 
@@ -983,6 +1007,8 @@ void displayPattern2(GTOBJECT *gt)
 	if ((editorInfo.esnum & 1 && maxSIDChannels == 9) || maxSIDChannels == 3)
 		maxChan = 3;
 
+	int chnWidth = 13;
+
 	for (int c = 0; c < maxChan; c++)
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
@@ -994,7 +1020,7 @@ void displayPattern2(GTOBJECT *gt)
 	if (gt->editorInfo[editorInfo.highlightLoopChannel].epnum == editorInfo.highlightLoopPatternNumber)
 		highlightPatternLoop = 1;
 
-	printtext(PATTERN_X + 1, PATTERN_Y, getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND), "POS");
+	printtext(PATTERN_X + 0, PATTERN_Y, getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND), " POS");
 	for (int d = 0; d < VISIBLEPATTROWS; d++)
 	{
 		int p = editorInfo.epview + d;
@@ -1012,11 +1038,8 @@ void displayPattern2(GTOBJECT *gt)
 		color &= 0xff00;
 		color |= CPATTERN_DIVIDER_LINE;
 
-		int tunderline = UIUnderline;
-		UIUnderline = 0;
 		int colort = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
-		printbyte(PATTERN_X + (MAX_CHN * 9) + 4, PATTERN_Y + 1 + d, colort, 0x20);
-		UIUnderline = tunderline;
+		printbyte(PATTERN_X + (MAX_CHN * chnWidth) + 4, PATTERN_Y + 1 + d, colort, 0x20);	//0xff);
 
 		color &= 0xff00;
 		//		if ((p% stepsize) == 0)
@@ -1024,25 +1047,17 @@ void displayPattern2(GTOBJECT *gt)
 		//		else
 		color |= CPATTERN_NOTE_FOREGROUND;
 
-
-
 		if ((p < 0) || (p > maxpattlen))
 		{
 			color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 			sprintf(textbuffer, "   ");
-			//			int tempUnderline = UIUnderline;
-			//			UIUnderline = 0;
-			//			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0xff);
-			//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
-			//			UIUnderline = tempUnderline;
+			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0x20);	//ff);
+//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
 		}
 		else
 		{
-			//			int tempUnderline = UIUnderline;
-			//			UIUnderline = 0;
-			//			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0xff);
-			//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
-			//			UIUnderline = tempUnderline;
+			printbyte(PATTERN_X, PATTERN_Y + 1 + d, color, 0x20);	//ff);
+//			printbyte(PATTERN_X + (maxChan * 9) + 4, PATTERN_Y + 1 + d, color, 0xff);
 
 
 			color &= 0xff00;
@@ -1050,8 +1065,6 @@ void displayPattern2(GTOBJECT *gt)
 				color |= CPATTERN_INDEX_HIGHLIGHT;
 			else
 				color |= CPATTERN_NOTE_FOREGROUND;
-
-			
 
 			if (!(patterndispmode & 1))
 			{
@@ -1063,20 +1076,19 @@ void displayPattern2(GTOBJECT *gt)
 			else
 				sprintf(textbuffer, " %02X", p);
 		}
-		UIUnderline = UNDERLINE_MASK;
+
 		printtext(PATTERN_X + 1, PATTERN_Y + 1 + d, color, textbuffer);
 
 
 		if (d == 0)
 		{
-			//	color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
-			color = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
-			printbyte(PATTERN_X, PATTERN_Y, color, 32);
-			printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 32);	// header sepearator 
+			color = CPATTERN_DIVIDER_LINE | (CUNUSED_MUTED_BACKGROUND << 8);
+			//		printbyte(PATTERN_X, PATTERN_Y, color, 0xff);
+			//		printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 0xff);	// header sepearator 
 		}
 	}
 
-	for (int c = 0; c < MAX_CHN; c++)
+	for (int c = 0; c < 3; c++)
 	{
 		for (int d = 0; d < VISIBLEPATTROWS; d++)
 		{
@@ -1103,14 +1115,17 @@ void displayPattern2(GTOBJECT *gt)
 			int cl = color & 0xff00;
 			cl |= CPATTERN_DIVIDER_LINE;
 
-			printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y + 1 + d, cl, 0xff);
+			printbyte(PATTERN_X + 4 + (c * chnWidth), PATTERN_Y + 1 + d, cl, 0xff);
 			if (d == 0)
-				printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y, getColor(CPATTERN_DIVIDER_LINE, CUNUSED_MUTED_BACKGROUND), 0xff);
+				printbyte(PATTERN_X + 4 + (c * chnWidth), PATTERN_Y, getColor(CPATTERN_DIVIDER_LINE, CUNUSED_MUTED_BACKGROUND), 0xff);
 		}
 	}
 
-	for (int c = 0; c < MAX_CHN; c++)
+	for (int c = 0; c < 3;c++)	//MAX_CHN; c++)
 	{
+		//9
+		int xpos = PATTERN_X + 4 + c * chnWidth;
+
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 		int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
 
@@ -1119,33 +1134,38 @@ void displayPattern2(GTOBJECT *gt)
 		if (c >= maxChan)
 			invalidColumn = 1;
 
-		sprintf(textbuffer, " CH%01X   %02X", c2 + 1, gt->editorInfo[c2].epnum);
+		sprintf(textbuffer, " CH%01X   %02X ", c2 + 1, gt->editorInfo[c2].epnum);
+
+		int filterInfoXOffset = 6;
 
 		int headerColor = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
 		if (c >= maxChan)
 			headerColor = getColor(CUNUSED_MUTED_FOREGROUND, CTRANSPORT_FOREGROUND);
 
-		printtext(PATTERN_X + 4 + c * 9, PATTERN_Y, headerColor, textbuffer);
+		printtext(xpos, PATTERN_Y, headerColor, textbuffer);
 
 		if (getFilterOnOff(gt, c2))
 			headerColor = getColor(CCOLOR_RED, CGENERAL_BACKGROUND);
-		printbyte(PATTERN_X + 9 + c * 9, PATTERN_Y, headerColor, 0xf3);	// Filter on/off marker
+		printbyte(xpos + filterInfoXOffset, PATTERN_Y, headerColor, 0xf3);	// Filter on/off marker
 
 
 		headerColor = getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND);
 		if (!(c % 3))
 		{
+			int t = UIUnderline;
 			UIUnderline = 0;
-			sprintf(textbuffer, "LO BN HI  CUT:%02X  RES:%01X", getFilterCutoff(gt, c2), getFilterResonance(gt, c2));
-			printtext(PATTERN_X + 6 + c * 9, PATTERN_Y - 1, headerColor, textbuffer);
 
-			// Filter info
+			sprintf(textbuffer, "LO BN HI  CUT:%02X  RES:%01X", getFilterCutoff(gt, c2), getFilterResonance(gt, c2));
+			printtext(PATTERN_X + filterInfoXOffset + 6 + c * chnWidth, PATTERN_Y - 1, headerColor, textbuffer);
+
 			for (int i = 0;i < 2;i++)
 			{
-				printbyte(PATTERN_X + 6 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe0 + i);
-				printbyte(PATTERN_X + 9 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe2 + i);
-				printbyte(PATTERN_X + 12 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe4 + i);
+				printbyte(PATTERN_X + filterInfoXOffset + 6 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0xe0 + i);
+				printbyte(PATTERN_X + filterInfoXOffset + 9 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0xe2 + i);
+				printbyte(PATTERN_X + filterInfoXOffset + 12 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0xe4 + i);
 			}
+
+			UIUnderline = t;
 
 			int filterTypeOffColor = getColor(CUNUSED_MUTED_FOREGROUND, CTRANSPORT_FOREGROUND);
 			int filterEnabledType = getFilterType(gt, c2);
@@ -1156,15 +1176,15 @@ void displayPattern2(GTOBJECT *gt)
 				{
 					if (!(filterEnabledType&(1 << j)))
 					{
-						printbg(PATTERN_X + 6 + i + (j * 3) + c * 9, PATTERN_Y - 1, filterTypeOffColor, 2);
+						printbg(PATTERN_X + filterInfoXOffset + 6 + i + (j * 3) + c * chnWidth, PATTERN_Y - 1, filterTypeOffColor, 2);
 					}
 				}
 			}
-
 		}
 
 
 		int colorNoChange = 0;
+
 
 
 		for (int d = 0; d < VISIBLEPATTROWS; d++)
@@ -1209,20 +1229,18 @@ void displayPattern2(GTOBJECT *gt)
 				colorNoChange = 1;
 			}
 
-			//UIUnderline = 1;
-			UIUnderline = UNDERLINE_FOREGROUND_MASK;
 
 			if ((p < 0) || (p > pattlen[gt->editorInfo[c2].epnum]) || c2 >= maxSIDChannels || invalidColumn)
 			{
 				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 				colorNoChange = 1;
-				sprintf(textbuffer, "        ");
+				sprintf(textbuffer, "            ");
 			}
 			else
 			{
 				if (pattern[gt->editorInfo[c2].epnum][p * 4] == ENDPATT)
 				{
-					sprintf(textbuffer, "PATT.END");
+					sprintf(textbuffer, "PATTERN.END ");
 					if (colorNoChange == 0)
 					{
 						color &= 0xff00;	// keep background (stripes)
@@ -1233,7 +1251,7 @@ void displayPattern2(GTOBJECT *gt)
 				}
 				else
 				{
-					sprintf(textbuffer, "%s%02X%01X%02X",
+					sprintf(textbuffer, "%s %02X %01X %02X ",
 						notename[pattern[gt->editorInfo[c2].epnum][p * 4] - FIRSTNOTE],
 						pattern[gt->editorInfo[c2].epnum][p * 4 + 1],
 						pattern[gt->editorInfo[c2].epnum][p * 4 + 2],
@@ -1241,11 +1259,15 @@ void displayPattern2(GTOBJECT *gt)
 
 					if (patterndispmode & 2)
 					{
-						if (!pattern[gt->editorInfo[c2].epnum][p * 4 + 1])
-							memset(&textbuffer[3], '.', 2);
-						if (!pattern[gt->editorInfo[c2].epnum][p * 4 + 2])
-							memset(&textbuffer[5], '.', 3);
+						if (!pattern[gt->editorInfo[c2].epnum][p * 4 + 1])		// No instrument
+							memset(&textbuffer[4], '.', 2);
+						if (!pattern[gt->editorInfo[c2].epnum][p * 4 + 2])		// No command
+						{
+							memset(&textbuffer[7], '.', 1);	// clear command
+							memset(&textbuffer[9], '.', 2);	// clear data
+						}
 					}
+
 				}
 			}
 
@@ -1315,17 +1337,15 @@ void displayPattern2(GTOBJECT *gt)
 				{
 					if (isMatchingRGB(currentPalettePreset, color))
 					{
-						sprintf(textbuffer, "        ");
+						sprintf(textbuffer, "            ");
 					}
 				}
 			}
-
-			UIUnderline = 0;
-
-			printtext(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, color2, textbuffer);
-			printtext(PATTERN_X + 8 + c * 9, PATTERN_Y + 1 + d, color3, &textbuffer[3]);
-			printtext(PATTERN_X + 10 + c * 9, PATTERN_Y + 1 + d, color4, &textbuffer[5]);
-			printtext(PATTERN_X + 11 + c * 9, PATTERN_Y + 1 + d, color5, &textbuffer[6]);
+			xpos = PATTERN_X + 5;
+			printtext(xpos + (c * chnWidth), PATTERN_Y + 1 + d, color2, textbuffer);		// 4 chars: C-3<space>
+			printtext(xpos + 4 + (c* chnWidth), PATTERN_Y + 1 + d, color3, &textbuffer[4]);	// 3 chars: 00<space>
+			printtext(xpos + 4 + 3 + (c * chnWidth), PATTERN_Y + 1 + d, color4, &textbuffer[4 + 3]);	// 2 chars: 1 <space>
+			printtext(xpos + 4 + 3 + 2 + (c * chnWidth), PATTERN_Y + 1 + d, color5, &textbuffer[4 + 3 + 2]);	// 2 chars: 00
 
 			if (c == editorInfo.epmarkchn)
 			{
@@ -1333,12 +1353,12 @@ void displayPattern2(GTOBJECT *gt)
 				{
 					if ((p >= editorInfo.epmarkstart) && (p <= editorInfo.epmarkend))
 					{
-						printbg(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 8);
+						printbg(PATTERN_X + 5 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), chnWidth-1);
 
 						if (transportLoopPattern)
 						{
-							printbg(PATTERN_X + 4 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
-							printbg(PATTERN_X + 4 + 9 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+							printbg(PATTERN_X + 4 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+							printbg(PATTERN_X + 4 + chnWidth + c * chnWidth, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
 						}
 					}
 
@@ -1347,28 +1367,47 @@ void displayPattern2(GTOBJECT *gt)
 				{
 					if ((p <= editorInfo.epmarkstart) && (p >= editorInfo.epmarkend))
 					{
-						printbg(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 8);
+						printbg(PATTERN_X + 5 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), chnWidth-1);
 
 						if (transportLoopPattern)
 						{
-							printbg(PATTERN_X + 4 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
-							printbg(PATTERN_X + 4 + 9 + c * 9, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+							printbg(PATTERN_X + 4 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
+							printbg(PATTERN_X + 4 + chnWidth + c * chnWidth, PATTERN_Y + 1 + d, getColor(CPATTERN_LOOP_MARKER_FOREGROUND, CPATTERN_LOOP_MARKER_BACKGROUND), 1);
 						}
 					}
 
 				}
 			}
 
+			// Display cursor
 			if ((displayCursor) && (editorInfo.editmode == EDIT_PATTERN) && (editorInfo.epchn == c))
 			{
+				int displayColumn = 0;
+				int displayCursorOffset = 0;
 				switch (editorInfo.epcolumn)
 				{
 				case 0:
-					if (!eamode) printbg(PATTERN_X + 5 + c * 9, PATTERN_Y + 1 + d, cc << 8, 3);
+					if (!eamode) printbg(PATTERN_X + 5 + c * chnWidth, PATTERN_Y + 1 + d, cc << 8, 3);
 					break;
 
 				default:
-					if (!eamode) printbg(PATTERN_X + 5 + c * 9 + 2 + editorInfo.epcolumn, PATTERN_Y + 1 + d, cc << 8, 1);
+					if (editorInfo.epcolumn == 1 || editorInfo.epcolumn == 2)	// instrument 00
+					{
+						displayColumn = 4;
+						displayCursorOffset = editorInfo.epcolumn - 1;
+					}
+					else if (editorInfo.epcolumn == 3)	// command 0
+					{
+						displayColumn = 7;
+						displayCursorOffset = editorInfo.epcolumn - 3;
+					}
+					else
+					{
+						displayColumn = 9;	// data 00
+						displayCursorOffset = editorInfo.epcolumn - 4;
+					}
+
+					if (!eamode) printbg(PATTERN_X + 5 + c * chnWidth + displayColumn + displayCursorOffset, PATTERN_Y + 1 + d, cc << 8, 1);
 					break;
 				}
 			}
@@ -1378,8 +1417,6 @@ void displayPattern2(GTOBJECT *gt)
 	UIUnderline = 0;
 
 }
-*/
-
 
 
 void displayTransportBar(GTOBJECT *gt)
