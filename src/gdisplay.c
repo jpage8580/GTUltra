@@ -155,7 +155,8 @@ void printstatus(GTOBJECT *gt)
 
 	displayTransportBar(gt);
 
-	if ((followplay) && (!transportLoopPattern) && (isplaying(gt)))	// 1.1.7 FIX (added !transportLoopPattern) 3/5/2022
+//	if ((followplay) && (!transportLoopPattern) && (isplaying(gt)))	// 1.1.7 FIX (added !transportLoopPattern) 3/5/2022
+		if ((followplay) && (isplaying(gt)))	// 1.2.1 - removed (!transportLoopPattern) as it stopped follow+loop..gotta look into why I added that!
 	{
 		for (c = 0; c < maxSIDChannels; c++)
 		{
