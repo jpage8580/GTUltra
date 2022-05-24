@@ -145,7 +145,7 @@ unsigned char paletteR[256];
 unsigned char paletteG[256];
 unsigned char paletteB[256];
 
-int maxSIDChannels = 12;
+int maxSIDChannels = 3;	//12;
 int gMIDINote = -1;
 
 int loadedSongFlag = 0;
@@ -1247,8 +1247,8 @@ void mousecommands(GTOBJECT *gt)
 			int patternTextWidth = 7;
 			if (displayOriginal3Channel)
 			{
-				patternWidth = 13;
-				patternTextWidth = 10;
+				patternWidth = 14;
+				patternTextWidth = 9;
 			}
 
 
@@ -1294,8 +1294,8 @@ void mousecommands(GTOBJECT *gt)
 								editorInfo.epcolumn = 1 + (x - 4);	// instrument
 							else if (x == 7)
 								editorInfo.epcolumn = 3;	// instruction
-							else if (x >= 9 && x <= 10)
-								editorInfo.epcolumn = 4 + (x - 9);	// data
+							else if (x >= 8 && x <= 9)
+								editorInfo.epcolumn = 4 + (x - 8);	// data
 						}
 					}
 
@@ -2940,7 +2940,10 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (shiftOrCtrlPressed)
 			displayMIDISelectWindow();
 		else
+		{
+			lastDisplayChanCount = 0;
 			transportShowKeyboard = 1 - transportShowKeyboard;
+		}
 	}
 
 

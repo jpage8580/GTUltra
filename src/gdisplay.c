@@ -578,7 +578,10 @@ void displayPattern(GTOBJECT *gt)
 	if (maxChan != lastDisplayChanCount)	// clear pattern display area if swapping between 3/6 channel views
 	{
 		lastDisplayChanCount = maxChan;
-		fillArea(PATTERN_X, PATTERN_Y, 60, 30, 0, ' ');
+
+		int color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
+
+		fillArea(PATTERN_X, PATTERN_Y, 60, 30, color, ' ');
 	}
 
 	if (maxChan == MAX_CHN)
@@ -1007,7 +1010,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 	if ((editorInfo.esnum & 1 && maxSIDChannels == 9) || maxSIDChannels == 3)
 		maxChan = 3;
 
-	int chnWidth = 13;
+	int chnWidth = 14;
 
 	for (int c = 0; c < maxChan; c++)
 	{
@@ -1134,7 +1137,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 		if (c >= maxChan)
 			invalidColumn = 1;
 
-		sprintf(textbuffer, " CH%01X   %02X ", c2 + 1, gt->editorInfo[c2].epnum);
+		sprintf(textbuffer, " CHN%01X   PAT %02X", c2 + 1, gt->editorInfo[c2].epnum);
 
 		int filterInfoXOffset = 6;
 
@@ -1143,6 +1146,9 @@ void displayPattern3Chn(GTOBJECT *gt)
 			headerColor = getColor(CUNUSED_MUTED_FOREGROUND, CTRANSPORT_FOREGROUND);
 
 		printtext(xpos, PATTERN_Y, headerColor, textbuffer);
+		if (c == 2)
+			printbyterow(xpos + chnWidth, PATTERN_Y, headerColor, ' ', 59 - (xpos + chnWidth));
+
 
 		if (getFilterOnOff(gt, c2))
 			headerColor = getColor(CCOLOR_RED, CGENERAL_BACKGROUND);
@@ -1234,13 +1240,13 @@ void displayPattern3Chn(GTOBJECT *gt)
 			{
 				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 				colorNoChange = 1;
-				sprintf(textbuffer, "            ");
+				sprintf(textbuffer, "             ");
 			}
 			else
 			{
 				if (pattern[gt->editorInfo[c2].epnum][p * 4] == ENDPATT)
 				{
-					sprintf(textbuffer, "PATTERN.END ");
+					sprintf(textbuffer, "PATTERN.END  ");
 					if (colorNoChange == 0)
 					{
 						color &= 0xff00;	// keep background (stripes)
@@ -1251,7 +1257,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 				}
 				else
 				{
-					sprintf(textbuffer, "%s %02X %01X %02X ",
+					sprintf(textbuffer, "%s %02X %01X%02X   ",
 						notename[pattern[gt->editorInfo[c2].epnum][p * 4] - FIRSTNOTE],
 						pattern[gt->editorInfo[c2].epnum][p * 4 + 1],
 						pattern[gt->editorInfo[c2].epnum][p * 4 + 2],
@@ -1264,7 +1270,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 						if (!pattern[gt->editorInfo[c2].epnum][p * 4 + 2])		// No command
 						{
 							memset(&textbuffer[7], '.', 1);	// clear command
-							memset(&textbuffer[9], '.', 2);	// clear data
+							memset(&textbuffer[8], '.', 2);	// clear data
 						}
 					}
 
@@ -1337,7 +1343,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 				{
 					if (isMatchingRGB(currentPalettePreset, color))
 					{
-						sprintf(textbuffer, "            ");
+						sprintf(textbuffer, "             ");
 					}
 				}
 			}
@@ -1403,7 +1409,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 					}
 					else
 					{
-						displayColumn = 9;	// data 00
+						displayColumn = 8;	// data 00
 						displayCursorOffset = editorInfo.epcolumn - 4;
 					}
 

@@ -8,6 +8,7 @@ extern int displayOriginal3Channel;
 extern int timemin;
 extern int timesec;
 extern int timeframe;
+extern int lastDisplayChanCount;
 #endif
 
  
