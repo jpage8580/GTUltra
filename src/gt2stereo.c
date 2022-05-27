@@ -104,7 +104,7 @@ char packedpath[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.2.1";
+char *programname = "$VER: GTUltra V1.2.2";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -3080,8 +3080,8 @@ void nextSongPos(GTOBJECT *gt)
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr < songlen[songNum][c3])
 		{
-			sprintf(textbuffer, "cnt: %d\n", jcc++);
-			printtext(70, 36, 0xe, textbuffer);
+//			sprintf(textbuffer, "cnt: %d\n", jcc++);
+//			printtext(70, 36, 0xe, textbuffer);
 			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr, gt->masterLoopChannel, 0);
 		}
 	}
