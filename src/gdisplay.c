@@ -1799,7 +1799,7 @@ char majorKeyOn[12] = { 0,-1,1,-1,2,3,-1,4,-1,5,-1,6 };
 // Call this once per frame. Prior to doing the setNote
 void resetKeyboardDisplay()
 {
-	for (int i = 0;i < 49;i++)
+	for (int i = 0;i < 59;i++)
 	{
 		charIndexArrayTopRow[i] = 0;
 		charOnOffBottomRow[i] = 0;
