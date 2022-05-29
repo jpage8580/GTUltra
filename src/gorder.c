@@ -671,57 +671,28 @@ void orderright(void)
 
 void nextsong(GTOBJECT *gt)
 {
-	//	if (!editPaletteMode)
-	//	{
 	editorInfo.esnum++;
 	if (editorInfo.esnum >= MAX_SONGS) editorInfo.esnum = MAX_SONGS - 1;
 	songchange(gt, 0);
-
 	setMasterLoopChannel(gt);
-	//	}
-	//	else
-	//	{
-	/*
-			currentPalettePreset++;
-			if (currentPalettePreset >= MAX_PALETTE_PRESETS)
-				currentPalettePreset = MAX_PALETTE_PRESETS - 1;
-
-			copyPaletteToOrderList(currentPalettePreset);
-			setSkin(currentPalettePreset);
-	*/
-	//	}
-
 }
 
 void prevsong(GTOBJECT *gt)
 {
-	//	if (!editPaletteMode)
-	//	{
 	editorInfo.esnum--;
 	if (editorInfo.esnum < 0) editorInfo.esnum = 0;
 	songchange(gt, 0);
 	setMasterLoopChannel(gt);
-	//	}
-	//	else
-	/*
-		{
-			currentPalettePreset--;
-			if (currentPalettePreset < 0)
-				currentPalettePreset = 0;
-
-			copyPaletteToOrderList(currentPalettePreset);
-			setSkin(currentPalettePreset);
-		}
-	*/
 }
+
+int backupPatPos[MAX_PLAY_CH];
+int jr = 0;
 
 int lastSong = -1;
 void songchange(GTOBJECT *gt, int resetEditingPositions)
 {
 	int c;
 	int s = editorInfo.esnum / 2;	// JP 9 or 12 channel song only
-
-
 
 	editorInfo.highlightLoopChannel = 999;			// remove from display
 	gt->interPatternLoopEnabledFlag = 0;		// disable in player
@@ -747,6 +718,9 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 			editorInfo.eseditpos = 0;		// Reset cursor position in order list
 			editorInfo.esview = 0;			// reset scroll position in order list
 		}
+
+
+
 		if (gt->songinit != PLAY_STOPPED)
 		{
 			stopsong(gt);
@@ -755,6 +729,7 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 		lastInfoPatternCh = -1;	// force text
 		displayPatternInfo(gt);
 	}
+
 
 	int jc2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12 for currently selected channel in orderlist
 	int jsongNum = getActualSongNumber(editorInfo.esnum, jc2);
@@ -786,9 +761,47 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 		}
 	}
 
+#if 0
+	// JP - orderSelectPatternsFromSelected resets the pattern step position. We need to preserve this when changing subsong
+	int oldepView = editorInfo.epview;
+	int oldeppos = editorInfo.eppos;
+
+	for (c = 0; c < maxSIDChannels; c++)	// V1.2.2
+	{
+		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+		backupPatPos[c] = gt->chn[c2].pattptr;
+	}
+#endif
+
 	orderSelectPatternsFromSelected(gt);
 
-	editorInfo.eppos = 0;	// pattern pos
+#if 0
+	editorInfo.epview = oldepView;
+	editorInfo.eppos = oldeppos;
+
+	for (c = 0; c < maxSIDChannels; c++)	//V1.2.2 restore pattern play position when selecting another pattern in orderlist
+	{
+		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+		gt->chn[c2].pattptr = backupPatPos[c];
+		// check if cursor > patlen. And reset to 0 if it is
+		if ((c2 % 6) == editorInfo.epchn)
+		{
+			if (editorInfo.eppos > pattlen[gt->editorInfo[c2].epnum])
+			{
+				editorInfo.eppos = 0;
+				jr++;
+				sprintf(textbuffer, "out of range: %d", jr);
+				printtext(70, 36, 0xe, textbuffer);
+			}
+		}
+
+	}
+#endif
+
+
+		editorInfo.eppos = 0;	// pattern pos
+		editorInfo.epview = -VISIBLEPATTROWS / 2;
+
 	if (editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn])
 		editorInfo.eseditpos++;
 	editorInfo.epmarkchn = -1;
@@ -1127,12 +1140,13 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 {
 	if (editorInfo.eseditpos < songlen[editorInfo.esnum][editorInfo.eschn])
 	{
-		int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);
+		// V1.2.2. fix - rather than using eschn or epchn, use masterLoopChannel instead. works if you're editing pattern or song.
+	//	int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);
+		int c2 = gt->masterLoopChannel;
 		int sng = getActualSongNumber(editorInfo.esnum, c2);
 
 		if (c2 >= maxSIDChannels)
 			return;
-
 		int ep = editorInfo.eseditpos;
 
 		int ep2;
@@ -1144,7 +1158,10 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 			do {
 				playroutine(gte);
 				if (gte->songinit == PLAY_STOPPED)	// Error in song data
+				{
+
 					return;
+				}
 
 			} while (gte->chn[c2].songptr - 1 < ep);
 
