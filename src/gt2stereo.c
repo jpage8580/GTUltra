@@ -1208,6 +1208,20 @@ void mousecommands(GTOBJECT *gt)
 		}
 	*/
 
+	// V1.2.2 Fix - Ensure mouse clicking for 3 channel or 6 channel view is correct for mute + pattern change X positions
+	int patternWidth = 9;
+	int patternTextWidth = 7;
+	int chTextWidth = 2;
+	int chTextPos = 6;
+	if (displayOriginal3Channel)
+	{
+		patternWidth = 14;
+		patternTextWidth = 9;
+		chTextWidth = 3;
+		chTextPos = 11;
+	}
+
+
 	// Pattern editpos & pattern number selection
 	for (c = 0; c < MAX_CHN; c++)
 	{
@@ -1218,7 +1232,7 @@ void mousecommands(GTOBJECT *gt)
 
 		if (mousey == PATTERN_Y)
 		{
-			if ((mousex >= PATTERN_X + 11 + c * 9) && (mousex <= PATTERN_X + 12 + c * 9))
+			if ((mousex >= PATTERN_X + 5 + chTextPos + c * patternWidth) && (mousex <= PATTERN_X + 5 + chTextPos + 1 + c * patternWidth))
 			{
 				if ((!prevmouseb) || (mouseheld > HOLDDELAY))
 				{
@@ -1236,20 +1250,14 @@ void mousecommands(GTOBJECT *gt)
 			}
 			else if (mouseb && !prevmouseb)
 			{
-				if ((mousex >= PATTERN_X + 5 + c * 9) && (mousex <= PATTERN_X + 7 + c * 9))
+
+				if ((mousex >= PATTERN_X + 5 + c * patternWidth) && (mousex <= PATTERN_X + 5 + chTextWidth + c * patternWidth))
 					mutechannel(c, gt);
 			}
 
 		}
 		else
 		{
-			int patternWidth = 9;
-			int patternTextWidth = 7;
-			if (displayOriginal3Channel)
-			{
-				patternWidth = 14;
-				patternTextWidth = 9;
-			}
 
 
 			if ((mousey >= PATTERN_Y) && (mousey <= PATTERN_Y + VISIBLEPATTROWS + 0) && (mousex >= PATTERN_X + 5 + c * patternWidth) && (mousex <= PATTERN_X + 5 + patternTextWidth + c * patternWidth))
@@ -1287,8 +1295,8 @@ void mousecommands(GTOBJECT *gt)
 							editorInfo.epcolumn = x - 2;
 						else
 						{
-						//	sprintf(textbuffer, "%d", x);
-						//	printtext(70, 36, 0xe, textbuffer);
+							//	sprintf(textbuffer, "%d", x);
+							//	printtext(70, 36, 0xe, textbuffer);
 
 							if (x >= 4 && x <= 5)
 								editorInfo.epcolumn = 1 + (x - 4);	// instrument
@@ -3064,8 +3072,13 @@ void nextSongPos(GTOBJECT *gt)
 
 	if (gt->songinit == PLAY_STOPPED)
 	{
+
+
 		if (gt->editorInfo[ac].espos < songlen[songNum][c3] - 1)
 		{
+			sprintf(textbuffer, "%d ac %d c3 %d esp %d sn %d sl %d", jcc++, ac, c3, gt->editorInfo[ac].espos, songNum, songlen[songNum][c3]);
+			printtext(60, 36, 0xe, textbuffer);
+
 			editorInfo.eseditpos = gt->editorInfo[ac].espos + 1;
 			orderSelectPatternsFromSelected(gt);
 			if (gt->editorInfo[ac].espos - editorInfo.esview >= VISIBLEORDERLIST)
@@ -3080,8 +3093,8 @@ void nextSongPos(GTOBJECT *gt)
 	{
 		if (gt->chn[gt->masterLoopChannel].songptr < songlen[songNum][c3])
 		{
-//			sprintf(textbuffer, "cnt: %d\n", jcc++);
-//			printtext(70, 36, 0xe, textbuffer);
+			//			sprintf(textbuffer, "cnt: %d\n", jcc++);
+			//			printtext(70, 36, 0xe, textbuffer);
 			orderPlayFromPosition(gt, 0, gt->chn[gt->masterLoopChannel].songptr, gt->masterLoopChannel, 0);
 		}
 	}
