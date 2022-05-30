@@ -1384,7 +1384,9 @@ void mousecommands(GTOBJECT *gt)
 				editorInfo.eseditpos = newpos;
 				editorInfo.escolumn = newcolumn;
 				setMasterLoopChannel(gt);
+				backupPatternDisplayInfo(gt);	//V1.2.2 - Preserve pattern edit position
 				orderSelectPatternsFromSelected(gt);
+				restorePatternDisplayInfo(gt);	//V1.2.2
 			}
 			else if (m && !editPaletteMode)	// double click?
 			{
@@ -3068,6 +3070,7 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 int backupPatternPos[MAX_PLAY_CH];
 int oldepViewValue;
 int oldepPosValue;
+
 
 
 void backupPatternDisplayInfo(GTOBJECT *gt)

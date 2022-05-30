@@ -227,5 +227,7 @@ void detunePitchTable();
 void swapPalettes(int p1, int p2);
 void handlePressRewind(int doubleClick, GTOBJECT *gt);
 void createFilename(char *filePath, char *newfileName, char *filename);
+void backupPatternDisplayInfo(GTOBJECT *gt);
+void restorePatternDisplayInfo(GTOBJECT *gt);
 
 #endif
