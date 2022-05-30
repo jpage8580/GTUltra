@@ -1869,11 +1869,11 @@ void generalcommands(GTOBJECT *gt)
 			leftKeyTicks = SDL_GetTicks();
 			if (leftKeyTicksDelta < 300)
 			{
-				handlePressRewind(1);		// double click
+				handlePressRewind(1,gt);		// double click
 			}
 			else
 			{
-				handlePressRewind(0);		// single click
+				handlePressRewind(0,gt);		// single click
 			}
 		}
 		break;
@@ -2893,7 +2893,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (editPaletteMode)
 			return 1;
 
-		handlePressRewind(mousebDoubleClick);
+		handlePressRewind(mousebDoubleClick,gt);
 		return 1;
 	}
 
@@ -2964,16 +2964,18 @@ int mouseTransportBar(GTOBJECT *gt)
 
 }
 
-void handlePressRewind(int doubleClick)
+void handlePressRewind(int doubleClick, GTOBJECT *gt)
 {
 	if (doubleClick)
 		previousSongPos(&gtObject, 1);
 	else
 	{
-		if (editorInfo.eppos)
-			previousSongPos(&gtObject, 0);		// move to start of current pattern
-		else
+		if (gt->songinit==PLAY_STOPPED)
 			previousSongPos(&gtObject, 1);		// move to start of previous pattern
+		else if (editorInfo.eppos)	
+			previousSongPos(&gtObject, 0);		// playing. Not at start of pattern. move to start of current pattern
+		else
+			previousSongPos(&gtObject, 1);		// playing. At start of pattern. move to start of previous pattern
 	}
 }
 
@@ -3062,6 +3064,50 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 
 }
 
+
+int backupPatternPos[MAX_PLAY_CH];
+int oldepViewValue;
+int oldepPosValue;
+
+
+void backupPatternDisplayInfo(GTOBJECT *gt)
+{
+	// JP - orderSelectPatternsFromSelected resets the pattern step position. We need to preserve this when changing subsong
+	oldepViewValue = editorInfo.epview;
+	oldepPosValue = editorInfo.eppos;
+
+	for (int c = 0; c < maxSIDChannels; c++)	// V1.2.2
+	{
+		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+		backupPatternPos[c] = gt->chn[c2].pattptr;
+	}
+}
+
+void restorePatternDisplayInfo(GTOBJECT *gt)
+{
+	editorInfo.epview = oldepViewValue;
+	editorInfo.eppos = oldepPosValue;
+
+	for (int c = 0; c < maxSIDChannels; c++)	//V1.2.2 restore pattern play position when selecting another pattern in orderlist
+	{
+		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+		gt->chn[c2].pattptr = backupPatternPos[c];
+		// check if cursor > patlen. And reset to 0 if it is
+		if ((c2 % 6) == editorInfo.epchn)
+		{
+			if (editorInfo.eppos > pattlen[gt->editorInfo[c2].epnum])
+			{
+				editorInfo.eppos = 0;
+				editorInfo.epview = -VISIBLEPATTROWS / 2;
+//				jdebug[10]++;
+//				sprintf(textbuffer, "out of range: %d", jdebug[10]);
+//				printtext(70, 36, 0xe, textbuffer);
+			}
+		}
+
+	}
+}
+
 int jcc = 0;
 
 void nextSongPos(GTOBJECT *gt)
@@ -3076,8 +3122,10 @@ void nextSongPos(GTOBJECT *gt)
 
 		if (gt->editorInfo[ac].espos < songlen[songNum][c3] - 1)
 		{
-			sprintf(textbuffer, "%d ac %d c3 %d esp %d sn %d sl %d", jcc++, ac, c3, gt->editorInfo[ac].espos, songNum, songlen[songNum][c3]);
-			printtext(60, 36, 0xe, textbuffer);
+//			sprintf(textbuffer, "%d ac %d c3 %d esp %d sn %d sl %d", jcc++, ac, c3, gt->editorInfo[ac].espos, songNum, songlen[songNum][c3]);
+//			printtext(60, 36, 0xe, textbuffer);
+
+			backupPatternDisplayInfo(gt);	// V1.2.2 - keep pattern editing position when selecting a new song pos
 
 			editorInfo.eseditpos = gt->editorInfo[ac].espos + 1;
 			orderSelectPatternsFromSelected(gt);
@@ -3086,6 +3134,9 @@ void nextSongPos(GTOBJECT *gt)
 				editorInfo.esview = gt->editorInfo[ac].espos - VISIBLEORDERLIST + 1;
 				editorInfo.eseditpos = gt->editorInfo[ac].espos;
 			}
+
+			restorePatternDisplayInfo(gt);	// V1.2.2 - keep pattern editing position when selecting a new song pos
+
 			updateviewtopos(gt);
 		}
 	}
@@ -3129,7 +3180,9 @@ void previousSongPos(GTOBJECT *gt, int songDffset)
 			}
 		}
 
+		backupPatternDisplayInfo(gt);	// V1.2.2 - keep pattern editing position when selecting a new song pos
 		orderSelectPatternsFromSelected(gt);
+		restorePatternDisplayInfo(gt);	// V1.2.2 - keep pattern editing position when selecting a new song pos
 
 		if (gt->editorInfo[ac].espos < editorInfo.esview)
 		{
@@ -3174,12 +3227,17 @@ void setSongToBeginning(GTOBJECT *gt)
 	editorInfo.eseditpos = 0;
 	editorInfo.eschn = editorInfo.epchn;
 	if (gt->songinit == PLAY_STOPPED)
+	{
+		backupPatternDisplayInfo(gt);	// V1.2.2 Preserve pattern editing position if possible
 		orderSelectPatternsFromSelected(gt);
+		restorePatternDisplayInfo(gt);	// V1.2.2 Preserve pattern editing position if possible
+	}
 	else
+	{
 		orderPlayFromPosition(gt, 0, 0, 0, 0);
-
-	editorInfo.esview = 0;
-	editorInfo.eseditpos = 0;
+		editorInfo.esview = 0;
+		editorInfo.eseditpos = 0;
+	}
 
 	updateviewtopos(gt);
 }
