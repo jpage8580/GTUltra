@@ -196,9 +196,11 @@ void printstatus(GTOBJECT *gt)
 				{
 					editorInfo.esview = newpos;
 				}
-				if (newpos - editorInfo.esview >= VISIBLEORDERLIST)
+
+				int endPos = VISIBLEORDERLIST - 1;	// V1.2.2 change: Scroll order list 1 pattern before the end of the display, so we can see the next pattern that's going to play
+				if (newpos - editorInfo.esview >= endPos)
 				{
-					editorInfo.esview = newpos - VISIBLEORDERLIST + 1;
+					editorInfo.esview = newpos - (endPos -1);
 				}
 			}
 		}
