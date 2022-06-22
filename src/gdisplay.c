@@ -70,6 +70,8 @@ void displayupdate(GTOBJECT *gt)
 
 }
 
+int expandOrderListView = 0;
+int lastExpandOrderListView = -1;
 
 void printstatus(GTOBJECT *gt)
 {
@@ -77,269 +79,51 @@ void printstatus(GTOBJECT *gt)
 	int cc = cursorcolortable[cursorflash];
 	menu = 0;
 
-	if ((mouseb > MOUSEB_LEFT) && (mousey <= 1) && (!eamode)) menu = 1;
+	if ((mouseb > MOUSEB_LEFT) && (mousey <= 1) && (!eamode))
+		menu = 1;
 
-	printblankc(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), MAX_COLUMNS);
+	displayTopBar(menu, cc);
+	displayTransportBar(gt);
+	updateDisplayWhenFollowingAndPlaying(gt);
+	displayPattern(gt);
+	//	printtext(4, 4, getColor(CORDER_INST_TABLE_EDITING, 0), debugtext);
 
-	int menuInfoXOffset = 38;
-	if (!menu)
+	if (expandOrderListView != lastExpandOrderListView)
 	{
-		if (!strlen(loadedsongfilename))
-			sprintf(textbuffer, "%s", programname);
-		else
-			sprintf(textbuffer, "%s - %s", programname, loadedsongfilename);
-		textbuffer[57] = 0;
-		printtext(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
-
-		//		if (monomode)
-		//			printtext(menuInfoXOffset + 20, 0, getColor(15, 1), "M");
-		//		else
-		//			printtext(menuInfoXOffset + 20, 0, getColor(0, 1), "M");
-
-		menuInfoXOffset += 2;
-
-		if (usefinevib)
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "FV");
-		else
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "FV");
-
-		menuInfoXOffset += 3;
-		if (optimizepulse)
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "PO");
-		else
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "PO");
-		menuInfoXOffset += 3;
-
-		if (optimizerealtime)
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "RO");
-		else
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "RO");
-
-		menuInfoXOffset += 3;
-		if (ntsc)
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "NTSC");
-		else
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), " PAL");
-
-		menuInfoXOffset += 5;
-		if (!sidmodel)
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "6581");
-		else
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "8580");
-
-		menuInfoXOffset += 5;
-		sprintf(textbuffer, "HR:%04X", adparam);
-		printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
-
-		menuInfoXOffset += 3;
-		if (eamode)
-			printbg(menuInfoXOffset + 20 + eacolumn, getColor(0, 0), cc << 8, 1);
-
-		menuInfoXOffset += 5;
-
-
-		if (multiplier)
-		{
-			sprintf(textbuffer, "%2dX", multiplier);
-			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
-		}
-		else printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "25Hz");
-
-		menuInfoXOffset += 5;
-		printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "F12=HELP");
+		lastExpandOrderListView = expandOrderListView;
+		fillArea(PANEL_ORDER_X, PANEL_ORDER_Y, 40, EXTENDEDVISIBLEORDERLIST+2, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), 32);	//65);
+	}
+	if (expandOrderListView == 0)	// display original orderlist + instrument information
+	{
+		displayOrderList(gt, cc, PANEL_ORDER_X, PANEL_ORDER_Y);
+		
 	}
 	else
 	{
-		printtext(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), " PLAY | PLAYPOS | PLAYPATT | STOP | LOAD | SAVE | PACK/RL | HELP | CLEAR | QUIT |");
+		displayExpandedOrderList(gt, cc, PANEL_ORDER_X, PANEL_ORDER_Y);
 	}
 
-	displayTransportBar(gt);
+	displayInstrument(gt, cc, PANEL_INSTR_X, PANEL_INSTR_Y);
 
-//	if ((followplay) && (!transportLoopPattern) && (isplaying(gt)))	// 1.1.7 FIX (added !transportLoopPattern) 3/5/2022
-		if ((followplay) && (isplaying(gt)))	// 1.2.1 - removed (!transportLoopPattern) as it stopped follow+loop..gotta look into why I added that!
-	{
-		for (c = 0; c < maxSIDChannels; c++)
-		{
-			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
-			int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
+	displayTables(PANEL_TABLES_X, PANEL_TABLES_Y);
+	displaySongInfo(cc, PANEL_NAMES_X, PANEL_NAMES_Y);
 
-			int newpos = gt->chn[c2].pattptr / 4;
-			if (gt->chn[c2].advance)
-				gt->editorInfo[c2].epnum = gt->chn[c2].pattnum;
-
-			if (newpos > pattlen[gt->editorInfo[c2].epnum])
-				newpos = pattlen[gt->editorInfo[c2].epnum];
-
-			if (c == editorInfo.epchn)
-			{
-				editorInfo.eppos = newpos;
-				editorInfo.epview = newpos - VISIBLEPATTROWS / 2;
-			}
-
-			newpos = gt->chn[c2].songptr;
-			newpos--;
-			if (newpos < 0)
-				newpos = 0;
-			if (newpos > songlen[playingSong][c2 % 6])	// 1.1.7 FIX (added %6) 3/5/2022
-				newpos = songlen[playingSong][c2 % 6];	// 1.1.7 FIX (added %6) 3/5/2022
-
-
-			gt->editorInfo[c2].espos = gt->chn[c2].songptr - 1;
-
-			if ((c2 == gt->masterLoopChannel) && (gt->chn[c2].advance) && (playingSong == editorInfo.esnum))
-			{
-				//		sprintf(textbuffer, "cursorpos: %d\n", newpos);
-				//		printtext(70, 36, 0xe, textbuffer);
-
-				editorInfo.eseditpos = newpos;
-				if (newpos - editorInfo.esview < 0)
-				{
-					editorInfo.esview = newpos;
-				}
-
-				int endPos = VISIBLEORDERLIST - 1;	// V1.2.2 change: Scroll order list 1 pattern before the end of the display, so we can see the next pattern that's going to play
-				if (newpos - editorInfo.esview >= endPos)
-				{
-					editorInfo.esview = newpos - (endPos -1);
-				}
-			}
-		}
-	}
-
-	displayPattern(gt);
-
-	printtext(4, 4, getColor(CORDER_INST_TABLE_EDITING, 0), debugtext);
-
-
-	int lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
-
-//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
-	sprintf(textbuffer, "CHN  ");
-	printtext(40 + 20, 2, lockPatternColor, textbuffer);
-
-	lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
-
-	sprintf(textbuffer, "ORDERLIST ");
-	printtext(40 + 20 + 5, 2, lockPatternColor, textbuffer);
-
-
-	//	if (!editPaletteMode)
-	sprintf(textbuffer, "(SUBTUNE % 02X, POS % 02X)   ", editorInfo.esnum, editorInfo.eseditpos);
-	//	else
-	//		sprintf(textbuffer, "(PALETTE % 02X, POS % 02X)   ", currentPalettePreset, editorInfo.eseditpos);
-	printtext(40 + 20 + 15, getColor(2, 0), getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-	//	UIUnderline = 0;
-
-		//	if (!editPaletteMode)
-	displayOrderList(gt, cc);
-	//	else
-	//		displayPaletteInfo(cc);
-
-	sprintf(textbuffer, "                  ", instrumentCount[editorInfo.einum]);
-	printtext(60 + 20, 7 + 3 + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
-	sprintf(textbuffer, "USE COUNT: %d", instrumentCount[editorInfo.einum]);
-	printtext(60 + 20, 7 + 3 + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
-
-	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
-	sprintf(textbuffer, "INSTRUMENT NUM. %02X  %-18s", editorInfo.einum, instr[editorInfo.einum].name);
-	printtext(40 + 20, 7 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-	//	UIUnderline = 0;
-
-	sprintf(textbuffer, "Attack/Decay    %02X  ", instr[editorInfo.einum].ad);
-	if (editorInfo.eipos == 0) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(40 + 20, 8 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "Sustain/Release %02X  ", instr[editorInfo.einum].sr);
-	if (editorInfo.eipos == 1) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(40 + 20, 9 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "Wavetable Pos   %02X  ", instr[editorInfo.einum].ptr[WTBL]);
-	if (editorInfo.eipos == 2) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(40 + 20, 10 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "Pulsetable Pos  %02X  ", instr[editorInfo.einum].ptr[PTBL]);
-	if (editorInfo.eipos == 3) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(40 + 20, 11 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "Filtertable Pos %02X  ", instr[editorInfo.einum].ptr[FTBL]);
-	if (editorInfo.eipos == 4) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(40 + 20, 12 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "Vibrato Param   %02X", instr[editorInfo.einum].ptr[STBL]);
-	if (editorInfo.eipos == 5) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(60 + 20, 8 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "Vibrato Delay   %02X", instr[editorInfo.einum].vibdelay);
-	if (editorInfo.eipos == 6) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(60 + 20, 9 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "HR/Gate Timer   %02X", instr[editorInfo.einum].gatetimer);
-	if (editorInfo.eipos == 7) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(60 + 20, 10 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	sprintf(textbuffer, "1stFrame Wave   %02X", instr[editorInfo.einum].firstwave);
-	if (editorInfo.eipos == 8) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
-	printtext(60 + 20, 11 + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
-
-	// cursor
-	if (editorInfo.editmode == EDIT_INSTRUMENT)
-	{
-		if (editorInfo.eipos < 9)
-		{
-			if (!eamode) printbg(56 + 20 + editorInfo.eicolumn + 20 * (editorInfo.eipos / 5), 8 + 3 + (editorInfo.eipos % 5), cc << 8, 1);
-		}
-		else
-		{
-			if (!eamode) printbg(60 + 20 + strlen(instr[editorInfo.einum].name), 7 + 3, cc << 8, 1);
-		}
-	}
-
-
-	displayTables();
-
-	printtext(40 + 20, 21 + 3 + 9, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "NAME   ");
-	sprintf(textbuffer, "%-31s", songname);
-	printtext(47 + 20, 21 + 3 + 9, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-
-	printtext(40 + 20, 22 + 3 + 9, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "AUTHOR ");
-	sprintf(textbuffer, "%-32s", authorname);
-	printtext(47 + 20, 22 + 3 + 9, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-
-	printtext(40 + 20, 23 + 3 + 9, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "COPYR. ");
-	sprintf(textbuffer, "%-32s", copyrightname);
-	printtext(47 + 20, 23 + 3 + 9, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-
-	if ((editorInfo.editmode == EDIT_NAMES) && (!eamode))
-	{
-		switch (editorInfo.nameIndex)
+	/*
+		switch (autoadvance)
 		{
 		case 0:
-			printbg(47 + 20 + strlen(songname), 21 + 3 + 9, cc << 8, 1);
+			color = getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND);	// 10
 			break;
+
 		case 1:
-			printbg(47 + 20 + strlen(authorname), 22 + 3 + 9, cc << 8, 1);
+			color = getColor(14, CGENERAL_BACKGROUND);	//14;
 			break;
+
 		case 2:
-			printbg(47 + 20 + strlen(copyrightname), 23 + 3 + 9, cc << 8, 1);
+			color = getColor(12, CGENERAL_BACKGROUND);	//12;
 			break;
 		}
-	}
-
-
-	switch (autoadvance)
-	{
-	case 0:
-		color = getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND);	// 10
-		break;
-
-	case 1:
-		color = getColor(14, CGENERAL_BACKGROUND);	//14;
-		break;
-
-	case 2:
-		color = getColor(12, CGENERAL_BACKGROUND);	//12;
-		break;
-	}
+	*/
 }
 
 void resettime(GTOBJECT *gt)
@@ -401,25 +185,95 @@ void clearOrderListDisplay()
 	}
 }
 
-void displayOrderList(GTOBJECT *gt, int cc)
+
+void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 {
+	sprintf(textbuffer, "(SUBTUNE % 02X, POS % 02X)   ", editorInfo.esnum, editorInfo.eseditpos);
+	printtext(OX + 15, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+	int lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
+	sprintf(textbuffer, "ORDERLIST ");
+	printtext(OX + 5, OY, lockPatternColor, textbuffer);
+
 	int color;
 
+	for (int d = 0; d < EXTENDEDVISIBLEORDERLIST; d++)
+	{
+		color = getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND);
+
+		int p = editorInfo.esview + d;
+		sprintf(textbuffer, "%03X", p);
+		printtext(OX, OY + 2 + d, color, textbuffer);
+		printbyte(OX + 3, OY + 2 + d, color, 0xff);
+		printtext(OX, OY + 1, color, "   ");
+		printbyte(OX + 3, OY + 1, color, 0xff);
+
+		for (int c = 0; c < MAX_CHN; c++)
+		{
+			if (d == 0)
+			{
+				int c2 = getActualChannel(editorInfo.esnum, c);
+				sprintf(textbuffer, "%02X ", c2);
+
+				printtext(OX + 4 + (c * 6), OY + 1, getColor(15, CORDER_INST_BACKGROUND), textbuffer);
+				int compressedSize = 0x14;
+
+				sprintf(textbuffer, "%02X", compressedSize);
+				printtext(OX + 4 + 3 + (c * 6), OY + 1, getColor(CORDER_TRANS_REPEAT, CORDER_INST_BACKGROUND), textbuffer);
+				printbyte(OX + 4 + (c * 6) + 5, OY + 1, color, 0xff);
+
+
+				if (c2 == gt->masterLoopChannel)
+				{
+					printbyte(OX + 4 + 2 + (c * 6), OY + 1, getColor(14, CORDER_INST_BACKGROUND), 0x100);
+				}
+			}
+
+			int pattern = 0;
+			int transpose = 0;
+
+			sprintf(textbuffer, "%02X %02X", pattern, transpose);
+			printtext(OX + 4 + (c * 6), OY + 2 + d, color, textbuffer);
+			printbyte(OX + 4 + (c * 6) + 5, OY + 2 + d, color, 0xff);
+
+			// Flash cursor
+			if ((p == editorInfo.eseditpos) && (editorInfo.editmode == EDIT_ORDERLIST) && (editorInfo.eschn == c))
+			{
+				if (!eamode) printbg(OX + 4 + (c * 6) + (editorInfo.escolumn&1)+((editorInfo.escolumn/2)*3), OY + 2 + d, cc << 8, 1);
+			}
+		}
+	}
+}
+
+void displayOrderList(GTOBJECT *gt, int cc, int OX, int OY)
+{
+	int color;
+	int lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
+
+	sprintf(textbuffer, "CHN  ");
+	printtext(OX, OY, lockPatternColor, textbuffer);
+
+	lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
+
+	sprintf(textbuffer, "ORDERLIST ");
+	printtext(OX + 5, OY, lockPatternColor, textbuffer);
+
+	sprintf(textbuffer, "(SUBTUNE % 02X, POS % 02X)   ", editorInfo.esnum, editorInfo.eseditpos);
+	printtext(OX + 15, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 
 	for (int c = 0; c < MAX_CHN; c++)
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 		int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
 
-		printtext(40 + 20 + 3, 3 + c, getColor(15, CORDER_INST_BACKGROUND), "  ");
+		printtext(OX + 3, OY + 1 + c, getColor(15, CORDER_INST_BACKGROUND), "  ");
 
 		sprintf(textbuffer, " %d ", c2);	// c + 1);
-		printtext(40 + 20, 3 + c, getColor(15, CORDER_INST_BACKGROUND), textbuffer);
+		printtext(OX, OY + 1 + c, getColor(15, CORDER_INST_BACKGROUND), textbuffer);
 
 		if (c2 == gt->masterLoopChannel)
 		{
-			printbyte(40 + 23, 3 + c, getColor(14, CORDER_INST_BACKGROUND), 19);
-			printbyte(40 + 23 + 1, 3 + c, getColor(14, CORDER_INST_BACKGROUND), 20);
+			printbyte(OX + 3, OY + 1 + c, getColor(14, CORDER_INST_BACKGROUND), 19);
+			printbyte(OX + 3 + 1, OY + 1 + c, getColor(14, CORDER_INST_BACKGROUND), 20);
 		}
 
 		for (int d = 0; d < VISIBLEORDERLIST; d++)
@@ -496,7 +350,9 @@ void displayOrderList(GTOBJECT *gt, int cc)
 					if (color == CORDER_INST_FOREGROUND) color = CORDER_TRANS_REPEAT;
 				}
 			}
-			printtext(45 + 20 + d * 3, 3 + c, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+
+			printtext(OX + 5 + d * 3, OY + 1 + c, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
 			if (c == editorInfo.esmarkchn)
 			{
 				if (editorInfo.esmarkstart <= editorInfo.esmarkend)
@@ -504,9 +360,9 @@ void displayOrderList(GTOBJECT *gt, int cc)
 					if ((p >= editorInfo.esmarkstart) && (p <= editorInfo.esmarkend))
 					{
 						if (p != editorInfo.esmarkend)
-							printbg(45 + 20 + d * 3, 3 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
+							printbg(OX + 5 + d * 3, OY + 1 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
 						else
-							printbg(45 + 20 + d * 3, 3 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+							printbg(OX + 5 + d * 3, OY + 1 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
 					}
 				}
 				else
@@ -514,9 +370,9 @@ void displayOrderList(GTOBJECT *gt, int cc)
 					if ((p <= editorInfo.esmarkstart) && (p >= editorInfo.esmarkend))
 					{
 						if (p != editorInfo.esmarkstart)
-							printbg(45 + 20 + d * 3, 3 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
+							printbg(OX + 5 + d * 3, OY + 1 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
 						else
-							printbg(45 + 20 + d * 3, 3 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+							printbg(OX + 5 + d * 3, OY + 1 + c, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
 					}
 				}
 			}
@@ -524,10 +380,14 @@ void displayOrderList(GTOBJECT *gt, int cc)
 			// Flash cursor
 			if ((p == editorInfo.eseditpos) && (editorInfo.editmode == EDIT_ORDERLIST) && (editorInfo.eschn == c))
 			{
-				if (!eamode) printbg(45 + 20 + d * 3 + editorInfo.escolumn, 3 + c, cc << 8, 1);
+				if (!eamode) printbg(OX + 5 + d * 3 + editorInfo.escolumn, OY + 1 + c, cc << 8, 1);
 			}
 		}
 	}
+
+	// orderlist border
+	printbyterow(OX, OY + 7, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
+	printbytecol(OX + 38, OY + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 6);
 }
 
 
@@ -586,6 +446,7 @@ void displayPattern(GTOBJECT *gt)
 
 		fillArea(PATTERN_X, PATTERN_Y, 60, 30, color, ' ');
 	}
+
 
 	if (maxChan == MAX_CHN)
 	{
@@ -737,7 +598,7 @@ void displayPattern6Chn(GTOBJECT *gt)
 		if (c >= maxChan)
 			invalidColumn = 1;
 
-		sprintf(textbuffer, " CH%01X   %02X ", c2 + 1, gt->editorInfo[c2].epnum);
+		sprintf(textbuffer, " CH%01X   %02X ", c2, gt->editorInfo[c2].epnum);
 
 		int headerColor = getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND);
 		if (c >= maxChan)
@@ -1026,6 +887,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 	if (gt->editorInfo[editorInfo.highlightLoopChannel].epnum == editorInfo.highlightLoopPatternNumber)
 		highlightPatternLoop = 1;
 
+
 	printtext(PATTERN_X + 0, PATTERN_Y, getColor(CTITLES_FOREGROUND, CTRANSPORT_FOREGROUND), " POS");
 	for (int d = 0; d < VISIBLEPATTROWS; d++)
 	{
@@ -1045,7 +907,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 		color |= CPATTERN_DIVIDER_LINE;
 
 		int colort = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
-		printbyte(PATTERN_X + (MAX_CHN * chnWidth) + 4, PATTERN_Y + 1 + d, colort, 0x20);	//0xff);
+		//		printbyte(PATTERN_X + (MAX_CHN * chnWidth) + 4, PATTERN_Y + 1 + d, colort, 0x20);	//0xff);
 
 		color &= 0xff00;
 		//		if ((p% stepsize) == 0)
@@ -1093,6 +955,8 @@ void displayPattern3Chn(GTOBJECT *gt)
 			//		printbyte(PATTERN_X + (9 * (MAX_CHN)) + 4, PATTERN_Y, color, 0xff);	// header sepearator 
 		}
 	}
+
+	//return;
 
 	for (int c = 0; c < 3; c++)
 	{
@@ -1362,7 +1226,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 				{
 					if ((p >= editorInfo.epmarkstart) && (p <= editorInfo.epmarkend))
 					{
-						printbg(PATTERN_X + 5 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), chnWidth-1);
+						printbg(PATTERN_X + 5 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), chnWidth - 1);
 
 						if (transportLoopPattern)
 						{
@@ -1376,7 +1240,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 				{
 					if ((p <= editorInfo.epmarkstart) && (p >= editorInfo.epmarkend))
 					{
-						printbg(PATTERN_X + 5 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), chnWidth-1);
+						printbg(PATTERN_X + 5 + c * chnWidth, PATTERN_Y + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), chnWidth - 1);
 
 						if (transportLoopPattern)
 						{
@@ -1883,8 +1747,239 @@ int getTableTitleColour(int c)
 }
 
 
+void displaySongInfo(int cc, int OX, int OY)
+{
+
+	printtext(OX, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "NAME   ");
+	sprintf(textbuffer, "%-31s", songname);
+	printtext(OX + 7, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+
+	printtext(OX, OY + 1, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "AUTHOR ");
+	sprintf(textbuffer, "%-32s", authorname);
+	printtext(OX + 7, OY + 1, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+
+	printtext(OX, OY + 2, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "COPYR. ");
+	sprintf(textbuffer, "%-32s", copyrightname);
+	printtext(OX + 7, OY + 2, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+
+	if ((editorInfo.editmode == EDIT_NAMES) && (!eamode))
+	{
+		switch (editorInfo.nameIndex)
+		{
+		case 0:
+			printbg(OX + 7 + strlen(songname), OY, cc << 8, 1);
+			break;
+		case 1:
+			printbg(OX + 7 + strlen(authorname), OY + 1, cc << 8, 1);
+			break;
+		case 2:
+			printbg(OX + 7 + strlen(copyrightname), OY + 2, cc << 8, 1);
+			break;
+		}
+	}
+}
+
+void updateDisplayWhenFollowingAndPlaying(GTOBJECT *gt)
+{
+
+	//	if ((followplay) && (!transportLoopPattern) && (isplaying(gt)))	// 1.1.7 FIX (added !transportLoopPattern) 3/5/2022
+	if ((followplay) && (isplaying(gt)))	// 1.2.1 - removed (!transportLoopPattern) as it stopped follow+loop..gotta look into why I added that!
+	{
+		for (int c = 0; c < maxSIDChannels; c++)
+		{
+			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+			int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
+
+			int newpos = gt->chn[c2].pattptr / 4;
+			if (gt->chn[c2].advance)
+				gt->editorInfo[c2].epnum = gt->chn[c2].pattnum;
+
+			if (newpos > pattlen[gt->editorInfo[c2].epnum])
+				newpos = pattlen[gt->editorInfo[c2].epnum];
+
+			if (c == editorInfo.epchn)
+			{
+				editorInfo.eppos = newpos;
+				editorInfo.epview = newpos - VISIBLEPATTROWS / 2;
+			}
+
+			newpos = gt->chn[c2].songptr;
+			newpos--;
+			if (newpos < 0)
+				newpos = 0;
+			if (newpos > songlen[playingSong][c2 % 6])	// 1.1.7 FIX (added %6) 3/5/2022
+				newpos = songlen[playingSong][c2 % 6];	// 1.1.7 FIX (added %6) 3/5/2022
+
+
+			gt->editorInfo[c2].espos = gt->chn[c2].songptr - 1;
+
+			if ((c2 == gt->masterLoopChannel) && (gt->chn[c2].advance) && (playingSong == editorInfo.esnum))
+			{
+				//		sprintf(textbuffer, "cursorpos: %d\n", newpos);
+				//		printtext(70, 36, 0xe, textbuffer);
+
+				editorInfo.eseditpos = newpos;
+				if (newpos - editorInfo.esview < 0)
+				{
+					editorInfo.esview = newpos;
+				}
+
+				int endPos = VISIBLEORDERLIST - 1;	// V1.2.2 change: Scroll order list 1 pattern before the end of the display, so we can see the next pattern that's going to play
+				if (newpos - editorInfo.esview >= endPos)
+				{
+					editorInfo.esview = newpos - (endPos - 1);
+				}
+			}
+		}
+	}
+}
+
+void displayTopBar(int menu, int cc)
+{
+	printblankc(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), MAX_COLUMNS);
+
+	int menuInfoXOffset = 38;
+	if (!menu)
+	{
+		if (!strlen(loadedsongfilename))
+			sprintf(textbuffer, "%s", programname);
+		else
+			sprintf(textbuffer, "%s - %s", programname, loadedsongfilename);
+		textbuffer[57] = 0;
+		printtext(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
+
+		menuInfoXOffset += 2;
+
+		if (usefinevib)
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "FV");
+		else
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "FV");
+
+		menuInfoXOffset += 3;
+		if (optimizepulse)
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "PO");
+		else
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "PO");
+		menuInfoXOffset += 3;
+
+		if (optimizerealtime)
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "RO");
+		else
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "RO");
+
+		menuInfoXOffset += 3;
+		if (ntsc)
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "NTSC");
+		else
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), " PAL");
+
+		menuInfoXOffset += 5;
+		if (!sidmodel)
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "6581");
+		else
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "8580");
+
+		menuInfoXOffset += 5;
+		sprintf(textbuffer, "HR:%04X", adparam);
+		printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
+
+		menuInfoXOffset += 3;
+		if (eamode)
+			printbg(menuInfoXOffset + 20 + eacolumn, getColor(0, 0), cc << 8, 1);
+
+		menuInfoXOffset += 5;
+
+
+		if (multiplier)
+		{
+			sprintf(textbuffer, "%2dX", multiplier);
+			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
+		}
+		else printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "25Hz");
+
+		menuInfoXOffset += 5;
+		printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "F12=HELP");
+	}
+	else
+	{
+		printtext(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), " PLAY | PLAYPOS | PLAYPATT | STOP | LOAD | SAVE | PACK/RL | HELP | CLEAR | QUIT |");
+	}
+}
+
+void displayInstrument(GTOBJECT *gt, int cc, int OX, int OY)
+{
+	int color;
+
+	sprintf(textbuffer, "                  ", instrumentCount[editorInfo.einum]);
+	printtext(OX+20, OY + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
+	sprintf(textbuffer, "USE COUNT: %d", instrumentCount[editorInfo.einum]);
+	printtext(OX+20, OY + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
+
+	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
+	sprintf(textbuffer, "INSTRUMENT NUM. %02X  %-18s", editorInfo.einum, instr[editorInfo.einum].name);
+	printtext(OX, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+	//	UIUnderline = 0;
+
+	sprintf(textbuffer, "Attack/Decay    %02X  ", instr[editorInfo.einum].ad);
+	if (editorInfo.eipos == 0)
+		color = CORDER_INST_TABLE_EDITING;
+	else
+		color = CORDER_INST_FOREGROUND;
+	printtext(OX, OY + 1, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "Sustain/Release %02X  ", instr[editorInfo.einum].sr);
+	if (editorInfo.eipos == 1) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX, OY + 2, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "Wavetable Pos   %02X  ", instr[editorInfo.einum].ptr[WTBL]);
+	if (editorInfo.eipos == 2) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX, OY + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "Pulsetable Pos  %02X  ", instr[editorInfo.einum].ptr[PTBL]);
+	if (editorInfo.eipos == 3) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX, OY + 4, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "Filtertable Pos %02X  ", instr[editorInfo.einum].ptr[FTBL]);
+	if (editorInfo.eipos == 4) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX, OY + 5, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "Vibrato Param   %02X", instr[editorInfo.einum].ptr[STBL]);
+	if (editorInfo.eipos == 5) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX + 20, OY + 1, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "Vibrato Delay   %02X", instr[editorInfo.einum].vibdelay);
+	if (editorInfo.eipos == 6) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX + 20, OY + 2, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "HR/Gate Timer   %02X", instr[editorInfo.einum].gatetimer);
+	if (editorInfo.eipos == 7) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX + 20, OY + 3, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	sprintf(textbuffer, "1stFrame Wave   %02X", instr[editorInfo.einum].firstwave);
+	if (editorInfo.eipos == 8) color = CORDER_INST_TABLE_EDITING; else color = CORDER_INST_FOREGROUND;
+	printtext(OX + 20, OY + 4, getColor(color, CORDER_INST_BACKGROUND), textbuffer);
+
+	// cursor
+	if (editorInfo.editmode == EDIT_INSTRUMENT)
+	{
+		if (editorInfo.eipos < 9)
+		{
+			if (!eamode) printbg(OX - 4 + 20 + editorInfo.eicolumn + 20 * (editorInfo.eipos / 5), OY + 1 + (editorInfo.eipos % 5), cc << 8, 1);
+		}
+		else
+		{
+			if (!eamode) printbg(OX + 20 + strlen(instr[editorInfo.einum].name), OY, cc << 8, 1);
+		}
+	}
+
+	// Instrument border
+	printbyterow(OX, OY + 6, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
+	printbytecol(OX + 38, OY + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 5);
+}
+
+
 int lastTableType = EDIT_TABLE_NONE;
-void displayTables()
+void displayTables(int OX, int OY)
 {
 	if (editorInfo.editTableMode != lastTableType)
 	{
@@ -1893,7 +1988,7 @@ void displayTables()
 		// Clear table panel
 		for (int y = 0;y < VISIBLETABLEROWS;y++)
 		{
-			printbyterow(40 + 20, 15 + 3 + y, getColor(CTABLE_FOREGROUND1, CTABLE_BACKGROUND1), 32, 38);
+			printbyterow(OX, OY + 1 + y, getColor(CTABLE_FOREGROUND1, CTABLE_BACKGROUND1), 32, 38);
 		}
 
 		if (editorInfo.editTableMode == EDIT_TABLE_WAVE)
@@ -1928,61 +2023,51 @@ void displayTables()
 
 	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
 	sprintf(textbuffer, "WAVE TBL");
-	printtext(40 + 20, 14 + 3, getTableTitleColour(EDIT_TABLE_WAVE), textbuffer);
+	printtext(OX, OY, getTableTitleColour(EDIT_TABLE_WAVE), textbuffer);
 
 	sprintf(textbuffer, "PULSETBL");
-	printtext(40 + 20 + 10, 14 + 3, getTableTitleColour(EDIT_TABLE_PULSE), textbuffer);
+	printtext(OX + 10, OY, getTableTitleColour(EDIT_TABLE_PULSE), textbuffer);
 
 	sprintf(textbuffer, "FILT.TBL");
-	printtext(40 + 20 + 20, 14 + 3, getTableTitleColour(EDIT_TABLE_FILTER), textbuffer);
+	printtext(OX + 20, OY, getTableTitleColour(EDIT_TABLE_FILTER), textbuffer);
 
 	if (editorInfo.editTableMode == EDIT_TABLE_WAVE || editorInfo.editTableMode == EDIT_TABLE_NONE)
 	{
 		sprintf(textbuffer, "SPEEDTBL");
-		printtext(40 + 20 + 30, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+		printtext(OX + 30, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 	}
 	else
 	{
 		sprintf(textbuffer, "        ");
-		printtext(40 + 20 + 30, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+		printtext(OX + 30, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 	}
 
-	printtext(40 + 20 + 8, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
-	printtext(40 + 20 + 10 + 8, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
-	printtext(40 + 20 + 20 + 8, 14 + 3, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
+	printtext(OX + 8, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
+	printtext(OX + 10 + 8, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
+	printtext(OX + 20 + 8, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), "  ");
 	//	UIUnderline = 0;
 
 	if (editorInfo.editTableMode == EDIT_TABLE_NONE)
 	{
-		displayOriginalTableView(cc);
+		displayOriginalTableView(cc, OX, OY);
 	}
 	else if (editorInfo.editTableMode == EDIT_TABLE_WAVE)
 	{
-		displayDetailedWaveTable(cc);
+		displayDetailedWaveTable(cc, OX, OY);
 	}
 	else if (editorInfo.editTableMode == EDIT_TABLE_FILTER)
 	{
-		displayDetailedFilterTable(cc);
+		displayDetailedFilterTable(cc, OX, OY);
 	}
 	else if (editorInfo.editTableMode == EDIT_TABLE_PULSE)
 	{
-		displayDetailedPulseTable(cc);
+		displayDetailedPulseTable(cc, OX, OY);
 	}
 
 
 	// Table bottom border
-	printbyterow(40 + 20, 32, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
-	printbytecol(40 + 20 + 38, 32 - 14, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 0xe);
-
-	// Instrument border
-	printbyterow(40 + 20, 14 + 2, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
-	printbytecol(40 + 20 + 38, 14 + 2 - 5, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 5);
-
-	// orderlist border
-	printbyterow(40 + 20, 9, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
-	printbytecol(40 + 20 + 38, 9 - 6, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 6);
-
-
+	printbyterow(PANEL_TABLES_X, PANEL_TABLES_Y + 15, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
+	printbytecol(PANEL_TABLES_X + 38, PANEL_TABLES_Y + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 0xe);
 }
 
 /*
@@ -1994,7 +2079,7 @@ Wavetable left side:   00    Leave waveform unchanged
 					   FF    Jump. Right side tells position ($00 = stop)
 
 */
-void displayDetailedWaveTable(int cc)
+void displayDetailedWaveTable(int cc, int OX, int OY)
 {
 	for (int d = 0; d < VISIBLETABLEROWS; d++)
 	{
@@ -2011,16 +2096,16 @@ void displayDetailedWaveTable(int cc)
 		int r2 = r;
 
 		sprintf(textbuffer, "%02X:", p + 1);
-		printtext(40 + 20, 15 + 3 + d, color, textbuffer);
+		printtext(OX, OY + 1 + d, color, textbuffer);
 
-		printtext(40 + 24, 15 + 3 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "-WDCJ");
+		printtext(OX + 4, OY + 1 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "-WDCJ");
 		int highlightOffset = 0;
 		int displayRightTable = 0;
 
 		if (v == 0)	// skip
 		{
 			detailedTableBaseLValue[p] = -1;
-			printtext(40 + 33, 15 + 3 + d, color, "---- ");
+			printtext(OX + 13, OY + 1 + d, color, "---- ");
 			displayRightTable = 1;
 		}
 		else if (v >= 1 && v <= 0x0f)
@@ -2030,14 +2115,14 @@ void displayDetailedWaveTable(int cc)
 			detailedTableMinLValue[p] = 1;
 			detailedTableBaseLValue[p] = 0;		// base value to add to current to get new tableR[p] value
 
-			printtext(40 + 33, 15 + 3 + d, color, "DELY:");
+			printtext(OX + 13, OY + 1 + d, color, "DELY:");
 			highlightOffset = 2;	// delay
 			displayRightTable = 1;
 		}
 		else if (v >= 0x10 && v <= 0x0ef)
 		{
 			highlightOffset = 1;	// wave
-			printtext(40 + 33, 15 + 3 + d, color, "WAVE:");
+			printtext(OX + 13, OY + 1 + d, color, "WAVE:");
 			if (v >= 0xe0)
 				v2 -= 0xe0;	// waveforms 0-0xf
 
@@ -2052,7 +2137,7 @@ void displayDetailedWaveTable(int cc)
 		else if (v >= 0xf0 && v <= 0x0fe)
 		{
 			highlightOffset = 3;	// command
-			printtext(40 + 33, 15 + 3 + d, color, "CMND:");
+			printtext(OX + 13, OY + 1 + d, color, "CMND:");
 			v2 -= 0xf0;
 
 			detailedTableLValue[p] = v2;			// current L value. Modify this with HexInput
@@ -2074,9 +2159,9 @@ void displayDetailedWaveTable(int cc)
 
 			highlightOffset = 4;	// jump
 			if (r)
-				printtext(40 + 33, 15 + 3 + d, color, "JUMP:");
+				printtext(OX + 13, OY + 1 + d, color, "JUMP:");
 			else
-				printtext(40 + 33, 15 + 3 + d, color, "STOP:");
+				printtext(OX + 13, OY + 1 + d, color, "STOP:");
 			displayRightTable = 0;
 
 			detailedTableLValue[p] = r;			// current L value. Modify this with HexInput
@@ -2090,10 +2175,10 @@ void displayDetailedWaveTable(int cc)
 		if (v != 0)
 		{
 			sprintf(textbuffer, "%02X", v2);
-			printtext(40 + 38, 15 + 3 + d, color, textbuffer);
+			printtext(OX + 18, OY + 1 + d, color, textbuffer);
 		}
 		else
-			printtext(40 + 38, 15 + 3 + d, color, "--");
+			printtext(OX + 18, OY + 1 + d, color, "--");
 
 
 		/*
@@ -2105,12 +2190,12 @@ void displayDetailedWaveTable(int cc)
 		*/
 
 
-		printtext(40 + 45, 15 + 3 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "   ");
+		printtext(OX + 25, OY + 1 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "   ");
 		if (displayRightTable == 1)	// 1 = display Relative/Absolute / Note name (eg C#4)
 		{
 
 			int rhighlight = -1;
-			printtext(40 + 30, 15 + 3 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "RA");
+			printtext(OX + 10, OY + 1 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "RA");
 			if (r != 0x80)
 			{
 				if (r >= 0x81)	// && r <= 0xdf)
@@ -2122,9 +2207,9 @@ void displayDetailedWaveTable(int cc)
 					detailedTableMinRValue[p] = 1;
 
 					rhighlight = 1;
-					printtext(40 + 45, 15 + 3 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), notenameTableView[r2]);
+					printtext(OX + 25, OY + 1 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), notenameTableView[r2]);
 					sprintf(textbuffer, " %02X", r2);
-					printtext(40 + 41, 15 + 3 + d, color, textbuffer);
+					printtext(OX + 21, OY + 1 + d, color, textbuffer);
 				}
 				else
 				{
@@ -2141,7 +2226,7 @@ void displayDetailedWaveTable(int cc)
 						detailedTableMinRValue[p] = 1;
 
 						sprintf(textbuffer, "-%02X", r3);
-						printtext(40 + 41, 15 + 3 + d, color, textbuffer);
+						printtext(OX + 21, OY + 1 + d, color, textbuffer);
 					}
 					else
 					{
@@ -2151,30 +2236,30 @@ void displayDetailedWaveTable(int cc)
 						detailedTableMinRValue[p] = 0;
 
 						sprintf(textbuffer, "+%02X", r2);
-						printtext(40 + 41, 15 + 3 + d, color, textbuffer);
+						printtext(OX + 21, OY + 1 + d, color, textbuffer);
 					}
-					printbg(40 + 41, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
+					printbg(OX + 21, OY + 1 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 				}
 				//				if (rhighlight >= 0)
-				printbg(40 + 30 + rhighlight, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
+				printbg(OX + 10 + rhighlight, OY + 1 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 			}
 			else
 			{
 				detailedTableBaseRValue[p] = -1;	// -1 = User can't edit value
-				printtext(40 + 41, 15 + 3 + d, color, " --");
+				printtext(OX + 21, OY + 1 + d, color, " --");
 			}
 		}
 		else if (displayRightTable == 2)	// Display command
 		{
 			sprintf(textbuffer, " %02X", r2);
-			printtext(40 + 41, 15 + 3 + d, color, textbuffer);
+			printtext(OX + 21, OY + 1 + d, color, textbuffer);
 		}
 		else
-			printtext(40 + 41, 15 + 3 + d, color, " --");
+			printtext(OX + 21, OY + 1 + d, color, " --");
 
 		UIUnderline = 0;
 
-		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
+		printbg(OX + 4 + highlightOffset, OY + 1 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 
 
 		if (editorInfo.etmarknum == 0)
@@ -2183,37 +2268,37 @@ void displayDetailedWaveTable(int cc)
 			{
 				if ((p >= editorInfo.etmarkstart) && (p <= editorInfo.etmarkend))
 				{
-					printbg(40 + 38, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
-					printbg(40 + 38 - 5, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
-					printbg(40 + 42, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 18, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 18 - 5, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
+					printbg(OX + 22, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
 				}
 			}
 			else
 			{
 				if ((p <= editorInfo.etmarkstart) && (p >= editorInfo.etmarkend))
 				{
-					printbg(40 + 38, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
-					printbg(40 + 38 - 5, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
-					printbg(40 + 42, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 18, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 18 - 5, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
+					printbg(OX + 22, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
 				}
 			}
 		}
 	}
 
-	displayTable(EDIT_TABLE_SPEED - 1);
+	displayTable(EDIT_TABLE_SPEED - 1, OX, OY);
 	if (editorInfo.editmode == EDIT_TABLES)
 	{
 		if (!eamode)
 		{
 			if (editorInfo.etnum < EDIT_TABLE_SPEED - 1)
 			{
-				editorInfo.cursorX = 43 + 20 + (editorInfo.etcolumn & 1) + editorInfo.etDetailedWaveTableColumn + (editorInfo.etcolumn / 2) * 4;
-				printbg(editorInfo.cursorX, 15 + 3 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
+				editorInfo.cursorX = OX + 3 + (editorInfo.etcolumn & 1) + editorInfo.etDetailedWaveTableColumn + (editorInfo.etcolumn / 2) * 4;
+				printbg(editorInfo.cursorX, OY + 1 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
 			}
 			else
 			{
-				editorInfo.cursorX = 43 + 20 + editorInfo.etnum * 10 + (editorInfo.etcolumn & 1) + (editorInfo.etcolumn / 2) * 3;
-				printbg(editorInfo.cursorX, 15 + 3 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
+				editorInfo.cursorX = OX + 3 + editorInfo.etnum * 10 + (editorInfo.etcolumn & 1) + (editorInfo.etcolumn / 2) * 3;
+				printbg(editorInfo.cursorX, OY + 1 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
 			}
 		}
 	}
@@ -2233,10 +2318,12 @@ Filtertable left side: 00    Set cutoff, indicated by right side
 					   FF    Jump. Right side tells position ($00 = stop)
 */
 
-void displayDetailedFilterTable(int cc)
+void displayDetailedFilterTable(int cc, int OX, int OY)
 {
 	int filterEnabledColor[3] = { 0,0,0 };
-	int xpos = 40 + 29;
+	int xpos = OX + 9;
+	int ypos = OY + 1;
+
 
 
 	for (int d = 0; d < VISIBLETABLEROWS; d++)
@@ -2246,7 +2333,7 @@ void displayDetailedFilterTable(int cc)
 		UIUnderline = 0;
 
 
-		printtext(xpos + 15, 15 + 3 + d, getColor(CTABLE_FOREGROUND1, CTABLE_BACKGROUND1), "      ");
+		printtext(xpos + 15, ypos + d, getColor(CTABLE_FOREGROUND1, CTABLE_BACKGROUND1), "      ");
 
 
 		int v = ltable[FTBL][p];
@@ -2258,9 +2345,9 @@ void displayDetailedFilterTable(int cc)
 		int r2 = r;
 
 		sprintf(textbuffer, "%02X:", p + 1);
-		printtext(40 + 20, 15 + 3 + d, color, textbuffer);
+		printtext(OX, ypos + d, color, textbuffer);
 
-		printtext(40 + 24, 15 + 3 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "CMFJ");
+		printtext(OX + 4, ypos + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "CMFJ");
 		int highlightOffset = 0;
 		int displayRightTable = 0;
 
@@ -2272,7 +2359,7 @@ void displayDetailedFilterTable(int cc)
 			detailedTableBaseRValue[p] = -1;	// No right value to display
 			displayRightTable = 0;
 
-			printtext(xpos, 15 + 3 + d, color, "CUTOFF ");
+			printtext(xpos, ypos + d, color, "CUTOFF ");
 
 			v++;
 			v2 = r;	// display right value in left column
@@ -2290,7 +2377,7 @@ void displayDetailedFilterTable(int cc)
 			detailedTableMinLValue[p] = 1;
 			detailedTableBaseLValue[p] = 0;		// base value to add to current to get new tableR[p] value
 
-			printtext(xpos, 15 + 3 + d, color, "FLT MOD");
+			printtext(xpos, ypos + d, color, "FLT MOD");
 			displayRightTable = 1;
 		}
 		else if (v >= 0x80 && v <= 0x0f0)
@@ -2300,7 +2387,7 @@ void displayDetailedFilterTable(int cc)
 			detailedTableRValue[p] = -1;
 
 			highlightOffset = 2;	// Resonance, filter On/Off and filter type.
-			printtext(xpos, 15 + 3 + d, color, "FLT SET");
+			printtext(xpos, ypos + d, color, "FLT SET");
 
 
 			// Left side low nybble is not used.
@@ -2322,7 +2409,7 @@ void displayDetailedFilterTable(int cc)
 				int headerColor = getColor(CTABLE_UNUSED_FOREGROUND, 0);
 				if (filterOnOff &(1 << i))
 					headerColor = getColor(CCOLOR_RED, 0);
-				printbyte(xpos + 11 + i, 15 + 3 + d, headerColor, 0xf3);	// Filter on/off marker
+				printbyte(xpos + 11 + i, ypos + d, headerColor, 0xf3);	// Filter on/off marker
 
 				filterEnabledColor[i] = headerColor;
 			}
@@ -2335,14 +2422,14 @@ void displayDetailedFilterTable(int cc)
 				for (int i = 0;i < 2;i++)
 				{
 					int x = j * 2 + i;
-					printbyte(xpos + 15 + x, 15 + 3 + d, headerColor, 0xe0 + (j * 2) + i);
+					printbyte(xpos + 15 + x, ypos + d, headerColor, 0xe0 + (j * 2) + i);
 				}
 			}
 
 		}
 		else if (v >= 0xf1 && v <= 0xfe)
 		{
-			printtext(xpos, 15 + 3 + d, color, "??? ???");	// invalid command range. 
+			printtext(xpos, ypos + d, color, "??? ???");	// invalid command range. 
 			detailedTableBaseLValue[p] = -1;
 			detailedTableBaseRValue[p] = -1;
 			displayRightTable = 0;
@@ -2351,9 +2438,9 @@ void displayDetailedFilterTable(int cc)
 		{
 			highlightOffset = 3;	// jump
 			if (r)
-				printtext(xpos, 15 + 3 + d, color, "JUMP:  ");
+				printtext(xpos, ypos + d, color, "JUMP:  ");
 			else
-				printtext(xpos, 15 + 3 + d, color, "STOP:  ");
+				printtext(xpos, ypos + d, color, "STOP:  ");
 
 			displayRightTable = 0;
 
@@ -2370,13 +2457,13 @@ void displayDetailedFilterTable(int cc)
 		if (v != 0)
 		{
 			sprintf(textbuffer, "%02X", v2);
-			printtext(xpos + 8, 15 + 3 + d, color, textbuffer);
+			printtext(xpos + 8, ypos + d, color, textbuffer);
 		}
 		else
-			printtext(xpos + 8, 15 + 3 + d, color, "--");
+			printtext(xpos + 8, ypos + d, color, "--");
 
 
-		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
+		printbg(OX + 4 + highlightOffset, ypos + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 
 		if (displayRightTable == 1)	// 1 = display Modulation speed (signed 8bit)
 		{
@@ -2388,7 +2475,7 @@ void displayDetailedFilterTable(int cc)
 				detailedTableMinRValue[p] = 0;
 
 				sprintf(textbuffer, "+%02X", r);
-				printtext(xpos + 11, 15 + 3 + d, color, textbuffer);
+				printtext(xpos + 11, ypos + d, color, textbuffer);
 			}
 			else
 			{
@@ -2399,16 +2486,16 @@ void displayDetailedFilterTable(int cc)
 				detailedTableMinRValue[p] = 1;
 
 				sprintf(textbuffer, "-%02X", r2);
-				printtext(xpos + 11, 15 + 3 + d, color, textbuffer);
+				printtext(xpos + 11, ypos + d, color, textbuffer);
 			}
-			printbg(xpos + 11, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
+			printbg(xpos + 11, ypos + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 		}
 		else if (displayRightTable == 2)
 		{
 
 		}
 		else
-			printtext(xpos + 11, 15 + 3 + d, color, " --");
+			printtext(xpos + 11, ypos + d, color, " --");
 
 		UIUnderline = 0;
 
@@ -2419,20 +2506,20 @@ void displayDetailedFilterTable(int cc)
 			{
 				if ((p >= editorInfo.etmarkstart) && (p <= editorInfo.etmarkend))
 				{
-					printbg(40 + 37, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
-					printbg(40 + 37 - 8, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
+					printbg(OX + 17, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 17 - 8, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
 					if (displayRightTable != 2)
-						printbg(40 + 41, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+						printbg(OX + 21, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
 				}
 			}
 			else
 			{
 				if ((p <= editorInfo.etmarkstart) && (p >= editorInfo.etmarkend))
 				{
-					printbg(40 + 37, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
-					printbg(40 + 37 - 8, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
+					printbg(OX + 17, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 17 - 8, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
 					if (displayRightTable != 2)
-						printbg(40 + 41, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+						printbg(OX + 21, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
 				}
 			}
 		}
@@ -2452,9 +2539,7 @@ void displayDetailedFilterTable(int cc)
 
 			if (ctype == 1)
 			{
-
-
-				printbg(editorInfo.cursorX, 15 + 3 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
+				printbg(editorInfo.cursorX, ypos + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
 			}
 			else
 			{
@@ -2480,10 +2565,11 @@ Pulsetable left side:  01-7F Pulse modulation step. Left side indicates time
 					   FF    Jump. Right side tells position ($00 = stop)
 
 */
-void displayDetailedPulseTable(int cc)
+void displayDetailedPulseTable(int cc, int OX, int OY)
 {
 
-	int xpos = 40 + 29;
+	int xpos = OX + 9;
+	int ypos = OY + 1;
 
 
 	for (int d = 0; d < VISIBLETABLEROWS; d++)
@@ -2493,7 +2579,7 @@ void displayDetailedPulseTable(int cc)
 		UIUnderline = 0;
 
 
-		printtext(xpos + 15, 15 + 3 + d, getColor(CTABLE_FOREGROUND1, CTABLE_BACKGROUND1), "      ");
+		printtext(xpos + 15, ypos + d, getColor(CTABLE_FOREGROUND1, CTABLE_BACKGROUND1), "      ");
 
 
 		int v = ltable[PTBL][p];
@@ -2505,9 +2591,9 @@ void displayDetailedPulseTable(int cc)
 		int r2 = r;
 
 		sprintf(textbuffer, "%02X:", p + 1);
-		printtext(40 + 20, 15 + 3 + d, color, textbuffer);
+		printtext(OX, ypos + d, color, textbuffer);
 
-		printtext(40 + 24, 15 + 3 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "SMJ");
+		printtext(OX + 4, ypos + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), "SMJ");
 		int highlightOffset = 0;
 		int displayRightTable = 0;
 
@@ -2520,7 +2606,7 @@ void displayDetailedPulseTable(int cc)
 			detailedTableMinLValue[p] = 1;
 			detailedTableBaseLValue[p] = 0;		// base value to add to current to get new tableR[p] value
 			displayRightTable = 1;
-			printtext(xpos, 15 + 3 + d, color, "PLS MOD");
+			printtext(xpos, ypos + d, color, "PLS MOD");
 		}
 		else if (v >= 0x80 && v <= 0x0fe)
 		{
@@ -2528,13 +2614,13 @@ void displayDetailedPulseTable(int cc)
 			detailedTableRValue[p] = -1;
 
 			highlightOffset = 0;	// Resonance, filter On/Off and filter type.
-			printtext(xpos, 15 + 3 + d, color, "PLS SET");
+			printtext(xpos, ypos + d, color, "PLS SET");
 
 			v2 &= 0xf;
 			v2 <<= 8;
 			v2 |= r;
 			sprintf(textbuffer, "%03X", v2);
-			printtext(xpos + 8, 15 + 3 + d, color, textbuffer);
+			printtext(xpos + 8, ypos + d, color, textbuffer);
 			v = -1;	// don't display anything else for left column
 
 
@@ -2550,9 +2636,9 @@ void displayDetailedPulseTable(int cc)
 		{
 			highlightOffset = 2;	// jump
 			if (r)
-				printtext(xpos, 15 + 3 + d, color, "JUMP:  ");
+				printtext(xpos, ypos + d, color, "JUMP:  ");
 			else
-				printtext(xpos, 15 + 3 + d, color, "STOP:  ");
+				printtext(xpos, ypos + d, color, "STOP:  ");
 
 			displayRightTable = 0;
 
@@ -2567,7 +2653,7 @@ void displayDetailedPulseTable(int cc)
 		}
 		else
 		{
-			printtext(xpos, 15 + 3 + d, color, "??? ???");	// invalid command range. 
+			printtext(xpos, ypos + d, color, "??? ???");	// invalid command range. 
 			detailedTableBaseLValue[p] = -1;
 			detailedTableBaseRValue[p] = -1;
 			displayRightTable = 0;
@@ -2578,13 +2664,13 @@ void displayDetailedPulseTable(int cc)
 		if (v > 0)
 		{
 			sprintf(textbuffer, " %02X", v2);
-			printtext(xpos + 8, 15 + 3 + d, color, textbuffer);
+			printtext(xpos + 8, ypos + d, color, textbuffer);
 		}
 		else if (v == 0)
-			printtext(xpos + 8, 15 + 3 + d, color, " --");
+			printtext(xpos + 8, ypos + d, color, " --");
 
 
-		printbg(40 + 24 + highlightOffset, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
+		printbg(OX + 4 + highlightOffset, ypos + d, getColor(CCOLOR_EXCLAMATION, CTABLE_UNUSED_BACKGROUND), 1);
 
 
 		if (displayRightTable == 1)	// 1 = display Modulation speed (signed 8bit)
@@ -2597,7 +2683,7 @@ void displayDetailedPulseTable(int cc)
 				detailedTableMinRValue[p] = 0;
 
 				sprintf(textbuffer, "+%02X", r);
-				printtext(xpos + 12, 15 + 3 + d, color, textbuffer);
+				printtext(xpos + 12, ypos + d, color, textbuffer);
 			}
 			else
 			{
@@ -2608,7 +2694,7 @@ void displayDetailedPulseTable(int cc)
 				detailedTableMinRValue[p] = 1;
 
 				sprintf(textbuffer, "-%02X", r2);
-				printtext(xpos + 12, 15 + 3 + d, color, textbuffer);
+				printtext(xpos + 12, ypos + d, color, textbuffer);
 			}
 
 		}
@@ -2616,10 +2702,10 @@ void displayDetailedPulseTable(int cc)
 		{
 			int ut = UIUnderline;
 			UIUnderline = 0;
-			printtext(xpos + 12, 15 + 3 + d, color, " --");
+			printtext(xpos + 12, ypos + d, color, " --");
 			UIUnderline = ut;
 		}
-		printbg(xpos + 12, 15 + 3 + d, getColor(CCOLOR_EXCLAMATION, 0), 1);
+		printbg(xpos + 12, ypos + d, getColor(CCOLOR_EXCLAMATION, 0), 1);
 
 		UIUnderline = 0;
 
@@ -2630,21 +2716,21 @@ void displayDetailedPulseTable(int cc)
 			{
 				if ((p >= editorInfo.etmarkstart) && (p <= editorInfo.etmarkend))
 				{
-					printbg(40 + 37, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
+					printbg(OX + 17, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
 
-					printbg(40 + 42, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 22, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
 
-					printbg(40 + 37 - 8, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
+					printbg(OX + 17 - 8, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
 				}
 			}
 			else
 			{
 				if ((p <= editorInfo.etmarkstart) && (p >= editorInfo.etmarkend))
 				{
-					printbg(40 + 37, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
+					printbg(OX + 17, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 3);
 
-					printbg(40 + 42, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
-					printbg(40 + 37 - 8, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
+					printbg(OX + 22, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 2);
+					printbg(OX + 17 - 8, ypos + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 7);
 				}
 			}
 		}
@@ -2670,7 +2756,7 @@ void displayDetailedPulseTable(int cc)
 
 			if (ctype == 1)
 			{
-				printbg(editorInfo.cursorX, 15 + 3 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
+				printbg(editorInfo.cursorX, ypos + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
 			}
 		}
 	}
@@ -2679,22 +2765,22 @@ void displayDetailedPulseTable(int cc)
 
 
 
-void displayOriginalTableView(int cc)
+void displayOriginalTableView(int cc, int OX, int OY)
 {
 	for (int c = 0; c < MAX_TABLES; c++)
 	{
-		displayTable(c);
+		displayTable(c, OX, OY);
 	}
 
 	if (editorInfo.editmode == EDIT_TABLES)
 	{
 		if (!eamode)
-			printbg(43 + 20 + editorInfo.etnum * 10 + (editorInfo.etcolumn & 1) + (editorInfo.etcolumn / 2) * 3, 15 + 3 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
+			printbg(OX + 3 + editorInfo.etnum * 10 + (editorInfo.etcolumn & 1) + (editorInfo.etcolumn / 2) * 3, OY + 1 + editorInfo.etpos - editorInfo.etview[editorInfo.etnum], cc << 8, 1);
 	}
 }
 
 
-void displayTable(int c)
+void displayTable(int c, int OX, int OY)
 {
 	for (int d = 0; d < VISIBLETABLEROWS; d++)
 	{
@@ -2715,12 +2801,12 @@ void displayTable(int c)
 
 
 		sprintf(textbuffer, "%02X:%02X %02X", p + 1, ltable[c][p], rtable[c][p]);
-		printtext(40 + 20 + 10 * c, 15 + 3 + d, color, textbuffer);
+		printtext(OX + 10 * c, OY + 1 + d, color, textbuffer);
 
 		UIUnderline = 0;
 		if (c < 3)
 		{
-			printtext(40 + 20 + (10 * (c + 1)) - 2, 15 + 3 + d, getColor(0, CTABLE_UNUSED_BACKGROUND), "  ");
+			printtext(OX + (10 * (c + 1)) - 2, OY + 1 + d, getColor(0, CTABLE_UNUSED_BACKGROUND), "  ");
 		}
 
 		if (editorInfo.etmarknum == c)
@@ -2728,12 +2814,12 @@ void displayTable(int c)
 			if (editorInfo.etmarkstart <= editorInfo.etmarkend)
 			{
 				if ((p >= editorInfo.etmarkstart) && (p <= editorInfo.etmarkend))
-					printbg(40 + 20 + 10 * c + 3, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
+					printbg(OX + 10 * c + 3, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
 			}
 			else
 			{
 				if ((p <= editorInfo.etmarkstart) && (p >= editorInfo.etmarkend))
-					printbg(40 + 20 + 10 * c + 3, 15 + 3 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
+					printbg(OX + 10 * c + 3, OY + 1 + d, getColor(CSELECT_TO_COPY_FOREGROUND, CSELECT_TO_COPY_BACKGROUND), 5);
 			}
 		}
 	}

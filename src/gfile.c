@@ -466,7 +466,7 @@ NEWPATH:
 			switch (rawkey)
 			{
 			case KEY_Y:
-				exitfilesel = 0;
+				exitfilesel = 1;		// JP FIX for V1.2.3
 				break;
 			case KEY_N:
 				checkForFileExists = 0;

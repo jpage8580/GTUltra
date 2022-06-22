@@ -444,50 +444,114 @@ void orderlistcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_LEFT:
-		if (!ctrlpressed)
-			orderleft();
+		if (expandOrderListView == 0)
+		{
+			if (!ctrlpressed)
+				orderleft();
+		}
+		else
+		{
+			if (editorInfo.escolumn > 0)
+				editorInfo.escolumn--;
+			else
+			{
+				editorInfo.escolumn = 3;
+
+				editorInfo.eschn--;
+				if (editorInfo.eschn < 0)
+					editorInfo.eschn = maxCh - 1;
+
+				setMasterLoopChannel(gt);
+				if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
+			}
+		}
+
 		break;
 
 	case KEY_RIGHT:
-		if (!ctrlpressed)
-			orderright();
+		if (expandOrderListView == 0)
+		{
+			if (!ctrlpressed)
+				orderright();
+		}
+		else
+		{
+			editorInfo.escolumn++;
+			editorInfo.escolumn %= 4;
+			if (!editorInfo.escolumn)
+			{
+				editorInfo.eschn++;
+				if (editorInfo.eschn >= maxCh)
+					editorInfo.eschn = 0;
+
+				setMasterLoopChannel(gt);
+				if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
+			}
+		}
 		break;
 
 	case KEY_UP:
-		editorInfo.eschn--;
-		if (editorInfo.eschn < 0) editorInfo.eschn = maxCh - 1;
-		if ((editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn]) || (editorInfo.eseditpos > songlen[editorInfo.esnum][editorInfo.eschn] + 1))
+		if (expandOrderListView == 0)
 		{
-			editorInfo.eseditpos = songlen[editorInfo.esnum][editorInfo.eschn] + 1;
-			editorInfo.escolumn = 0;
+			editorInfo.eschn--;
+			if (editorInfo.eschn < 0) editorInfo.eschn = maxCh - 1;
+			if ((editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn]) || (editorInfo.eseditpos > songlen[editorInfo.esnum][editorInfo.eschn] + 1))
+			{
+				editorInfo.eseditpos = songlen[editorInfo.esnum][editorInfo.eschn] + 1;
+				editorInfo.escolumn = 0;
+			}
+			setMasterLoopChannel(gt);
+			if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
 		}
-		setMasterLoopChannel(gt);
-		if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
+		else
+		{
+			if (editorInfo.eseditpos > 0)
+				editorInfo.eseditpos--;
+		}
 		break;
 
 	case KEY_DOWN:
 
-
-		editorInfo.eschn++;
-		if (editorInfo.eschn >= maxCh) editorInfo.eschn = 0;
-		if ((editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn]) || (editorInfo.eseditpos > songlen[editorInfo.esnum][editorInfo.eschn] + 1))
+		if (expandOrderListView == 0)
 		{
-			editorInfo.eseditpos = songlen[editorInfo.esnum][editorInfo.eschn] + 1;
-			editorInfo.escolumn = 0;
-		}
-		setMasterLoopChannel(gt);
+			editorInfo.eschn++;
+			if (editorInfo.eschn >= maxCh) editorInfo.eschn = 0;
+			if ((editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn]) || (editorInfo.eseditpos > songlen[editorInfo.esnum][editorInfo.eschn] + 1))
+			{
+				editorInfo.eseditpos = songlen[editorInfo.esnum][editorInfo.eschn] + 1;
+				editorInfo.escolumn = 0;
+			}
+			setMasterLoopChannel(gt);
 
-		if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
+			if (shiftOrCtrlPressed) editorInfo.esmarkchn = -1;
+		}
+		else
+		{
+			if (editorInfo.eseditpos < 0x7ff)
+				editorInfo.eseditpos++;
+		}
 		break;
 	}
+
 	if (editorInfo.eseditpos - editorInfo.esview < 0)
 	{
 		editorInfo.esview = editorInfo.eseditpos;
 	}
-	if (editorInfo.eseditpos - editorInfo.esview >= VISIBLEORDERLIST)
+	if (expandOrderListView == 0)
 	{
-		editorInfo.esview = editorInfo.eseditpos - VISIBLEORDERLIST + 1;
+		if (editorInfo.eseditpos - editorInfo.esview >= VISIBLEORDERLIST)
+		{
+			editorInfo.esview = editorInfo.eseditpos - VISIBLEORDERLIST + 1;
+		}
 	}
+	else
+	{
+		if (editorInfo.eseditpos - editorInfo.esview >= EXTENDEDVISIBLEORDERLIST)
+		{
+			editorInfo.esview = editorInfo.eseditpos - EXTENDEDVISIBLEORDERLIST + 1;
+		}
+	}
+
 }
 
 void namecommands(GTOBJECT *gt)
@@ -620,7 +684,8 @@ void orderleft(void)
 		if (editorInfo.eseditpos > 0)
 		{
 			editorInfo.eseditpos--;
-			if (editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn]) editorInfo.eseditpos--;
+			if (editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn])
+				editorInfo.eseditpos--;
 			editorInfo.escolumn = 1;
 			if (editorInfo.eseditpos < 0)
 			{
@@ -799,8 +864,8 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 #endif
 
 
-		editorInfo.eppos = 0;	// pattern pos
-		editorInfo.epview = -VISIBLEPATTROWS / 2;
+	editorInfo.eppos = 0;	// pattern pos
+	editorInfo.epview = -VISIBLEPATTROWS / 2;
 
 	if (editorInfo.eseditpos == songlen[editorInfo.esnum][editorInfo.eschn])
 		editorInfo.eseditpos++;
