@@ -202,7 +202,12 @@ void instrumentcommands(GTOBJECT *gt)
 		}
 		break;
 	}
-	if ((editorInfo.eipos == 9) && (editorInfo.einum)) editstring(instr[editorInfo.einum].name, MAX_INSTRNAMELEN);
+	
+	if ((editorInfo.eipos == 9) && (editorInfo.einum))
+	{
+		editstring(instr[editorInfo.einum].name, MAX_INSTRNAMELEN);
+	}
+
 	if ((hexnybble >= 0) && (editorInfo.eipos < 9) && (editorInfo.einum))
 	{
 		unsigned char *ptr = &instr[editorInfo.einum].ad;
@@ -270,15 +275,18 @@ void nextinstr(void)
 
 	sprintf(infoTextBuffer, "instr:%d", editorInfo.einum);
 
-	if (editorInfo.einum >= MAX_INSTR) editorInfo.einum = MAX_INSTR - 1;
+	if (editorInfo.einum >= MAX_INSTR)
+		editorInfo.einum = MAX_INSTR - 1;
 	showinstrtable();
 }
 
 void previnstr(void)
 {
 	editorInfo.einum--;
-	if (editorInfo.einum < 0) editorInfo.einum = 0;
-	showinstrtable();setTableBackgroundColours(editorInfo.einum);
+	if (editorInfo.einum < 0)
+		editorInfo.einum = 0;
+	showinstrtable();
+	setTableBackgroundColours(editorInfo.einum);
 }
 
 void showinstrtable(void)

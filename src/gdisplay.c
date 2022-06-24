@@ -91,12 +91,12 @@ void printstatus(GTOBJECT *gt)
 	if (expandOrderListView != lastExpandOrderListView)
 	{
 		lastExpandOrderListView = expandOrderListView;
-		fillArea(PANEL_ORDER_X, PANEL_ORDER_Y, 40, EXTENDEDVISIBLEORDERLIST+2, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), 32);	//65);
+		fillArea(PANEL_ORDER_X, PANEL_ORDER_Y, 40, EXTENDEDVISIBLEORDERLIST + 2, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), 32);	//65);
 	}
 	if (expandOrderListView == 0)	// display original orderlist + instrument information
 	{
 		displayOrderList(gt, cc, PANEL_ORDER_X, PANEL_ORDER_Y);
-		
+
 	}
 	else
 	{
@@ -238,7 +238,7 @@ void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 			// Flash cursor
 			if ((p == editorInfo.eseditpos) && (editorInfo.editmode == EDIT_ORDERLIST) && (editorInfo.eschn == c))
 			{
-				if (!eamode) printbg(OX + 4 + (c * 6) + (editorInfo.escolumn&1)+((editorInfo.escolumn/2)*3), OY + 2 + d, cc << 8, 1);
+				if (!eamode) printbg(OX + 4 + (c * 6) + (editorInfo.escolumn & 1) + ((editorInfo.escolumn / 2) * 3), OY + 2 + d, cc << 8, 1);
 			}
 		}
 	}
@@ -1910,14 +1910,21 @@ void displayInstrument(GTOBJECT *gt, int cc, int OX, int OY)
 {
 	int color;
 
-	sprintf(textbuffer, "                  ", instrumentCount[editorInfo.einum]);
-	printtext(OX+20, OY + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
+	sprintf(textbuffer, "                  ");
+	printtext(OX + 20, OY + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
 	sprintf(textbuffer, "USE COUNT: %d", instrumentCount[editorInfo.einum]);
-	printtext(OX+20, OY + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
+	printtext(OX + 20, OY + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
+
+//	for (int i = 1;i < 5;i++)
+//	{
+//		sprintf(textbuffer, "%s", instr[i].name);
+//		printtext(60, 12 + i, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+//	}
 
 	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
-	sprintf(textbuffer, "INSTRUMENT NUM. %02X  %-18s", editorInfo.einum, instr[editorInfo.einum].name);
+	sprintf(textbuffer, "INSTRUMENT NUM. % 02X  %-18s", editorInfo.einum, instr[editorInfo.einum].name);
 	printtext(OX, OY, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+
 	//	UIUnderline = 0;
 
 	sprintf(textbuffer, "Attack/Decay    %02X  ", instr[editorInfo.einum].ad);

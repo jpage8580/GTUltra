@@ -1382,7 +1382,7 @@ void mousecommands(GTOBJECT *gt)
 			mouseTrack();	// MUST DO AFTER SETTING ABOVE VALUES
 		}
 	}
-	if ((mousey == PANEL_INSTR_Y) && (mousex >= PANEL_INSTR_Y))
+	if ((mousey == PANEL_INSTR_Y) && (mousex >= PANEL_INSTR_X))
 	{
 		if (editorInfo.editmode != EDIT_INSTRUMENT && prevmouseb)	// Don't allow hold/drag to select another panel
 			return;
@@ -1394,7 +1394,7 @@ void mousecommands(GTOBJECT *gt)
 		{
 			editorInfo.editmode = EDIT_INSTRUMENT;
 			editorInfo.eipos = 9;
-			mouseTrack();	// MUST DO AFTER SETTING ABOVE VALUES
+//			mouseTrack();	// MUST DO AFTER SETTING ABOVE VALUES
 		}
 	}
 
@@ -1403,8 +1403,14 @@ void mousecommands(GTOBJECT *gt)
 		if (editorInfo.editmode != EDIT_INSTRUMENT && prevmouseb)	// Don't allow hold/drag to select another panel
 			return;
 
-		if (mouseb & MOUSEB_LEFT) nextinstr();
-		if (mouseb & MOUSEB_RIGHT) previnstr();
+		if (mouseb & MOUSEB_LEFT)
+		{
+			nextinstr();
+		}
+		if (mouseb & MOUSEB_RIGHT)
+		{
+			previnstr();
+		}
 	}
 
 	// Table editpos
@@ -1449,7 +1455,7 @@ void mousecommands(GTOBJECT *gt)
 	}
 
 
-	// Name editpos
+	// Name editpos (song name, author, (c) )
 	if ((mousey >= (PANEL_NAMES_Y) && mousey < (PANEL_NAMES_Y + 3)) && (mousex >= PANEL_NAMES_X) && (mousex < PANEL_NAMES_X + 32))
 	{
 		if (!mouseb)
