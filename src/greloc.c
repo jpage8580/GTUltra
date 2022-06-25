@@ -581,44 +581,6 @@ void relocator(GTOBJECT *gt)
 	membuf_free(&src);
 	membuf_free(&dest);
 
-	/*
-	int tableerrortype = TYPE_NONE;
-	int tableerrorcause = CAUSE_NONE;
-	int tableerrorsource1 = 0;
-	int tableerrorsource2 = 0;
-	int patterns = 0;
-	int songs = 0;
-	int instruments = 0;
-	int numlegato = 0;
-	int numnohr = 0;
-	int numnormal = 0;
-	int freenormal;
-	int freenohr;
-	int freelegato;
-	int transuprange = 0;
-	int transdownrange = 0;
-	int pattdatasize = 0;
-	int patttblsize = 0;
-	int songdatasize = 0;
-	int songtblsize = 0;
-	int instrsize = 0;
-	int wavetblsize = 0;
-	int pulsetblsize = 0;
-	int filttblsize = 0;
-	int speedtblsize = 0;
-	int playersize = 0;
-	int packedsize = 0;
-	FILE *songhandle = NULL;
-	int selectdone;
-	int opt = 0;
-	unsigned char speedcode[] = { 0xa2,0x00,0x8e,0x04,0xdc,0xa2,0x00,0x8e,0x05,0xdc };
-	int c, d, e;
-	unsigned char patttemp[512];
-	unsigned char *songwork = NULL;
-	unsigned char *pattwork = NULL;
-	unsigned char *instrwork = NULL;
-	*/
-
 	fixedparams = 1;
 	simplepulse = 1;
 	firstnote = MAX_NOTES - 1;
@@ -1027,7 +989,8 @@ void relocator(GTOBJECT *gt)
 	if (!songwork)
 	{
 		clearscreen(getColor(1, 0));
-		printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), "OUT OF MEMORY IN PACKER/RELOCATOR!");
+		sprintf(textbuffer, "OUT OF MEMORY IN PACKER/RELOCATOR (SONG DATA SIZE 0x%x)!", songdatasize);
+		printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), textbuffer);
 		fliptoscreen();
 		waitkeynoupdate();
 		goto PRCLEANUP;
@@ -1128,7 +1091,8 @@ void relocator(GTOBJECT *gt)
 	if (!pattwork)
 	{
 		clearscreen(getColor(1, 0));
-		printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), "OUT OF MEMORY IN PACKER/RELOCATOR!");
+		sprintf(textbuffer, "OUT OF MEMORY IN PACKER/RELOCATOR (PATTERN SIZE 0x%x)!", pattdatasize);
+		printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), textbuffer);
 		fliptoscreen();
 		waitkeynoupdate();
 		goto PRCLEANUP;
@@ -1156,7 +1120,8 @@ void relocator(GTOBJECT *gt)
 	if (!instrwork)
 	{
 		clearscreen(getColor(1, 0));
-		printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), "OUT OF MEMORY IN PACKER/RELOCATOR!");
+		sprintf(textbuffer, "OUT OF MEMORY IN PACKER/RELOCATOR (INSTRUMENT DATA SIZE 0x%x)!", instrsize);
+		printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), textbuffer);
 		fliptoscreen();
 		waitkeynoupdate();
 		goto PRCLEANUP;
@@ -2065,15 +2030,6 @@ void relocator(GTOBJECT *gt)
 
 	fwrite(packeddata, packedsize, 1, songhandle);
 	fclose(songhandle);
-
-
-	jplayeradr += packedsize; // move player addr to write to after first SID
-	jplayeradr += 0xff;	// round second .SID to multiple of 0x100 (GT code starts with a number of functions that are accessed only have low byte lookup table info)
-	jplayeradr &= 0xffffff00;
-
-	if (pattwork) free(pattwork);
-	if (songwork) free(songwork);
-	if (instrwork) free(instrwork);
 
 PRCLEANUP:
 	membuf_free(&src);

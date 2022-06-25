@@ -1906,6 +1906,50 @@ void displayTopBar(int menu, int cc)
 	}
 }
 
+
+/* Definition of a structure that is 1024 bytes (1 kilobyte) in size.) */
+
+struct kilo {/*  w  ww .  j  ava 2s .  c  o m*/
+	struct kilo *next;
+	char dummy[1022];
+};
+
+int FreeMem(void);
+#define FREEMEMALLOCSIZE 1024*512		// 1/2 meg packets
+int FreeMem(void)
+{
+	/*Returns the number of kilobytes (1024 bytes) of free memory. */
+
+	long counter;
+	struct kilo *head, *current, *nextone;
+
+	current = head = (struct kilo*) malloc(FREEMEMALLOCSIZE);
+
+	if (head == NULL)
+		return 0;      /*No memory available.*/
+
+	counter = 0;
+
+	do {
+		counter++;
+		current->next = (struct kilo*) malloc(FREEMEMALLOCSIZE);
+		current = current->next;
+	} while (current != NULL);
+
+	current = head;
+	do {
+		nextone = current->next;
+		free(current);
+		current = nextone;
+	} while (nextone != NULL);
+
+	return counter;
+}
+
+int getFreeMem = 1;
+int freememsize = 0;
+//#define DISPLAY_FREE_MEM
+
 void displayInstrument(GTOBJECT *gt, int cc, int OX, int OY)
 {
 	int color;
@@ -1915,11 +1959,14 @@ void displayInstrument(GTOBJECT *gt, int cc, int OX, int OY)
 	sprintf(textbuffer, "USE COUNT: %d", instrumentCount[editorInfo.einum]);
 	printtext(OX + 20, OY + 5, getColor(CORDER_INST_FOREGROUND, CORDER_INST_BACKGROUND), textbuffer);
 
-//	for (int i = 1;i < 5;i++)
-//	{
-//		sprintf(textbuffer, "%s", instr[i].name);
-//		printtext(60, 12 + i, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
-//	}
+#ifdef DISPLAY_FREE_MEM
+	if (getFreeMem)
+	{
+		freememsize = FreeMem() * FREEMEMALLOCSIZE;
+	}
+		sprintf(textbuffer, "free (mb): %d", freememsize);
+		printtext(60, 12, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+#endif
 
 	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;
 	sprintf(textbuffer, "INSTRUMENT NUM. % 02X  %-18s", editorInfo.einum, instr[editorInfo.einum].name);
