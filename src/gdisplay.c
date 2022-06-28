@@ -1453,16 +1453,22 @@ void displayTransportBarPlaying(GTOBJECT *gt, int x, int y)
 		printbyte(x + i, y + 1, color, 0xc0 + i + imageOffset);
 	}
 }
+
+
 void displayTransportBarRecord(int x, int y)
 {
 	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	if (recordmode)
 		color = getColor(CCOLOR_RED, CTRANSPORT_BUTTON_BACKGROUND);
 
+	int firstChar = 0xa9;
+	if (useOriginalGTFunctionKeys)
+		firstChar = 0x101;
+
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0xa0 + i + 9);
-		printbyte(x + i, y + 1, color, 0xc0 + i + 9);
+		printbyte(x + i, y, color, firstChar + i );
+		printbyte(x + i, y + 1, color, firstChar+0x20 + i);
 	}
 }
 
@@ -1906,16 +1912,19 @@ void displayTopBar(int menu, int cc)
 	}
 }
 
+#define DISPLAY_FREE_MEM
+
+#ifdef DISPLAY_FREE_MEM
 
 /* Definition of a structure that is 1024 bytes (1 kilobyte) in size.) */
 
 struct kilo {/*  w  ww .  j  ava 2s .  c  o m*/
 	struct kilo *next;
-	char dummy[1022];
+//	char dummy[1022];
 };
 
 int FreeMem(void);
-#define FREEMEMALLOCSIZE 1024*512		// 1/2 meg packets
+#define FREEMEMALLOCSIZE 512*1024		// 1/2 meg packets
 int FreeMem(void)
 {
 	/*Returns the number of kilobytes (1024 bytes) of free memory. */
@@ -1923,24 +1932,39 @@ int FreeMem(void)
 	long counter;
 	struct kilo *head, *current, *nextone;
 
+	unsigned int memSize = FREEMEMALLOCSIZE;
 	current = head = (struct kilo*) malloc(FREEMEMALLOCSIZE);
 
 	if (head == NULL)
 		return 0;      /*No memory available.*/
 
-	counter = 0;
+	counter = memSize;
 
-	do {
-		counter++;
-		current->next = (struct kilo*) malloc(FREEMEMALLOCSIZE);
-		current = current->next;
-	} while (current != NULL);
+	int allocCount = 1;
+//	do
+//	{
+		int doAgain = 1;
+		do {
+			current->next = (struct kilo*) malloc(memSize);
+
+			if (current->next != NULL)
+			{
+				allocCount++;
+				current = current->next;
+				counter += memSize;
+			}
+			else
+				doAgain = 0;
+		} while (doAgain != 0);
+//		memSize /= 2;
+//	} while (memSize >= 64 * 1024);
 
 	current = head;
 	do {
 		nextone = current->next;
 		free(current);
 		current = nextone;
+		allocCount--;
 	} while (nextone != NULL);
 
 	return counter;
@@ -1948,7 +1972,8 @@ int FreeMem(void)
 
 int getFreeMem = 1;
 int freememsize = 0;
-//#define DISPLAY_FREE_MEM
+
+#endif
 
 void displayInstrument(GTOBJECT *gt, int cc, int OX, int OY)
 {
@@ -1962,10 +1987,11 @@ void displayInstrument(GTOBJECT *gt, int cc, int OX, int OY)
 #ifdef DISPLAY_FREE_MEM
 	if (getFreeMem)
 	{
-		freememsize = FreeMem() * FREEMEMALLOCSIZE;
+		freememsize = FreeMem();	// *FREEMEMALLOCSIZE;
+		getFreeMem = 0;
 	}
-		sprintf(textbuffer, "free (mb): %d", freememsize);
-		printtext(60, 12, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+	sprintf(textbuffer, "free mem: %d", freememsize);
+	printtext(60, 12, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 #endif
 
 	//	UIUnderline = UNDERLINE_FOREGROUND_MASK;

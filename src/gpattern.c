@@ -362,7 +362,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 					}
 				}
 
-				playtestnote(newnote, editorInfo.einum, editorInfo.epchn, gt);
+				playtestnote(newnote, editorInfo.einum, getActualChannel(editorInfo.esnum, editorInfo.epchn), gt);
 			}
 
 
@@ -1872,7 +1872,12 @@ int lastFoundChannel = 0;
 int findFreePolyChannel(int note)
 {
 	if (checkMonoMode())
-		return editorInfo.epchn;
+	{
+//		sprintf(textbuffer,"ch: %d %d",editorInfo.epchn,getActualChannel(editorInfo.esnum, editorInfo.epchn));
+//		printtext(65, 12, 0xe, textbuffer);
+		return getActualChannel(editorInfo.esnum, editorInfo.epchn);
+	}
+//		return editorInfo.epchn;
 
 
 	// Found channel playing the same note? retrigger using this channel

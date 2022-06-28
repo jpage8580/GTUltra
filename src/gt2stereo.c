@@ -81,6 +81,7 @@ unsigned int lmanMode = 1;
 unsigned int editPaletteMode = 0;
 unsigned int enablekeyrepeat = 0;
 unsigned int enableAntiAlias = 1;
+int useOriginalGTFunctionKeys = 0;
 
 float masterVolume = 1.0f;
 float detuneCent = 0;
@@ -1213,6 +1214,7 @@ void mousecommands(GTOBJECT *gt)
 	int patternTextWidth = 7;
 	int chTextWidth = 2;
 	int chTextPos = 6;
+	int ok = 0;
 	if (displayOriginal3Channel)
 	{
 		patternWidth = 14;
@@ -1394,7 +1396,7 @@ void mousecommands(GTOBJECT *gt)
 		{
 			editorInfo.editmode = EDIT_INSTRUMENT;
 			editorInfo.eipos = 9;
-//			mouseTrack();	// MUST DO AFTER SETTING ABOVE VALUES
+			//			mouseTrack();	// MUST DO AFTER SETTING ABOVE VALUES
 		}
 	}
 
@@ -1558,6 +1560,7 @@ void generalcommands(GTOBJECT *gt)
 	int c;
 	int songNum;
 	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);
+	int ok = 0;
 
 	switch (key)
 	{
@@ -1688,26 +1691,45 @@ void generalcommands(GTOBJECT *gt)
 		// JP - Shift_F1  changed to just turn looping on/off
 		playUntilEnd();
 
-		orderPlayFromPosition(gt, 0, 0, 0, 1);
+		if (useOriginalGTFunctionKeys)
+		{
+			transportLoopPattern = 0;
+			if (shiftOrCtrlPressed)
+				followplay = 1;
+			else
+				followplay = 0;
+		}
 
-		//		initsong(editorInfo.esnum, PLAY_BEGINNING, gt);
-				//	followplay = shiftOrCtrlPressed;
+		orderPlayFromPosition(gt, 0, 0, 0, 1);
 
 		break;
 
 		// PLAY FROM START OF SELECTED PATTERN
 	case KEY_F2:
 
-		if (shiftOrCtrlPressed)
-			followplay = 1 - followplay;
+		if (useOriginalGTFunctionKeys)
+		{
+			playFromCurrentPosition(gt, 0);
+			transportLoopPattern = 0;
+			if (shiftOrCtrlPressed)
+				followplay = 1;
+			else
+				followplay = 0;
+		}
 		else
 		{
-			transportLoopPattern = 1 - transportLoopPattern;
-			if (!transportLoopPattern)
+
+			if (shiftOrCtrlPressed)
+				followplay = 1 - followplay;
+			else
 			{
-				editorInfo.highlightLoopChannel = 999;			// remove from display
-				editorInfo.highlightLoopPatternNumber = -1;
-				editorInfo.highlightLoopStart = editorInfo.highlightLoopEnd = 0;
+				transportLoopPattern = 1 - transportLoopPattern;
+				if (!transportLoopPattern)
+				{
+					editorInfo.highlightLoopChannel = 999;			// remove from display
+					editorInfo.highlightLoopPatternNumber = -1;
+					editorInfo.highlightLoopStart = editorInfo.highlightLoopEnd = 0;
+				}
 			}
 		}
 		break;
@@ -1718,15 +1740,28 @@ void generalcommands(GTOBJECT *gt)
 		if (editPaletteMode)
 			break;
 
-		if (editorInfo.editmode == EDIT_ORDERLIST)	// 1.1.7: Fast select / playback when in OrderList. Just press F3 to play from the cursor pos
+		if (useOriginalGTFunctionKeys)
 		{
-
-			orderSelectPatternsFromSelected(gt);
-			orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
+			transportLoopPattern = 1;
+			if (shiftOrCtrlPressed)
+				followplay = 1;
+			else
+				followplay = 0;
+			playFromCurrentPosition(gt, 0);
 		}
 		else
 		{
-			playFromCurrentPosition(gt);
+
+			if (editorInfo.editmode == EDIT_ORDERLIST)	// 1.1.7: Fast select / playback when in OrderList. Just press F3 to play from the cursor pos
+			{
+
+				orderSelectPatternsFromSelected(gt);
+				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
+			}
+			else
+			{
+				playFromCurrentPosition(gt, editorInfo.eppos);
+			}
 		}
 		break;
 
@@ -1787,16 +1822,20 @@ void generalcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_F10:
-		load(gt);
 
-		// Set up song 1 and then 0... This allows editor pattern numbers to be complete, so that F3 works from the very start.
-		// (Bit of a nasty hack..Meh. Never mind)
-		editorInfo.esnum = 1;
-		songchange(gt, 1);
-		editorInfo.esnum = 0;
-		songchange(gt, 1);
+		ok = load(gt);
+		if (ok)
+		{
 
-		playUntilEnd();
+			// Set up song 1 and then 0... This allows editor pattern numbers to be complete, so that F3 works from the very start.
+			// (Bit of a nasty hack..Meh. Never mind)
+			editorInfo.esnum = 1;
+			songchange(gt, 1);
+			editorInfo.esnum = 0;
+			songchange(gt, 1);
+
+			playUntilEnd();
+		}
 		break;
 
 	case KEY_F11:
@@ -1829,7 +1868,7 @@ void generalcommands(GTOBJECT *gt)
 	}
 }
 
-void load(GTOBJECT *gt)
+int load(GTOBJECT *gt)
 {
 	win_enableKeyRepeat();
 
@@ -1853,6 +1892,7 @@ void load(GTOBJECT *gt)
 			countInstruments();
 			setTableBackgroundColours(editorInfo.einum);
 		}
+		return ok;
 
 	}
 	else
@@ -1934,10 +1974,11 @@ void quit(GTOBJECT *gt)
 {
 	if ((!shiftOrCtrlPressed) || (mouseb))
 	{
-		printtextcp(78, 36, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "Really Quit (y/n)?");
+		//78,36
+		printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "Really Quit (y/n)?");
 		waitkey(gt);
 
-		printtextcp(78, 36, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "                  ");
+		printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "                  ");
 		if ((key == 'y') || (key == 'Y')) exitprogram = 1;
 	}
 	key = 0;
@@ -1952,9 +1993,9 @@ void clear(GTOBJECT *gt)
 	int ct = 0;
 	int cn = 0;
 
-	printtextcp(78, 36, getColor(15, CGENERAL_BACKGROUND), "Optimize everything (y/n)?");
+	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Optimize everything (y/n)?");
 	waitkey(gt);
-	printbyterow(60, 36, getColor(15, CGENERAL_BACKGROUND), 32, 39);
+	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 
 	if ((key == 'y') || (key == 'Y'))
 	{
@@ -1964,29 +2005,29 @@ void clear(GTOBJECT *gt)
 		return;
 	}
 
-	printtextcp(78, 36, getColor(15, CGENERAL_BACKGROUND), "Clear orderlists (y/n)?");
+	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear orderlists (y/n)?");
 	waitkey(gt);
-	printbyterow(60, 36, getColor(15, CGENERAL_BACKGROUND), 32, 39);
+	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) cs = 1;
 
-	printtextcp(78, 36, getColor(15, CGENERAL_BACKGROUND), "Clear patterns (y/n)?");
+	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear patterns (y/n)?");
 	waitkey(gt);
-	printbyterow(60, 36, getColor(15, CGENERAL_BACKGROUND), 32, 39);
+	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) cp = 1;
 
-	printtextcp(78, 36, getColor(15, CGENERAL_BACKGROUND), "Clear instruments (y/n)?");
+	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear instruments (y/n)?");
 	waitkey(gt);
-	printbyterow(60, 36, getColor(15, CGENERAL_BACKGROUND), 32, 39);
+	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) ci = 1;
 
-	printtextcp(78, 36, getColor(15, CGENERAL_BACKGROUND), "Clear tables (y/n)?");
+	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear tables (y/n)?");
 	waitkey(gt);
-	printbyterow(60, 36, getColor(15, CGENERAL_BACKGROUND), 32, 39);
+	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) ct = 1;
 
-	printtextcp(78, 36, getColor(15, CGENERAL_BACKGROUND), "Clear songname (y/n)?");
+	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear songname (y/n)?");
 	waitkey(gt);
-	printbyterow(60, 36, getColor(15, CGENERAL_BACKGROUND), 32, 39);
+	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) cn = 1;
 
 	if (cp == 1)
@@ -2841,7 +2882,12 @@ int mouseTransportBar(GTOBJECT *gt)
 
 	if (checkMouseRange(TRANSPORT_BAR_X + 16 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
-		recordmode = 1 - recordmode;
+		if (shiftOrCtrlPressed)
+			useOriginalGTFunctionKeys = 1 - useOriginalGTFunctionKeys;
+		else
+			recordmode = 1 - recordmode;
+
+		getFreeMem = 1;
 		return 1;
 	}
 
@@ -2850,7 +2896,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (editPaletteMode)
 			return 1;
 		if (gt->songinit == PLAY_STOPPED)
-			playFromCurrentPosition(gt);
+			playFromCurrentPosition(gt, editorInfo.eppos);
 		else
 		{
 			if (gt->songinit != PLAY_STOPPED)
@@ -3184,7 +3230,7 @@ void setSongToBeginning(GTOBJECT *gt)
 	updateviewtopos(gt);
 }
 
-void playFromCurrentPosition(GTOBJECT *gt)
+void playFromCurrentPosition(GTOBJECT *gt,int currentPos)
 {
 	if (editPaletteMode)
 		return;
@@ -3194,7 +3240,7 @@ void playFromCurrentPosition(GTOBJECT *gt)
 	gt->loopEnabledFlag = 0;
 	gt->interPatternLoopEnabledFlag = 0;
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);
-	handleShiftSpace(gt, c2, editorInfo.eppos * 4, 0, 1);
+	handleShiftSpace(gt, c2, currentPos*4, 0, 1);
 
 	gt->loopEnabledFlag = transportLoopPattern;
 	gt->interPatternLoopEnabledFlag = t2;
@@ -4067,7 +4113,7 @@ void checkForMouseInOrderList(GTOBJECT *gt, int maxCh)
 void checkForMouseInExtendedOrderList(GTOBJECT *gt, int maxCh)
 {
 	// Song editpos & songnumber selection
-	if ((mousey >= PANEL_ORDER_Y + 2) && (mousey <= 3 + EXTENDEDVISIBLEORDERLIST) && (mousex >= PANEL_ORDER_X + 4) && (mousex <= PANEL_ORDER_X + 4 + 4+(maxCh * 6)))
+	if ((mousey >= PANEL_ORDER_Y + 2) && (mousey <= 3 + EXTENDEDVISIBLEORDERLIST) && (mousex >= PANEL_ORDER_X + 4) && (mousex <= PANEL_ORDER_X + 4 + 4 + (maxCh * 6)))
 	{
 		if (editorInfo.editmode != EDIT_ORDERLIST && prevmouseb)	// Don't allow hold/drag to select another panel
 			return;

@@ -158,6 +158,7 @@ extern WAVEFORM_INFO waveformDisplayInfo;
 extern int selectedMIDIPort;
 extern unsigned int enableAntiAlias;
 
+extern int useOriginalGTFunctionKeys;
 
 extern float detuneCent;
 
@@ -175,7 +176,7 @@ void docommand(void);
 void onlinehelp(int standalone, int context, GTOBJECT *gt);
 void mousecommands(GTOBJECT *gt);
 void generalcommands(GTOBJECT *gt);
-void load(GTOBJECT *gt);
+int load(GTOBJECT *gt);
 void save(GTOBJECT *gt);
 void quit(GTOBJECT *gt);
 void clear(GTOBJECT *gt);
@@ -203,7 +204,7 @@ void handleSIDChannelCountChange(GTOBJECT *gt);
 void nextSongPos(GTOBJECT *gt);
 void previousSongPos(GTOBJECT *gt, int songDffset);
 void setSongToBeginning(GTOBJECT *gt);
-void playFromCurrentPosition(GTOBJECT *gt);
+void playFromCurrentPosition(GTOBJECT *gt, int currentPos);
 int mouseTrackModify(int editorWindow);
 void mouseTrack();
 void ModifyTrackGetOriginalValue();
