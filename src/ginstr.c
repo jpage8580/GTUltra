@@ -37,7 +37,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_X:
-		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (ctrlpressed) && (editorInfo.eipos <= 9))
 		{
 			cutinstr = editorInfo.einum;
 			memcpy(&instrcopybuffer, &instr[editorInfo.einum], sizeof(INSTR));
@@ -46,7 +46,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_C:
-		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (ctrlpressed) && (editorInfo.eipos <= 9))
 		{
 			cutinstr = -1;
 			memcpy(&instrcopybuffer, &instr[editorInfo.einum], sizeof(INSTR));
@@ -71,7 +71,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_V:
-		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (ctrlpressed) && (editorInfo.eipos <= 9))
 		{
 			memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
 		}
