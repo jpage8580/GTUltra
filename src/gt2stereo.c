@@ -3602,7 +3602,7 @@ void previousSongPos(GTOBJECT *gt, int songDffset)
 				Check if we're on a transpose or repeat. If so, keep moving backwards to a valid pattern
 				*/
 
-				if (editorInfo.expandOrderListView = 0)
+				if (editorInfo.expandOrderListView == 0)
 				{
 					while ((songorder[songNum][c3][so] >= REPEAT) && (songorder[songNum][c3][so] < LOOPSONG))
 					{
