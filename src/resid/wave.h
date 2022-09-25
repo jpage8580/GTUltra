@@ -53,6 +53,8 @@ public:
   // 12-bit waveform output.
   RESID_INLINE reg12 output();
 
+  RESID_INLINE float getPan();
+
 protected:
   const WaveformGenerator* sync_source;
   WaveformGenerator* sync_dest;
@@ -67,6 +69,8 @@ protected:
   reg16 freq;
   // PWout = (PWn/40.95)%
   reg12 pw;
+
+  reg8 pan;
 
   // The control register right-shifted 4 bits; used for output function
   // table lookup.
@@ -450,6 +454,13 @@ RESID_INLINE
 reg12 WaveformGenerator::outputNPST()
 {
   return 0;
+}
+
+
+RESID_INLINE
+float WaveformGenerator::getPan()
+{
+	return pan;
 }
 
 // ----------------------------------------------------------------------------

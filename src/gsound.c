@@ -23,10 +23,10 @@ int usecatweasel = 0;
 int initted = 0;
 int firsttimeinit = 1;
 unsigned framerate = PALFRAMERATE;
-Sint16 *lbuffer = NULL;
-Sint16 *rbuffer = NULL;
-Sint16 *lbuffer2 = NULL;
-Sint16 *rbuffer2 = NULL;
+Sint16 *sid0buffer = NULL;
+Sint16 *sid1buffer = NULL;
+Sint16 *sid2buffer = NULL;
+Sint16 *sid3buffer = NULL;
 Sint16 *tempbuffer = NULL;
 
 FILE *writehandle = NULL;
@@ -149,7 +149,7 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
 		else
 		{
 			runplayerthread = TRUE;
-			playerthread = SDL_CreateThread(sound_thread, NULL,NULL);
+			playerthread = SDL_CreateThread(sound_thread, NULL, NULL);
 			if (!playerthread) return 0;
 		}
 #else
@@ -202,15 +202,15 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
 		goto SOUNDOK;
 	}
 
-	if (!tempbuffer) tempbuffer = malloc(MIXBUFFERSIZE * sizeof(Sint16));
+	if (!tempbuffer) tempbuffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
 
-	if (!lbuffer) lbuffer = malloc(MIXBUFFERSIZE * sizeof(Sint16));
-	if (!rbuffer) rbuffer = malloc(MIXBUFFERSIZE * sizeof(Sint16));
+	if (!sid0buffer) sid0buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
+	if (!sid1buffer) sid1buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
 
-	if (!lbuffer2) lbuffer2 = malloc(MIXBUFFERSIZE * sizeof(Sint16));
-	if (!rbuffer2) rbuffer2 = malloc(MIXBUFFERSIZE * sizeof(Sint16));
+	if (!sid2buffer) sid2buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
+	if (!sid3buffer) sid3buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
 
-	if ((!lbuffer) || (!rbuffer)) return 0;
+	if ((!sid0buffer) || (!sid1buffer)) return 0;
 
 	if (writer)
 		writehandle = fopen("sidaudio.raw", "wb");
@@ -221,12 +221,15 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
 	if (b < MINBUF) b = MINBUF;
 	if (b > MAXBUF) b = MAXBUF;
 
+
 	if (firsttimeinit)
 	{
 		if (!snd_init(mr, SIXTEENBIT | STEREO, b, 1, 0)) return 0;
 		firsttimeinit = 0;
 	}
+
 	playspeed = snd_mixrate;
+
 	sid_init(playspeed, m, ntsc, interpolate & 1, customclockrate, interpolate >> 1);
 
 	snd_player = &sound_playrout;
@@ -277,27 +280,27 @@ void sound_uninit(void)
 		writehandle = NULL;
 	}
 
-	if (lbuffer)
+	if (sid0buffer)
 	{
-		free(lbuffer);
-		lbuffer = NULL;
+		free(sid0buffer);
+		sid0buffer = NULL;
 	}
-	if (rbuffer)
+	if (sid1buffer)
 	{
-		free(rbuffer);
-		rbuffer = NULL;
-	}
-
-	if (lbuffer2)
-	{
-		free(lbuffer2);
-		lbuffer2 = NULL;
+		free(sid1buffer);
+		sid1buffer = NULL;
 	}
 
-	if (rbuffer2)
+	if (sid2buffer)
 	{
-		free(rbuffer2);
-		rbuffer2 = NULL;
+		free(sid2buffer);
+		sid2buffer = NULL;
+	}
+
+	if (sid3buffer)
+	{
+		free(sid3buffer);
+		sid3buffer = NULL;
 	}
 
 	if (tempbuffer)
@@ -552,104 +555,99 @@ void sound_mixer(Sint32 *dest, unsigned samples)
 		JPSoundMixer(dest, samples);
 }
 
+// for TrueStereo, sidnBuffer is *2 size:
+// Left = sidnBuffer 0 > MIXBUFFERSIZE-1
+// Right = sidnBuffer MIXBUFFERSIZE > MIXBUFFERSIZE*2
 void JPSoundMixer(Sint32 *dest, unsigned samples)
 {
+
+	int tick = SDL_GetTicks();
+
 	int c;
 
 	if (!initted) return;
 	if (samples > MIXBUFFERSIZE) return;
 
 	if (dest == NULL)
-		sid_fillbuffer(tempbuffer, tempbuffer, tempbuffer, tempbuffer, samples);
+		sid_fillbuffer(tempbuffer, tempbuffer, tempbuffer, tempbuffer, samples, MIXBUFFERSIZE);
 	else
-		sid_fillbuffer(lbuffer, rbuffer, lbuffer2, rbuffer2, samples);
-	if (writehandle)
-	{
-		for (c = 0; c < samples; c++)
-		{
-			fwrite(&lbuffer[c], sizeof(Sint16), 1, writehandle);
-			fwrite(&rbuffer[c], sizeof(Sint16), 1, writehandle);
-			fwrite(&lbuffer2[c], sizeof(Sint16), 1, writehandle);
-			fwrite(&rbuffer2[c], sizeof(Sint16), 1, writehandle);
-		}
-	}
+		sid_fillbuffer(sid0buffer, sid1buffer, sid2buffer, sid3buffer, samples, MIXBUFFERSIZE);
 
 
+//	sprintf(textbuffer, "sid %d", sid_debug());
+//	printtext(70, 14, 0xe, textbuffer);
+	
+
+//	int tick = SDL_GetTicks();
+
+	//debugTicks = SDL_GetTicks() - tick;
 
 	if (dest != NULL)
 	{
 		Sint32 *dp = dest;
 		Sint32 v;
 
-		if (monomode || maxSIDChannels==3)
+		Sint16 *spL0 = sid0buffer;
+		Sint16 *spL1 = sid1buffer;
+		Sint16 *spL2 = sid2buffer;
+		Sint16 *spL3 = sid3buffer;
+
+		Sint16 *spR0 = sid0buffer + MIXBUFFERSIZE;
+		Sint16 *spR1 = sid1buffer + MIXBUFFERSIZE;
+		Sint16 *spR2 = sid2buffer + MIXBUFFERSIZE;
+		Sint16 *spR3 = sid3buffer + MIXBUFFERSIZE;
+
+
+		float mvf = masterVolume * 0x8000;
+		int mv = (int)mvf;
+
+		for (c = 0; c < samples; c++)
 		{
-			for (c = 0; c < samples; c++)
-			{
-				v = lbuffer[c] / 4 + rbuffer[c] / 4 + lbuffer2[c] / 4 + rbuffer2[c] / 4;
-				*dp = v;
-				dp++;
-				*dp = v;	//dest[c * 2];
-				dp++;
+			v = *spL0 + *spL1 + *spL2 + *spL3;
+			spL0++;
+			spL1++;
+			spL2++;
+			spL3++;
 
-				//		dest[c * 2] = lbuffer[c] / 4 + rbuffer[c] / 4 + lbuffer2[c] / 4 + rbuffer2[c] / 4;
-				//		dest[c * 2 + 1] = dest[c * 2];
-			}
+			v /= 4;
+			v *= mv;
+			v /= 0x8000;
 
-			dp = dest;
-			for (c = 0; c < samples; c++)
-			{
-				short h = *dp;
-				float f = h;
-				if (f >= 0x8000)
-				{
-					f = (0x10000 - f) *masterVolume;		// convert 8000>FFFF to 1 > 0x7fff
-					h = 0x10000 - f;
-				}
-				else
-				{
-					f *= masterVolume;
-					h = f;
-				}
-				*dp = h;
-				dp++;
-				*dp = h;
-				dp++;
-			} 
+			*dp = v;
+			dp++;
 
+			v = *spR0 + *spR1 + *spR2 + *spR3;
+			spR0++;
+			spR1++;
+			spR2++;
+			spR3++;
+
+			v /= 4;
+			v *= mv;
+			v /= 0x8000;
+
+			*dp = v;
+			dp++;
 
 		}
-		else
-		{
 
-			for (c = 0; c < samples; c++)
-			{
-				*dp = lbuffer[c] / 2 + lbuffer2[c] / 2;
-				dp++;
-				*dp = rbuffer[c] / 2 + rbuffer2[c] / 2;
-				dp++;
-			}
-			dp = dest;
+
+		if (writehandle)
+		{
 			for (c = 0; c < samples * 2; c++)
 			{
-				short h = *dp;	//dest[c];
-				float f = h;
-				if (f >= 0x8000)
-				{
-					f = (0x10000 - f) *masterVolume;		// convert 8000>FFFF to 1 > 0x7fff
-					h = 0x10000 - f;
-				}
-				else
-				{
-					f *= masterVolume;
-					h = f;
-				}
-				*dp = h;
-				dp++;
+				fwrite(&dest[c], sizeof(Sint16), 1, writehandle);
+				//				fwrite(&dest[c], sizeof(Sint16), 1, writehandle);
+				//				fwrite(&sid2buffer[c], sizeof(Sint16), 1, writehandle);
+				//				fwrite(&sid3buffer[c], sizeof(Sint16), 1, writehandle);
 			}
 		}
 
-
 	}
+
+	debugTicks = SDL_GetTicks() - tick;
+
+	
 }
 
 #ifdef __WIN32__

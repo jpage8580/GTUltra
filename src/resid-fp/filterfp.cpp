@@ -106,7 +106,7 @@ void FilterFP::reset()
   fc = 0;
   res = filt = voice3off = hp_bp_lp = 0; 
   vol = 0;
-  volf = Vhp = Vbp = Vlp = 0;
+  volf = Vhp[0] = Vbp[0] = Vlp[0] = Vhp[1] = Vbp[1] = Vlp[1] = 0;
   type3_fc_kink_exp = 0;
   type4_w0_cache = 0;
   set_w0();

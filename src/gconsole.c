@@ -256,6 +256,11 @@ void printtext(int x, int y, int color, const char *text)
 	unsigned *dptr = scrbuffer + (x + y * MAX_COLUMNS);
 	unsigned *cptr = colorbuffer + (x + y * MAX_COLUMNS);
 
+	if ((x + y * MAX_COLUMNS)>=(MAX_COLUMNS* MAX_ROWS))	// JP - proper check for out of bounds
+		return;
+	if ((x + y * MAX_COLUMNS)<0)
+		return;
+
 	if (!gfxinitted) return;
 	if (y < 0) return;
 	if (y >= MAX_ROWS) return;

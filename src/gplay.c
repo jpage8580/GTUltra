@@ -106,6 +106,7 @@ void initsong(int num, int mode, GTOBJECT *gt)
 
 	loopChannel = getActualChannel(editorInfo.esnum, loopChannel);	// 1.1.7 FIX (need 0-11 for masterloop) 3/5/2022
 	gt->masterLoopChannel = loopChannel;
+	gt->masterLoopSubSong = editorInfo.esnum;
 
 	gt->loopEnabledFlag = 0;
 
@@ -115,6 +116,12 @@ void initsong(int num, int mode, GTOBJECT *gt)
 	gt->songinit = mode;
 	gt->disableLoopSearch = 0;
 	gt->startpattpos = 0;
+
+	for (int i = 0;i < MAX_PLAY_CH;i++)
+	{
+		gt->loopEndChn[i].pattptr = -1;
+	}
+
 	sound_flush();
 }
 
@@ -185,9 +192,12 @@ void playtestnote(int note, int ins, int chnnum, GTOBJECT *gt)
 			}
 		}
 	}
+
 	gt->chn[c2].requestKeyOff = 0xff;
 	gt->chn[c2].instr = ins;
 	gt->chn[c2].newnote = note;
+	gt->chn[c2].pan = 0x7;
+
 	if (gt->songinit == PLAY_STOPPED)
 	{
 		gt->chn[c2].releaseTime = 0;
@@ -241,15 +251,26 @@ void playroutine(GTOBJECT *gt)
 				int songNum = getActualSongNumber(editorInfo.esnum, c2);
 				int c3 = c % 6;
 
-				if (gt->editorInfo[c2].espos >= songlen[songNum][c3])
-					gt->songinit = 0x01;
+
+				if (editorInfo.expandOrderListView == 0)
+				{
+					if (gt->editorUndoInfo.editorInfo[c2].espos >= songlen[songNum][c3])
+						gt->songinit = 0x01;
+				}
+				else
+				{
+					if (gt->editorUndoInfo.editorInfo[c2].espos >= songOrderLength[songNum][c3])
+						gt->songinit = 0x01;
+				}
+
 			}
 		}
 
 		for (c = 0; c < MAX_PLAY_CH; c++)
 		{
+			
 			cptr->instr = 0;
-
+			cptr->nextPatternTriggered = 0;
 			cptr->releaseTime = 0;
 			cptr->requestKeyOff = 0xff;
 			cptr->portCounter = 0;
@@ -270,6 +291,7 @@ void playroutine(GTOBJECT *gt)
 				cptr->tick = 6 - 1;
 			cptr->gatetimer = instr[1].gatetimer & 0x3f;
 			cptr->pattptr = 0x7fffffff;
+
 			cptr->lastpattptr = cptr->pattptr;
 			cptr->lastsongptr = cptr->songptr;
 
@@ -302,13 +324,13 @@ void playroutine(GTOBJECT *gt)
 				case PLAY_PATTERN:
 					cptr->advance = 0;
 					cptr->pattptr = gt->startpattpos * 4;
-					cptr->pattnum = gt->editorInfo[c].epnum;
+					cptr->pattnum = gt->editorUndoInfo.editorInfo[c].epnum;
 					if (cptr->pattptr >= (pattlen[cptr->pattnum] * 4))
 						cptr->pattptr = 0;
 					break;
 
 				case PLAY_POS:
-					cptr->songptr = gt->editorInfo[c].espos;
+					cptr->songptr = gt->editorUndoInfo.editorInfo[c].espos;
 					sequencer(c, cptr, gt);
 					break;
 				}
@@ -327,14 +349,29 @@ void playroutine(GTOBJECT *gt)
 
 			int j = i / 6;
 			int k = i % 6;
-			if (!songlen[baseSong + j][k])
+
+			if (editorInfo.expandOrderListView == 0)
 			{
-				gt->songinit = PLAY_STOPPED; // Zero length song
-				break;
+				if (!songlen[baseSong + j][k])
+				{
+					gt->songinit = PLAY_STOPPED; // Zero length song
+					break;
+				}
+			}
+			else
+			{
+				if (!songOrderLength[baseSong + j][k])
+				{
+					gt->songinit = PLAY_STOPPED; // Zero length song
+					break;
+				}
 			}
 		}
 
 		gt->startpattpos = 0;
+
+
+		return;	// JP Added this. Just to make sure nothing futher causes problems 22Aug2022
 	}
 	else
 	{
@@ -409,7 +446,8 @@ void playroutine(GTOBJECT *gt)
 			// (we process 12 channels to allow for poly mode, but only want to process, say, 3 channels for playing song)
 
 			// Reset tempo in jammode
-			if ((gt->songinit == PLAY_STOPPED & cptr->tempo < 2) || c >= maxSIDChannels)// JP FEB 17 added maxSIDChannel check
+			// JP 22Aug2022 - Fix .. Only had one & 
+			if ((gt->songinit == PLAY_STOPPED && cptr->tempo < 2) || c >= maxSIDChannels)// JP FEB 17 added maxSIDChannel check
 			{
 				if (multiplier)
 					cptr->tempo = 6 * multiplier - 1;
@@ -425,7 +463,7 @@ void playroutine(GTOBJECT *gt)
 
 			// Tick N
 			// Reload counter
-			if (cptr->tick >= 0x80)
+			if (cptr->tick >= 0x80)		// gone negative
 			{
 				if (cptr->tempo >= 2)
 					cptr->tick = cptr->tempo;
@@ -439,6 +477,7 @@ void playroutine(GTOBJECT *gt)
 				if (gt->chn[c].gatetimer > cptr->tick)		// JP FIXED THE CODE IN THIS LINE
 					stopsong(gt);
 			}
+
 			cptr->portCounter++;
 
 			goto WAVEEXEC;
@@ -446,13 +485,9 @@ void playroutine(GTOBJECT *gt)
 			// Tick 0
 		TICK0:
 
-
-
 			cptr->portCounter++;
 			// Advance in sequencer
 			sequencer(c, cptr, gt);
-
-
 
 			// Get gatetimer compare-value
 			cptr->gatetimer = iptr->gatetimer & 0x3f;
@@ -477,17 +512,9 @@ void playroutine(GTOBJECT *gt)
 						}
 					}
 
-
 					cptr->ptr[WTBL] = iptr->ptr[WTBL];
-					// JP - This appears to have no effect
-			//		cptr->freqBackup = freqtbllo[cptr->newnote] | (freqtblhi[cptr->newnote] << 8);
-
 					int n = cptr->note & 0x7f;
-					//		sprintf(textbuffer, "+ %x", n);
-						//	printtext(60, 36, 0xe, textbuffer);
-
 					cptr->freq = freqtbllo[n] | (freqtblhi[n] << 8);
-
 
 					if (cptr->ptr[WTBL])
 					{
@@ -508,13 +535,13 @@ void playroutine(GTOBJECT *gt)
 					}
 					if (iptr->ptr[FTBL])
 					{
-						int i = c / 3;	// 0-3
-						gt->filterInfo[i].filterptr = iptr->ptr[FTBL];
-						gt->filterInfo[i].filtertime = 0;
-						if (gt->filterInfo[i].filterptr)
+						//	int i = c / 3;	// 0-3	// JP - Removed and replaced with sidIndex 22Aug2022
+						gt->filterInfo[sidIndex].filterptr = iptr->ptr[FTBL];
+						gt->filterInfo[sidIndex].filtertime = 0;
+						if (gt->filterInfo[sidIndex].filterptr)
 						{
 							// Stop the song in case of jumping into a jump
-							if (ltable[FTBL][gt->filterInfo[i].filterptr - 1] == 0xff)
+							if (ltable[FTBL][gt->filterInfo[sidIndex].filterptr - 1] == 0xff)
 								stopsong(gt);
 						}
 
@@ -556,7 +583,6 @@ void playroutine(GTOBJECT *gt)
 				if (!gt->noSIDWrites)
 				{
 					gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = cptr->newcmddata;
-
 				}
 				break;
 
@@ -607,7 +633,8 @@ void playroutine(GTOBJECT *gt)
 
 			case CMD_SETFILTERCTRL:
 				gt->filterInfo[sidIndex].filterctrl = cptr->newcmddata;
-				if (!gt->filterInfo[sidIndex].filterctrl) gt->filterInfo[sidIndex].filterptr = 0;
+				if (!gt->filterInfo[sidIndex].filterctrl)
+					gt->filterInfo[sidIndex].filterptr = 0;
 				break;
 
 			case CMD_SETFILTERCUTOFF:
@@ -637,7 +664,8 @@ void playroutine(GTOBJECT *gt)
 			{
 				unsigned char newtempo = cptr->newcmddata & 0x7f;
 
-				if (newtempo >= 3) newtempo--;
+				if (newtempo >= 3)
+					newtempo--;
 				if (cptr->newcmddata >= 0x80)
 					cptr->tempo = newtempo;
 				else
@@ -648,6 +676,7 @@ void playroutine(GTOBJECT *gt)
 				}
 			}
 			break;
+
 			}
 			if (cptr->newnote)
 			{
@@ -655,15 +684,10 @@ void playroutine(GTOBJECT *gt)
 				if (cptr->newcommand != CMD_TONEPORTA) goto NEXTCHN;
 			}
 
-
-
 		WAVEEXEC:
-
-
 
 			if (cptr->ptr[WTBL])
 			{
-
 				unsigned char wave = ltable[WTBL][cptr->ptr[WTBL] - 1];
 				unsigned char note = rtable[WTBL][cptr->ptr[WTBL] - 1];
 
@@ -682,7 +706,6 @@ void playroutine(GTOBJECT *gt)
 
 						case CMD_DONOTHING:
 #ifdef JP_NEW_FEATURES
-
 							// JP - GTUltra Special command $F0.
 							// Data byte dictates function (save pitch / restore pitch...)
 
@@ -835,7 +858,6 @@ void playroutine(GTOBJECT *gt)
 							if (!gt->noSIDWrites)
 							{
 								gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = param;
-
 							}
 							break;
 
@@ -900,7 +922,6 @@ void playroutine(GTOBJECT *gt)
 					}
 				}
 
-
 				cptr->wavetime = 0;
 				cptr->ptr[WTBL]++;
 				// Wavetable jump
@@ -908,7 +929,6 @@ void playroutine(GTOBJECT *gt)
 				{
 					cptr->ptr[WTBL] = rtable[WTBL][cptr->ptr[WTBL] - 1];
 				}
-
 
 				if ((wave >= WAVECMD) && (wave <= WAVELASTCMD))
 					goto PULSEEXEC;
@@ -924,9 +944,6 @@ void playroutine(GTOBJECT *gt)
 					goto PULSEEXEC;
 				}
 			}
-
-
-
 
 			// Tick N command
 		TICKNEFFECTS:
@@ -967,7 +984,6 @@ void playroutine(GTOBJECT *gt)
 						speed >>= rtable[STBL][cptr->cmddata - 1];
 					}
 					cptr->freq -= speed;
-
 					cptr->freqBackup -= speed;
 				}
 				break;
@@ -1115,8 +1131,6 @@ void playroutine(GTOBJECT *gt)
 			// JP Check for max playing SID count here!
 			// (we process 12 channels to allow for poly mode, but only want to process, say, 3 channels for playing song)
 
-
-
 			if ((gt->songinit == PLAY_STOPPED) || (cptr->tick != cptr->gatetimer) || (c >= maxSIDChannels))
 				goto NEXTCHN;
 
@@ -1125,7 +1139,7 @@ void playroutine(GTOBJECT *gt)
 			{
 				unsigned char newnote;
 
-				cptr->lastpattptr = cptr->pattptr;	// / 4;
+				cptr->lastpattptr = cptr->pattptr;
 				cptr->lastsongptr = cptr->songptr;
 				cptr->lastpattnum = cptr->pattnum;
 
@@ -1134,7 +1148,9 @@ void playroutine(GTOBJECT *gt)
 					cptr->instr = pattern[cptr->pattnum][cptr->pattptr + 1];
 				cptr->newcommand = pattern[cptr->pattnum][cptr->pattptr + 2];
 				cptr->newcmddata = pattern[cptr->pattnum][cptr->pattptr + 3];
+
 				cptr->pattptr += 4;
+
 				if (pattern[cptr->pattnum][cptr->pattptr] == ENDPATT)
 					cptr->pattptr = 0x7fffffff;
 
@@ -1160,6 +1176,38 @@ void playroutine(GTOBJECT *gt)
 								{
 									gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = adparam >> 8;
 									gt->sidreg[sidIndex][0x6 + 7 * (c % 3)] = adparam & 0xff;
+
+									if (stereoMode == 2)	// TrueStereo panning enabled
+									{
+										// set pan
+										int panMin = instr[cptr->instr].pan >> 4;
+										int panMax = instr[cptr->instr].pan & 0xf;
+
+										if (panMax > panMin)
+											cptr->pan = panMin += rand() % (panMax - panMin);
+										else if (panMin > panMax)
+											cptr->pan = panMax += rand() % (panMin - panMax);
+										else
+											cptr->pan = panMin;
+									}
+									else if (monomode == 1)	// mono
+										cptr->pan = 0x7;
+									else
+									{
+										int sidChip = c / 3;
+										int pan = SID_StereoPanPositions[(maxSIDChannels / 3) - 1][sidChip];
+										cptr->pan = pan;
+
+										/*
+																				if (sidChip == 0 || sidChip == 2)
+																					cptr->pan = 0x0;	// hard left
+																				else
+																					cptr->pan = 0xe;	// hard right
+
+																				if (maxSIDChannels == 9 && sidChip == 2)	// 3 SIDS? 3rd SID = center
+																					cptr->pan = 0x7;
+										*/
+									}
 								}
 							}
 						}
@@ -1179,30 +1227,37 @@ void playroutine(GTOBJECT *gt)
 			{
 				if (!gt->noSIDWrites)
 				{
-
 					gt->sidreg[sidIndex][0x0 + 7 * (c % 3)] = cptr->freq & 0xff;
 					gt->sidreg[sidIndex][0x1 + 7 * (c % 3)] = cptr->freq >> 8;
 					gt->sidreg[sidIndex][0x2 + 7 * (c % 3)] = cptr->pulse & 0xfe;
-					gt->sidreg[sidIndex][0x3 + 7 * (c % 3)] = cptr->pulse >> 8;
-
+					gt->sidreg[sidIndex][0x3 + 7 * (c % 3)] = (cptr->pulse >> 8) | (cptr->pan << 4);
 
 					gt->sidreg[sidIndex][0x4 + 7 * (c % 3)] = cptr->wave & cptr->gate & cptr->requestKeyOff;
 
 					cptr->releaseTime -= 50 * 2;
 					if (cptr->releaseTime < 0)
 						cptr->releaseTime = 0;
-
 				}
 			}
 			cptr++;
 		}
 	}
+
 	if (gt->songinit != PLAY_STOPPED)
 		incrementtime(gt);
 
 
+	/*
+	jdebug[15]++;
 
-	if (gt->noSIDWrites == 0 && gt->loopEnabledFlag  && gt->disableLoopSearch == 0 && gtObject.interPatternLoopEnabledFlag)
+	if (gtObject.interPatternLoopEnabledFlag && gt->disableLoopSearch == 0)	// && gt->loopEnabledFlag)
+	{
+		sprintf(textbuffer, "interloop %x %x", jdebug[15], useOriginalGTFunctionKeys);
+		printtext(70, 12, 0xe, textbuffer);
+	}
+	*/
+
+	if (gt->noSIDWrites == 0 && gt->loopEnabledFlag  && gt->disableLoopSearch == 0 && gtObject.interPatternLoopEnabledFlag && transportLoopPatternSelectArea)
 	{
 		int c3 = ((gtObject.interPatternLoopEnabledFlag >> 8) & 0xff) - 1;
 		int markEnd = (gtObject.interPatternLoopEnabledFlag & 0xff);
@@ -1225,6 +1280,7 @@ void playroutine(GTOBJECT *gt)
 			gt->timemin = gt->looptimemin;
 			gt->timesec = gt->looptimesec;
 			gt->timeframe = gt->looptimeframe;
+
 		}
 	}
 	else if (gt->noSIDWrites == 0 && gt->loopEnabledFlag  && gt->disableLoopSearch == 0 && transportLoopPattern)
@@ -1251,6 +1307,25 @@ void playroutine(GTOBJECT *gt)
 				gt->timemin = gt->looptimemin;
 				gt->timesec = gt->looptimesec;
 				gt->timeframe = gt->looptimeframe;
+
+
+				int jnum = getActualSongNumber(gt->psnum, i);
+				int c2 = getActualChannel(jnum, i);
+
+				if (editorInfo.expandOrderListView)
+				{
+
+					int t = songOrderTranspose[jnum][c2][gt->chn[i].songptr - 1];
+					if (t & 0x80)
+					{
+						t &= 0x7f;
+						gt->chn[i].trans = -t;
+					}
+					else
+					{
+						gt->chn[i].trans = t;
+					}
+				}
 			}
 		}
 
@@ -1258,63 +1333,75 @@ void playroutine(GTOBJECT *gt)
 
 
 	if (gt->noSIDWrites == 0 && gt->disableLoopSearch == 0)	// only the PLAYING GTObject should check for looping. Otherwise, we end up in recursive hell
-	{		
-		if (transportLoopPattern)
+	{
+		if (transportLoopPattern && transportLoopPatternSelectArea)
 		{
+			int c3 = getActualChannel(gt->psnum, editorInfo.epmarkchn);
+
+			if (editorInfo.epmarkchn >= 0)
+			{
+				int plen = (pattlen[gt->chn[c3].pattnum] - 1);	// *4;
+//				sprintf(textbuffer, "%x hit loop %x  ", jdebug[15]++, editorInfo.epmarkchn);
+	//			printtext(70, 12, 0xe, textbuffer);
+
+				if (editorInfo.epmarkend > plen || editorInfo.epmarkstart > plen)
+				{
+					editorInfo.epmarkstart = editorInfo.epmarkend = 0;
+					editorInfo.epmarkchn = -1;
+				}
+			}
 
 			int markStart = editorInfo.epmarkstart;
 			int markEnd = editorInfo.epmarkend;
 
-			if (markStart != markEnd)// 1.1.7 FIX (only check for inter-pattern looping if area is selected) 3/5/2022
-			{
+			//	sprintf(textbuffer, "%x hit loop %x %x %x  ", jdebug[15]++, markStart, markEnd, plen);
+			//	printtext(70, 12, 0xe, textbuffer);
 
+			if (markStart != markEnd && editorInfo.epmarkchn >= 0)// 1.1.7 FIX (only check for inter-pattern looping if area is selected) 3/5/2022
+			{
 				if (markEnd < markStart)
 				{
 					markStart = markEnd;
 					markEnd = editorInfo.epmarkstart;
 				}
-				// THIS PART NEEDS TO MOVE TO THE MAIN PLAY ROUTINE - WHERE THE CODE THAT CHECKS END OF PATTERN LOOP IS.
-				// THAT CODE SHOULD THEN CALL THIS ROUTINE TO FIND THE LOOP START INFO
-				//-------------
-				int c3 = getActualChannel(gt->psnum, editorInfo.epmarkchn);
 
-		//		sprintf(textbuffer, "master: %d\n", c3);
-		//		printtext(70, 36, 0xe, textbuffer);
-
-				if (gt->chn[c3].pattptr == (markEnd + 0) * 4)
+				if (gt->chn[editorInfo.epmarkchn].pattptr == markEnd * 4)
 				{
-					if (calcStartofInterPatternLoop(gt->psnum, c3, gt->chn[c3].songptr - 1, &gtLoopObject))
+					//					if (calcStartofInterPatternLoop(gt->psnum, c3, gt->chn[c3].songptr - 1, &gtLoopObject))
+					if (calcStartofInterPatternLoop(gt->psnum, c3, gt->chn[editorInfo.epmarkchn].songptr - 1, &gtLoopObject))
 					{
-						gtObject.interPatternLoopEnabledFlag = (markEnd)+((c3 + 1) << 8);	// c3+1 - just to make sure we don't get a 0 flag value
+						gtObject.interPatternLoopEnabledFlag = (markEnd)+((editorInfo.epmarkchn + 1) << 8);	// c3+1 - just to make sure we don't get a 0 flag value
 					}
-					// We don't need to rememeber the end of here.. as we're there already.
-					//			memcpy((char*)&gt->patternLoopEndChn[0], (char*)&gt->chn[0], sizeof(CHN)*MAX_PLAY_CH);
-
 				}
 			}
 		}
-		
+
 		//-------------
 
 
 		// Wait until playback of the loop master channel is at the very end of the pattern before recalculating loop start positions
 		// This will then take into consideration any changes made to the pattern length or changes to the order list during playback
-		if (gt->chn[gt->masterLoopChannel].songptr != gt->chn[gt->masterLoopChannel].songLoopPtr
-			&& gt->chn[gt->masterLoopChannel].pattptr == ((pattlen[gt->chn[gt->masterLoopChannel].pattnum] - 1) * 4))
+
+//		if (gt->chn[gt->masterLoopChannel].songptr != gt->chn[gt->masterLoopChannel].songLoopPtr
+//			&& gt->chn[gt->masterLoopChannel].pattptr == ((pattlen[gt->chn[gt->masterLoopChannel].pattnum] - 1) * 4))
+
+
+		if (gt->chn[gt->masterLoopChannel].pattptr == ((pattlen[gt->chn[gt->masterLoopChannel].pattnum] - 1) * 4))
 		{
 			gt->chn[gt->masterLoopChannel].songLoopPtr = gt->chn[gt->masterLoopChannel].songptr;
 
-			//	sprintf(textbuffer, "end song %x", gt->chn[gt->masterLoopChannel].songLoopPtr);
+	//		sprintf(textbuffer, "end song %x mlc %x ec %x em %x %d", gt->chn[gt->masterLoopChannel].songLoopPtr, gt->masterLoopChannel, editorInfo.epchn, editorInfo.editmode, jpd++);
+	//		printtext(PANEL_NAMES_X + 24, PANEL_NAMES_Y + 3, 0xe, textbuffer);
 			//	printtext(70, 36, 0xe, textbuffer);
 			calculateLoopInfo2(gt->psnum, gt->masterLoopChannel, gt->chn[gt->masterLoopChannel].songptr - 1, &gtLoopObject);
 			gtObject.loopEnabledFlag = 1;
 		}
 
-
-
 	}
 
 }
+
+
 
 
 void sequencer(int c, CHN *cptr, GTOBJECT *gt)
@@ -1322,27 +1409,103 @@ void sequencer(int c, CHN *cptr, GTOBJECT *gt)
 	if (c >= maxSIDChannels)
 		return;
 
-	int jnum = getActualSongNumber(gt->psnum, c);
-	int c2 = c % MAX_CHN;
-
 	if ((gt->songinit != PLAY_STOPPED) && (cptr->pattptr == 0x7fffffff))
 	{
 		cptr->pattptr = gt->startpattpos * 4;
 
 		if (!cptr->advance) goto SEQDONE;
 
-		// Song loop
-		if (songorder[jnum][c2][cptr->songptr] == LOOPSONG)
+		if (editorInfo.expandOrderListView == 0)
+			updateCompressedSeq(c, cptr, gt);
+		else
+			updateExpandedSeq(c, cptr, gt);
+	}
+SEQDONE: {}
+}
+
+void updateCompressedSeq(int c, CHN *cptr, GTOBJECT *gt)
+{
+	int jnum = getActualSongNumber(gt->psnum, c);
+	int c2 = c % MAX_CHN;
+	// Song loop
+	if (songorder[jnum][c2][cptr->songptr] == LOOPSONG)
+	{
+		cptr->loopCount++;
+		cptr->songptr = songorder[jnum][c2][cptr->songptr + 1];
+		if (cptr->songptr >= songlen[jnum][c2])
 		{
-			cptr->loopCount++;
-			cptr->songptr = songorder[jnum][c2][cptr->songptr + 1];
-			if (cptr->songptr >= songlen[jnum][c2])
-			{
-				stopsong(gt);
-				cptr->songptr = 0;
-				goto SEQDONE;
-			}
+			stopsong(gt);
+			cptr->songptr = 0;
+			goto SEQDONE;
 		}
+	}
+	// Transpose
+	if ((songorder[jnum][c2][cptr->songptr] >= TRANSDOWN) && (songorder[jnum][c2][cptr->songptr] < LOOPSONG))
+	{
+		cptr->trans = songorder[jnum][c2][cptr->songptr] - TRANSUP;
+		cptr->songptr++;
+	}
+	// Repeat
+	if ((songorder[jnum][c2][cptr->songptr] >= REPEAT) && (songorder[jnum][c2][cptr->songptr] < TRANSDOWN))
+	{
+		cptr->repeat = songorder[jnum][c2][cptr->songptr] - REPEAT;
+		cptr->songptr++;
+	}
+	// Pattern number
+	cptr->pattnum = songorder[jnum][c2][cptr->songptr];
+	if (cptr->repeat)
+		cptr->repeat--;
+	else
+		cptr->songptr++;
+
+	// Check for illegal pattern now
+	if (cptr->pattnum >= MAX_PATT)
+	{
+		stopsong(gt);
+		cptr->pattnum = 0;
+	}
+	if (cptr->pattptr >= (pattlen[cptr->pattnum] * 4))
+		cptr->pattptr = 0;
+
+	// Check for playback endpos
+	if ((gt->lastsonginit != PLAY_BEGINNING) && (gt->editorUndoInfo.editorInfo[c].esend > 0) && (gt->editorUndoInfo.editorInfo[c].esend > gt->editorUndoInfo.editorInfo[c].espos) && (cptr->songptr > gt->editorUndoInfo.editorInfo[c].esend) && (gt->editorUndoInfo.editorInfo[c].espos < songlen[jnum][c2]))
+		cptr->songptr = gt->editorUndoInfo.editorInfo[c].espos;
+
+SEQDONE: {}
+}
+
+
+void updateExpandedSeq(int c, CHN *cptr, GTOBJECT *gt)
+{
+	int jnum = getActualSongNumber(gt->psnum, c);
+	int c2 = c % MAX_CHN;
+	// Song loop
+
+	if (songOrderPatterns[jnum][c2][cptr->songptr] == LOOPSONG)
+	{
+		cptr->loopCount++;
+		cptr->songptr = songOrderTranspose[jnum][c2][cptr->songptr];
+		if (cptr->songptr >= songOrderLength[jnum][c2])
+		{
+			stopsong(gt);
+			cptr->songptr = 0;
+			goto SEQDONE;
+		}
+	}
+
+	int t = songOrderTranspose[jnum][c2][cptr->songptr];
+	if (t & 0x80)
+	{
+		t &= 0x7f;
+		cptr->trans = -t;
+	}
+	else
+	{
+		cptr->trans = t;
+	}
+
+
+	/*
 		// Transpose
 		if ((songorder[jnum][c2][cptr->songptr] >= TRANSDOWN) && (songorder[jnum][c2][cptr->songptr] < LOOPSONG))
 		{
@@ -1355,26 +1518,30 @@ void sequencer(int c, CHN *cptr, GTOBJECT *gt)
 			cptr->repeat = songorder[jnum][c2][cptr->songptr] - REPEAT;
 			cptr->songptr++;
 		}
-		// Pattern number
-		cptr->pattnum = songorder[jnum][c2][cptr->songptr];
+	*/
+	// Pattern number
+	cptr->pattnum = songOrderPatterns[jnum][c2][cptr->songptr];	// songorder[jnum][c2][cptr->songptr];
+	cptr->songptr++;
+	cptr->nextPatternTriggered++;
+	/*
 		if (cptr->repeat)
 			cptr->repeat--;
 		else
 			cptr->songptr++;
-
-		// Check for illegal pattern now
-		if (cptr->pattnum >= MAX_PATT)
-		{
-			stopsong(gt);
-			cptr->pattnum = 0;
-		}
-		if (cptr->pattptr >= (pattlen[cptr->pattnum] * 4))
-			cptr->pattptr = 0;
-
-		// Check for playback endpos
-		if ((gt->lastsonginit != PLAY_BEGINNING) && (gt->editorInfo[c].esend > 0) && (gt->editorInfo[c].esend > gt->editorInfo[c].espos) && (cptr->songptr > gt->editorInfo[c].esend) && (gt->editorInfo[c].espos < songlen[jnum][c2]))
-			cptr->songptr = gt->editorInfo[c].espos;
+	*/
+	// Check for illegal pattern now
+	if (cptr->pattnum >= MAX_PATT)
+	{
+		stopsong(gt);
+		cptr->pattnum = 0;
 	}
+	if (cptr->pattptr >= (pattlen[cptr->pattnum] * 4))
+		cptr->pattptr = 0;
+
+	// Check for playback endpos
+	if ((gt->lastsonginit != PLAY_BEGINNING) && (gt->editorUndoInfo.editorInfo[c].esend > 0) && (gt->editorUndoInfo.editorInfo[c].esend > gt->editorUndoInfo.editorInfo[c].espos) && (cptr->songptr > gt->editorUndoInfo.editorInfo[c].esend) && (gt->editorUndoInfo.editorInfo[c].espos < songOrderLength[jnum][c2]))
+		cptr->songptr = gt->editorUndoInfo.editorInfo[c].espos;
+
 SEQDONE: {}
 }
 

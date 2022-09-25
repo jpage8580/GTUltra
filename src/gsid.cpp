@@ -8,6 +8,7 @@
 #include "resid/sid.h"
 #include "resid-fp/sidfp.h"
 
+//#include "goattrk2.h"
 #include "gsid.h"
 #include "gsound.h"
 
@@ -48,6 +49,9 @@ SIDFP *sidfp4 = 0;
 extern unsigned residdelay;
 extern unsigned adparam;
 
+// from GTUltra.cfg:
+// interpolate = interpolate&1 (0 or 1)
+// usefp = interpolate >> 1 (2 or 3)
 void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, unsigned usefp)
 {
 
@@ -266,7 +270,19 @@ unsigned char sid_getorder(unsigned char index)
 		return sidorder[index];
 }
 
-int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int samples)
+int sdb = 0;
+int sid_debug()
+{
+	return sid->debugCount;
+
+//	return sdb;
+
+}
+
+// TrueStereo = each buffer size = samples*2
+// Left = 0-samples-1
+// Right = samples>s(amples*2)-1
+int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int samples, int bufferHalfSize)
 {
 	int tdelta;
 	int tdelta2;
@@ -279,6 +295,7 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 	tdelta = clockrate * samples / samplerate;
 	if (tdelta <= 0) return total;
 
+
 	for (c = 0; c < NUMSIDREGS; c++)
 	{
 		unsigned char o = sid_getorder(c);
@@ -287,19 +304,19 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 		if ((o == 4) || (o == 11) || (o == 18))
 		{
 			tdelta2 = SIDWAVEDELAY;
-			if (sid) result = sid->clock(tdelta2, lptr, samples);
-			if (sidfp) result = sidfp->clock(tdelta2, lptr, samples);
+			if (sid) result = sid->clock(tdelta2, lptr, samples, bufferHalfSize);
+			if (sidfp) result = sidfp->clock(tdelta2, lptr, samples, bufferHalfSize);
 			tdelta2 = SIDWAVEDELAY;
-			if (sid2) sid2->clock(tdelta2, rptr, samples);
-			if (sidfp2) sidfp2->clock(tdelta2, rptr, samples);
+			if (sid2) sid2->clock(tdelta2, rptr, samples, bufferHalfSize);
+			if (sidfp2) sidfp2->clock(tdelta2, rptr, samples, bufferHalfSize);
 
 			tdelta2 = SIDWAVEDELAY;
-			if (sid3) sid3->clock(tdelta2, lptr2, samples);
-			if (sidfp3) sidfp3->clock(tdelta2, lptr2, samples);
+			if (sid3) sid3->clock(tdelta2, lptr2, samples, bufferHalfSize);
+			if (sidfp3) sidfp3->clock(tdelta2, lptr2, samples, bufferHalfSize);
 
 			tdelta2 = SIDWAVEDELAY;
-			if (sid4) sid4->clock(tdelta2, rptr2, samples);
-			if (sidfp4) sidfp4->clock(tdelta2, rptr2, samples);
+			if (sid4) sid4->clock(tdelta2, rptr2, samples, bufferHalfSize);
+			if (sidfp4) sidfp4->clock(tdelta2, rptr2, samples, bufferHalfSize);
 
 			total += result;
 			lptr += result;
@@ -314,19 +331,19 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 		if ((badline == c) && (residdelay))
 		{
 			tdelta2 = residdelay;
-			if (sid) result = sid->clock(tdelta2, lptr, samples);
-			if (sidfp) result = sidfp->clock(tdelta2, lptr, samples);
+			if (sid) result = sid->clock(tdelta2, lptr, samples, bufferHalfSize);
+			if (sidfp) result = sidfp->clock(tdelta2, lptr, samples, bufferHalfSize);
 			tdelta2 = residdelay;
-			if (sid2) sid2->clock(tdelta2, rptr, samples);
-			if (sidfp2) sidfp2->clock(tdelta2, rptr, samples);
+			if (sid2) sid2->clock(tdelta2, rptr, samples, bufferHalfSize);
+			if (sidfp2) sidfp2->clock(tdelta2, rptr, samples, bufferHalfSize);
 
 			tdelta2 = residdelay;
-			if (sid3) sid3->clock(tdelta2, lptr2, samples);
-			if (sidfp3) sidfp3->clock(tdelta2, lptr2, samples);
+			if (sid3) sid3->clock(tdelta2, lptr2, samples, bufferHalfSize);
+			if (sidfp3) sidfp3->clock(tdelta2, lptr2, samples, bufferHalfSize);
 
 			tdelta2 = residdelay;
-			if (sid4) sid4->clock(tdelta2, rptr2, samples);
-			if (sidfp4) sidfp4->clock(tdelta2, rptr2, samples);
+			if (sid4) sid4->clock(tdelta2, rptr2, samples, bufferHalfSize);
+			if (sidfp4) sidfp4->clock(tdelta2, rptr2, samples, bufferHalfSize);
 
 			total += result;
 			lptr += result;
@@ -347,17 +364,17 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 		if (sidfp4) sidfp4->write(o, sidreg4[o]);
 
 		tdelta2 = SIDWRITEDELAY;
-		if (sid) result = sid->clock(tdelta2, lptr, samples);
-		if (sidfp) result = sidfp->clock(tdelta2, lptr, samples);
+		if (sid) result = sid->clock(tdelta2, lptr, samples, bufferHalfSize);
+		if (sidfp) result = sidfp->clock(tdelta2, lptr, samples, bufferHalfSize);
 		tdelta2 = SIDWRITEDELAY;
-		if (sid2) sid2->clock(tdelta2, rptr, samples);
-		if (sidfp2) sidfp2->clock(tdelta2, rptr, samples);
+		if (sid2) sid2->clock(tdelta2, rptr, samples, bufferHalfSize);
+		if (sidfp2) sidfp2->clock(tdelta2, rptr, samples, bufferHalfSize);
 		tdelta2 = SIDWRITEDELAY;
-		if (sid3) sid3->clock(tdelta2, lptr2, samples);
-		if (sidfp3) sidfp3->clock(tdelta2, lptr2, samples);
+		if (sid3) sid3->clock(tdelta2, lptr2, samples, bufferHalfSize);
+		if (sidfp3) sidfp3->clock(tdelta2, lptr2, samples, bufferHalfSize);
 		tdelta2 = SIDWRITEDELAY;
-		if (sid4) sid4->clock(tdelta2, rptr2, samples);
-		if (sidfp4) sidfp4->clock(tdelta2, rptr2, samples);
+		if (sid4) sid4->clock(tdelta2, rptr2, samples, bufferHalfSize);
+		if (sidfp4) sidfp4->clock(tdelta2, rptr2, samples, bufferHalfSize);
 
 		total += result;
 		lptr += result;
@@ -371,17 +388,17 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 	}
 
 	tdelta2 = tdelta;
-	if (sid) result = sid->clock(tdelta2, lptr, samples);
-	if (sidfp) result = sidfp->clock(tdelta2, lptr, samples);
+	if (sid) result = sid->clock(tdelta2, lptr, samples, bufferHalfSize);
+	if (sidfp) result = sidfp->clock(tdelta2, lptr, samples, bufferHalfSize);
 	tdelta2 = tdelta;
-	if (sid2) result = sid2->clock(tdelta2, rptr, samples);
-	if (sidfp2) result = sidfp2->clock(tdelta2, rptr, samples);
+	if (sid2) result = sid2->clock(tdelta2, rptr, samples, bufferHalfSize);
+	if (sidfp2) result = sidfp2->clock(tdelta2, rptr, samples, bufferHalfSize);
 	tdelta2 = tdelta;
-	if (sid3) result = sid3->clock(tdelta2, lptr2, samples);
-	if (sidfp3) result = sidfp3->clock(tdelta2, lptr2, samples);
+	if (sid3) result = sid3->clock(tdelta2, lptr2, samples, bufferHalfSize);
+	if (sidfp3) result = sidfp3->clock(tdelta2, lptr2, samples, bufferHalfSize);
 	tdelta2 = tdelta;
-	if (sid4) result = sid4->clock(tdelta2, rptr2, samples);
-	if (sidfp4) result = sidfp4->clock(tdelta2, rptr2, samples);
+	if (sid4) result = sid4->clock(tdelta2, rptr2, samples, bufferHalfSize);
+	if (sidfp4) result = sidfp4->clock(tdelta2, rptr2, samples, bufferHalfSize);
 
 	total += result;
 	lptr += result;
@@ -396,17 +413,17 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 		tdelta = clockrate * samples / samplerate;
 		if (tdelta <= 0) return total;
 
-		if (sid) result = sid->clock(tdelta, lptr, samples);
-		if (sidfp) result = sidfp->clock(tdelta, lptr, samples);
+		if (sid) result = sid->clock(tdelta, lptr, samples, bufferHalfSize);
+		if (sidfp) result = sidfp->clock(tdelta, lptr, samples, bufferHalfSize);
 		tdelta = clockrate * samples / samplerate;
-		if (sid2) result = sid2->clock(tdelta, rptr, samples);
-		if (sidfp2) result = sidfp2->clock(tdelta, rptr, samples);
+		if (sid2) result = sid2->clock(tdelta, rptr, samples, bufferHalfSize);
+		if (sidfp2) result = sidfp2->clock(tdelta, rptr, samples, bufferHalfSize);
 		tdelta = clockrate * samples / samplerate;
-		if (sid3) result = sid3->clock(tdelta, lptr2, samples);
-		if (sidfp3) result = sidfp3->clock(tdelta, lptr2, samples);
+		if (sid3) result = sid3->clock(tdelta, lptr2, samples, bufferHalfSize);
+		if (sidfp3) result = sidfp3->clock(tdelta, lptr2, samples, bufferHalfSize);
 		tdelta = clockrate * samples / samplerate;
-		if (sid4) result = sid4->clock(tdelta, rptr2, samples);
-		if (sidfp4) result = sidfp4->clock(tdelta, rptr2, samples);
+		if (sid4) result = sid4->clock(tdelta, rptr2, samples, bufferHalfSize);
+		if (sidfp4) result = sidfp4->clock(tdelta, rptr2, samples, bufferHalfSize);
 		total += result;
 		lptr += result;
 		rptr += result;
@@ -415,5 +432,7 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 		samples -= result;
 	}
 
+
 	return total;
+
 }

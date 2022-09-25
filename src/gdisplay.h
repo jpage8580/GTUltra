@@ -1,7 +1,23 @@
 #ifndef GDISPLAY_H
 #define GDISPLAY_H
 
+
+#define PANEL_NAMES_X 1	//60
+#define PANEL_NAMES_Y 37 //33
+#define PANEL_TABLES_X 60
+#define PANEL_TABLES_Y 25 //17
+#define PANEL_INSTR_X 60
+#define PANEL_INSTR_Y 18
+#define PANEL_ORDER_X 60
+#define PANEL_ORDER_Y 2
+#define EXTENDEDVISIBLEORDERLIST 13
+
+#define YES_NO_TEXT_X 10
+#define YES_NO_TEXT_Y 40
+
 #ifndef GDISPLAY_C
+
+
 extern char debugtext[256];
 extern char* paletteText[];
 extern int displayOriginal3Channel;
@@ -9,6 +25,8 @@ extern int timemin;
 extern int timesec;
 extern int timeframe;
 extern int lastDisplayChanCount;
+//extern int expandOrderListView;
+extern int getFreeMem;
 #endif
 
  
@@ -101,10 +119,10 @@ void displayTransportBarDetune(int x, int y);
 void displayTransportBarMonoStereo(int x, int y);
 
 int getTableTitleColour(int c);
-void displayOriginalTableView(int cc);
-void displayDetailedWaveTable(int cc);
-void displayDetailedFilterTable(int cc);
-void displayDetailedPulseTable(int cc);
+void displayOriginalTableView(int cc,int OX,int OY);
+void displayDetailedWaveTable(int cc, int OX, int OY);
+void displayDetailedFilterTable(int cc, int OX, int OY);
+void displayDetailedPulseTable(int cc, int OX, int OY);
 
 
 void displayPattern(GTOBJECT *gt);
@@ -115,22 +133,29 @@ void displayupdate(GTOBJECT *gt);
 void printstatus(GTOBJECT *gt);
 void resettime(GTOBJECT *gt);
 void incrementtime(GTOBJECT *gt);
-void displayOrderList(GTOBJECT *gt, int cc);
+void displayOrderList(GTOBJECT *gt, int cc,int OX, int OY);
 void displayPaletteInfo(int cc);
 void clearOrderListDisplay();
 int getPaletteTextArraySize();
 void setSongLengthTime(GTOBJECT *gt);
+void displayInstrument(GTOBJECT *gt, int cc,int OX,int OY);
+void displaySongInfo(int cc,int OX,int OY);
+void updateDisplayWhenFollowingAndPlaying(GTOBJECT *gt);
+void displayTopBar(int menu, int cc);
+void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY);
 
 void displayKeyboard();
 void setNote(int noteNumber);
 void resetKeyboardDisplay();
 void displayNotes(GTOBJECT *gt);
-void displayTables();
-void displayTable(int c);
+void displayTables(int OX,int OY);
+void displayTable(int c,int OX,int OY);
 
 void displayWaveformInfo(int x, int y);
 int getWaveforumColour(int bit, int value);
+void updateDisplayWhenFollowingAndPlaying_Expanded(GTOBJECT *gt);
+void updateDisplayWhenFollowingAndPlaying_Compressed(GTOBJECT *gt);
 
-
+int FreeMem(void);
 
 #endif

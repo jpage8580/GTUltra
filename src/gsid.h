@@ -23,8 +23,10 @@ typedef struct
   float voicenonlinearity;
 } FILTERPARAMS;
 
+int sid_debug();
+
 void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, unsigned usefp);
-int sid_fillbuffer(short *lptr, short *rptr, short* lptr2, short* rptr2, int samples);
+int sid_fillbuffer(short *lptr, short *rptr, short* lptr2, short* rptr2, int samples, int bufferHalfSize);
 unsigned char sid_getorder(unsigned char index);
 
 #ifndef GSID_C

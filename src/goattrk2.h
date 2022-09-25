@@ -105,6 +105,7 @@ extern unsigned interpolate;
 extern unsigned hardsidbufinteractive;
 extern unsigned hardsidbufplayback;
 extern unsigned monomode;
+extern unsigned stereoMode;
 extern float basepitch;
 extern char configbuf[MAX_PATHNAME];
 extern char loadedsongfilename[MAX_FILENAME];
@@ -126,6 +127,13 @@ extern int jdebug[16];
 extern char palettefilter[MAX_FILENAME];
 extern char palettepath[MAX_FILENAME];
 extern char paletteFileName[MAX_FILENAME];
+extern char backupFolderName[MAX_FILENAME];
+extern char backupSngFilename[MAX_PATHNAME];
+
+extern char sourceBackupFolderName[MAX_FILENAME];
+extern char destBackupFolderName[MAX_FILENAME];
+
+extern int debugTicks;
 
 //unsigned short paletteUIDisplay[MAX_PALETTE_ENTRIES];
 extern unsigned char paletteLoadRGB[MAX_PALETTE_PRESETS][3][MAX_PALETTE_LOAD_ENTRIES];
@@ -142,8 +150,15 @@ extern unsigned char paletteB[256];
 extern int maxSIDChannels;
 extern char infoTextBuffer[256];
 
+extern int SID_StereoPanPositions[4][4];
+//extern int SID2_StereoPanPositions[];
+//extern int SID3_StereoPanPositions[];
+//extern int SID4_StereoPanPositions[];
+extern char editPan;
+
 extern char transportPolySIDEnabled[4];
 extern char transportLoopPattern;
+extern char transportLoopPatternSelectArea;
 extern char transportRecord;
 extern char transportPlay;
 extern char transportFollowPlay;
@@ -158,6 +173,7 @@ extern WAVEFORM_INFO waveformDisplayInfo;
 extern int selectedMIDIPort;
 extern unsigned int enableAntiAlias;
 
+extern int useOriginalGTFunctionKeys;
 
 extern float detuneCent;
 
@@ -175,7 +191,7 @@ void docommand(void);
 void onlinehelp(int standalone, int context, GTOBJECT *gt);
 void mousecommands(GTOBJECT *gt);
 void generalcommands(GTOBJECT *gt);
-void load(GTOBJECT *gt);
+int load(GTOBJECT *gt);
 void save(GTOBJECT *gt);
 void quit(GTOBJECT *gt);
 void clear(GTOBJECT *gt);
@@ -203,11 +219,11 @@ void handleSIDChannelCountChange(GTOBJECT *gt);
 void nextSongPos(GTOBJECT *gt);
 void previousSongPos(GTOBJECT *gt, int songDffset);
 void setSongToBeginning(GTOBJECT *gt);
-void playFromCurrentPosition(GTOBJECT *gt);
+void playFromCurrentPosition(GTOBJECT *gt, int currentPos);
 int mouseTrackModify(int editorWindow);
 void mouseTrack();
 void ModifyTrackGetOriginalValue();
-int checkForMouseInTable(int c);
+int checkForMouseInTable(int c,int OX,int OY);
 int checkForMouseInDetailedWaveTable();
 int checkForMouseInDetailedFilterTable();
 int checkForMouseInDetailedPulseTable();
@@ -219,6 +235,8 @@ void detailedFilterTableChangeSign(int x, int y);
 void detailedFilterTableChangeFilterType(int x, int y);
 void detailedPulseTableChangeSign(int x, int y);
 void detailedPulseTableChangeCommand(int x, int y);
+void checkForMouseInOrderList(GTOBJECT *gt, int maxCh);
+void checkForMouseInExtendedOrderList(GTOBJECT *gt, int maxCh);
 int checkMouseInWaveformInfo();
 int HzToSIDFreq(float hz);
 float noteToHz(int note);
@@ -229,5 +247,14 @@ void handlePressRewind(int doubleClick, GTOBJECT *gt);
 void createFilename(char *filePath, char *newfileName, char *filename);
 void backupPatternDisplayInfo(GTOBJECT *gt);
 void restorePatternDisplayInfo(GTOBJECT *gt);
+void reInitSID();
+void validateStereoMode();
+void editSIDPan(GTOBJECT *gt);
+void convertInsToPans(int sidChips);
+void convertPansToInts(int sidChips);
+void saveBackupSong();
+int createBackupFolder();
+int copyBackupFile(char *sourceName, char *destName);
+int replacechar(char *str, char orig, char rep);
 
 #endif

@@ -45,7 +45,7 @@ public:
 
   void clock();
   void clock(cycle_count delta_t);
-  int clock(cycle_count& delta_t, short* buf, int n, int interleave = 1);
+  int clock(cycle_count& delta_t, short* buf, int n, int bufferHalfSize, int interleave = 1);
   void reset();
   
   // Read/write registers.
@@ -57,6 +57,7 @@ public:
   {
   public:
     State();
+
 
     char sid_register[0x20];
 
@@ -74,6 +75,8 @@ public:
     bool hold_zero[3];
   };
     
+  reg24 debugCount;
+
   State read_state();
   void write_state(const State& state);
 
@@ -81,20 +84,20 @@ public:
   void input(int sample);
 
   // 16-bit output (AUDIO OUT).
-  int output();
+  int output(short *left, short *right);
   // n-bit output.
-  int output(int bits);
+  int output(int bits, short *left, short *right);
 
 protected:
   static double I0(double x);
-  RESID_INLINE int clock_fast(cycle_count& delta_t, short* buf, int n,
+  RESID_INLINE int clock_fast(cycle_count& delta_t, short* buf, int n, int bufferHalfSize,
             int interleave);
-  RESID_INLINE int clock_interpolate(cycle_count& delta_t, short* buf, int n,
+  RESID_INLINE int clock_interpolate(cycle_count& delta_t, short* buf, int n, int bufferHalfSize,
              int interleave);
   RESID_INLINE int clock_resample_interpolate(cycle_count& delta_t, short* buf,
-                int n, int interleave);
+                int n, int bufferHalfSize, int interleave);
   RESID_INLINE int clock_resample_fast(cycle_count& delta_t, short* buf,
-               int n, int interleave);
+               int n, int bufferHalfSize, int interleave);
 
   Voice voice[3];
   Filter filter;
@@ -115,12 +118,15 @@ protected:
   cycle_count cycles_per_sample;
   cycle_count sample_offset;
   int sample_index;
-  short sample_prev;
+  short sample_prevL;
+  short sample_prevR;
   int fir_N;
   int fir_RES;
 
   // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
-  short* sample;
+  short* sampleL;
+  short* sampleR;
+
 
   // FIR_RES filter tables (FIR_N*FIR_RES).
   short* fir;

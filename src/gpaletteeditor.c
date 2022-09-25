@@ -766,7 +766,6 @@ int loadPalettes()
 {
 	DIR *folder;
 
-
 //JP - NOT TESTED ! SETTING DIFFERENT PATH FOR LINUX FOR READING PALETTES FROM .EXE LOCATION INSTEAD OF .CFG
 #ifdef __WIN32__
 	createFilename(appFileName, paletteFile, "gtpalettes");

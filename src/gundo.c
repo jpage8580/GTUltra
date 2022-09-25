@@ -7,12 +7,13 @@
 #include "goattrk2.h"
 #include "gundo.h"
 
-char jtext[256];
+//char jtext[256];
 
 char **undoList;	//[MAX_UNDO];
 char **undoAreaList;	// this list is checked after every change to see if there's a dirty table / pattern
 
 int currentUndoPosition = 0;
+int lastUndoPosition = 0;
 int currentUndoPackagesCounter = 1;
 unsigned int undoBufferSize = 0;
 int undoCounter = 0;
@@ -45,35 +46,51 @@ void undoInitAllAreas(GTOBJECT *gt)
 
 	undoFreeAll();
 
+	//209
 	for (int i = 0;i < MAX_PATT;i++)
 	{
 		undoInitUndoArea((char*)&pattern[i], MAX_PATTROWS * 4 + 4, UNDO_AREA_PATTERN, i);
 
 	}
 
-//	for (int i = 0;i < MAX_PLAY_CH;i++)
-//	{
-		undoInitUndoArea((char*)&gt->editorInfo, sizeof(CHN_EDITOR_INFO)*MAX_PLAY_CH, UNDO_AREA_CHANNEL_EDITOR_INFO, 0);
-//	}
+	//210
+//	undoInitUndoArea((char*)&gt->editorInfo, sizeof(CHN_EDITOR_INFO)*MAX_PLAY_CH, UNDO_AREA_CHANNEL_EDITOR_INFO, 0);
+	undoInitUndoArea((char*)&gt->editorUndoInfo, sizeof(EDITOR_UNDO_INFO), UNDO_AREA_CHANNEL_EDITOR_INFO, 0);
 
+
+	//211
 	undoInitUndoArea((char*)&pattlen, MAX_PATT * sizeof(int), UNDO_AREA_PATTERN_LEN, 0);
+	//212
 	undoInitUndoArea((char*)&songlen, MAX_SONGS*MAX_CHN * sizeof(int), UNDO_AREA_ORDERLIST_LEN, 0);
 
+	//404
 	for (int s = 0;s < MAX_SONGS;s++)
 	{
 		for (int i = 0;i < MAX_CHN;i++)
 		{
 			undoInitUndoArea((char*)&songorder[s][i], MAX_SONGLEN + 2, UNDO_AREA_ORDERLIST, i + (s*MAX_CHN));
 		}
-		
 	}
 
+	undoInitUndoArea((char*)&songOrderLength, MAX_SONGS*MAX_CHN * sizeof(int), UNDO_AREA_ORDERLIST_LENGTH_EXPANDED, 0);
+	for (int s = 0;s < MAX_SONGS;s++)
+	{
+		for (int i = 0;i < MAX_CHN;i++)
+		{	
+			undoInitUndoArea((char*)&songOrderPatterns[s][i], MAX_SONGLEN_EXPANDED * sizeof(char), UNDO_AREA_ORDERLIST_PATTERN_EXPANDED, i + (s*MAX_CHN));
+			undoInitUndoArea((char*)&songOrderTranspose[s][i], MAX_SONGLEN_EXPANDED * sizeof(short), UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED, i + (s*MAX_CHN));
+
+		}
+	}
+
+
+	//468
 	for (int i = 0;i < MAX_INSTR;i++)
 	{
 		undoInitUndoArea((char*)&instr[i], sizeof(INSTR), UNDO_AREA_INSTRUMENTS, i);
 	}
 
-
+	//476
 	for (int i = 0;i < MAX_TABLES;i++)
 	{
 		undoInitUndoArea((char*)&ltable[i], MAX_TABLELEN, UNDO_AREA_TABLES + i, 0);
@@ -82,6 +99,7 @@ void undoInitAllAreas(GTOBJECT *gt)
 
 	undoBufferSize = 0;	// reset this. Ignore Area allocations
 	currentUndoPosition = 0;
+	lastUndoPosition = 0;	// Used for auto-saving backup songs
 }
 
 void undoFreeAll()
@@ -119,6 +137,7 @@ void undoFreeAll()
 			if (gArea)
 			{
 				undoFreeUndoObject(gArea->undoObject);	// free's object and gArea
+				free(gArea);	// JP - New Aug232023
 			}
 		}
 
@@ -180,15 +199,17 @@ void undoInitUndoArea(char *mem, int size, int undoAreaType, int subIndex)
 	ga->undoAreaSubIndex = subIndex;
 	ga->checkForChangeFlag = 0;
 
-	gu->jtest = (char*)&jtext[0];
-
-	ga->jtest = 1234;
+	//	gu->jtest = (char*)&jtext[0];
+	//	ga->jtest = 1234;
 	undoAreaList[undoAreaIndex] = (char*)ga;
 	undoAreaIndex++;
 }
 
 void updateUndoBuffer(int undoAreaType)
 {
+	if (REMOVE_UNDO)
+		return;
+
 	for (int i = 0;i < undoAreaIndex;i++)
 	{
 		GTUNDO_AREA *ga = (GTUNDO_AREA *)undoAreaList[i];
@@ -224,7 +245,9 @@ void undoAreaSetCheckForChange(int areaType, int areaIndex, int onOff)
 }
 
 
-
+/*
+mem = address of memory to check for changes / store changes in undo buffer
+*/
 void* undoCreateUndoObject(char *mem, int size, int offset)
 {
 	if (REMOVE_UNDO)
@@ -255,6 +278,33 @@ void* undoCreateUndoObject(char *mem, int size, int offset)
 int undoPackageCounter = 0;
 int jcounter = 0;
 
+int undoInvalidateBuffer(int areaType)
+{
+	if (REMOVE_UNDO)
+		return 0;
+
+	if (!initUndoBufferFlag)
+		return 0;
+
+	for (int i = 0;i < UNDO_AREA_SIZE;i++)
+	{
+		GTUNDO_AREA *gArea = (GTUNDO_AREA *)undoAreaList[i];
+		if (gArea != NULL)
+		{
+			if (gArea->undoAreaType == areaType)
+			{
+				// Now copy the new buffer to the undo area, so this is used for comparrison next time
+				char *dest = gArea->undoObject->data;
+				char *source = gArea->undoObject->dest;
+				int sizeToUndo = gArea->undoObject->size;
+
+				memcpy(dest, source, sizeToUndo);
+			}
+		}
+	}
+	return 1;
+}
+
 int undoValidateUndoAreas(GTUNDO_OBJECT *editorSettings)
 {
 	if (REMOVE_UNDO)
@@ -272,10 +322,10 @@ int undoValidateUndoAreas(GTUNDO_OBJECT *editorSettings)
 			{
 				gArea->checkForChangeFlag = 0;
 
+				// do a quick memcmp for a fast exit if no changes
 				int diff = memcmp(gArea->undoObject->dest, gArea->undoObject->data, gArea->undoObject->size);
 				if (diff)
 				{
-
 					char *cmp1 = gArea->undoObject->data;
 					char *cmp2 = gArea->undoObject->dest;
 
@@ -284,7 +334,7 @@ int undoValidateUndoAreas(GTUNDO_OBJECT *editorSettings)
 					int currentOffset = 0;
 					int endOffset = 0;
 
-
+					// only store the changes. Do this by creating smaller packets of data
 					while (currentOffset < gArea->undoObject->size)
 					{
 						if (getUndoPacket(&currentOffset, cmp1, cmp2, &startOffset, &endOffset, size))
@@ -359,14 +409,10 @@ int getUndoPacket(int *currentOffset, char *cmp1, char *cmp2, int *startOffset, 
 				return 1;	// we've got a valid packet 
 			}
 		}
-
-
 		co++;
-
 	}
 	*currentOffset = co;
 	return foundPacket;	// end of buffer to search. Could have had data changed at the end where waitForPacketCounter was <4
-
 }
 
 
@@ -381,6 +427,7 @@ int undoAddUndoObjectToList(GTUNDO_OBJECT *gu, GTUNDO_AREA *gArea, char *mem, in
 	return quickAddObjectToList(m, gArea);
 }
 
+int debugCurrentUndoBufferSize;
 
 int quickAddObjectToList(char *m, GTUNDO_AREA *gArea)
 {
@@ -390,7 +437,12 @@ int quickAddObjectToList(char *m, GTUNDO_AREA *gArea)
 	// Getting close to running out of memory for undo pointers? increase it
 	if (currentUndoPosition >= maxUndoSize - 10)
 	{
-		int newMaxUndoSize = maxUndoSize + 500;	//500
+		int newMaxUndoSize = maxUndoSize + 100;
+		debugCurrentUndoBufferSize = newMaxUndoSize;
+
+	//	sprintf(textbuffer, "Alloc 0x%x", newMaxUndoSize);
+	//	printtext(70, 1, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+
 		char **newUndoList = malloc((sizeof(char*)) * newMaxUndoSize);
 		memcpy(newUndoList, undoList, (sizeof(char*)) * maxUndoSize);
 
@@ -420,7 +472,6 @@ GTUNDO_OBJECT* undoCreateEditorInfo()
 		return 0;
 
 	char *m = undoCreateUndoObject((char*)&editorInfo, sizeof(EDITOR_INFO), 0);
-	//	undoBufferSize -= sizeof(EDITOR_INFO);
 	GTUNDO_OBJECT *ed = (GTUNDO_OBJECT*)m;
 
 	return ed;
@@ -435,23 +486,17 @@ void undoFinalizeUndoPackage(GTUNDO_OBJECT *editorSettings)
 	if (undoPackageCounter == 0)
 		return;
 
-
-//	sprintf(textbuffer, "patcheck pat %x", gtObject.editorInfo[2].epnum);
-//	printtext(70, 36, 0xe, textbuffer);
-
 	undoCounter++;	// we can use this to know if anything has been modified in the editor
 
 	quickAddObjectToList((char*)editorSettings, NULL);
 
 	EDITOR_INFO *ed = (EDITOR_INFO*)editorSettings->data;
 
-	int c = 0;
 	for (int i = 0;i < undoPackageCounter;i++)
 	{
 		GTUNDO_OBJECT *ed = (GTUNDO_OBJECT*)undoList[currentUndoPosition - (1 + i)];
 
-		ed->counter = (undoPackageCounter - 1) - i;
-		c++;
+		ed->counter = (undoPackageCounter - 1) - i;	// used to know how many packages to process when ctrl-z is pressed
 	}
 
 	undoPackageCounter = 0;
@@ -465,16 +510,13 @@ int undoPerform()
 
 	GTUNDO_OBJECT *gu;
 
-
 	if (currentUndoPosition == 0)
 		return 0;
-
 
 	gu = (GTUNDO_OBJECT*)undoList[currentUndoPosition - 1];
 
 
 	int counter;
-	int c = 0;
 	do {
 		currentUndoPosition--;
 
@@ -489,14 +531,10 @@ int undoPerform()
 		{
 			dest = gu->parentArea->undoObject->dest;
 			dest += gu->offset;
-			memcpy(dest, gu->data, gu->size);	// overwrite undo area data too, so that's now updated
+			memcpy(dest, gu->data, gu->size);	// overwrite undo area data too, so that it matches the actual data
 		}
 		undoFreeUndoObject(gu);
-
 		undoCounter++;	// we can use this to know if anything has been modified in the editor
-
-
-		c++;
 
 	} while (counter > 0);
 
@@ -513,8 +551,10 @@ void refreshVariables()
 		return;
 
 	countInstruments();
+	validateAllSongs();
 	setTableBackgroundColours(editorInfo.einum);
 }
+
 
 void undoFreeUndoObject(GTUNDO_OBJECT *gu)
 {
@@ -524,7 +564,6 @@ void undoFreeUndoObject(GTUNDO_OBJECT *gu)
 	free(gu->data);
 	undoBufferSize -= gu->size;
 	free(gu);
-
 }
 
 

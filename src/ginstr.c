@@ -9,7 +9,6 @@
 INSTR instrcopybuffer;
 int cutinstr = -1;
 
-
 void instrumentcommands(GTOBJECT *gt)
 {
 	switch (rawkey)
@@ -29,7 +28,7 @@ void instrumentcommands(GTOBJECT *gt)
 	{
 	case 0x8:
 	case KEY_DEL:
-		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < LAST_INST))
 		{
 			deleteinstrtable(editorInfo.einum);
 			clearinstr(editorInfo.einum);
@@ -37,7 +36,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_X:
-		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (ctrlpressed) && (editorInfo.eipos <= LAST_INST))
 		{
 			cutinstr = editorInfo.einum;
 			memcpy(&instrcopybuffer, &instr[editorInfo.einum], sizeof(INSTR));
@@ -46,7 +45,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_C:
-		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (ctrlpressed) && (editorInfo.eipos <= LAST_INST))
 		{
 			cutinstr = -1;
 			memcpy(&instrcopybuffer, &instr[editorInfo.einum], sizeof(INSTR));
@@ -54,7 +53,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_S:
-		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (shiftpressed) && (editorInfo.eipos < LAST_INST))
 		{
 			memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
 			if (cutinstr != -1)
@@ -71,7 +70,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_V:
-		if ((editorInfo.einum) && (shiftOrCtrlPressed) && (editorInfo.eipos < 9))
+		if ((editorInfo.einum) && (ctrlpressed) && (editorInfo.eipos <= LAST_INST))
 		{
 			memcpy(&instr[editorInfo.einum], &instrcopybuffer, sizeof(INSTR));
 		}
@@ -80,15 +79,15 @@ void instrumentcommands(GTOBJECT *gt)
 	case KEY_RIGHT:
 		if (!ctrlpressed)
 		{
-			if (editorInfo.eipos < 9)
+			if (editorInfo.eipos < LAST_INST)
 			{
 				editorInfo.eicolumn++;
 				if (editorInfo.eicolumn > 1)
 				{
 					editorInfo.eicolumn = 0;
 					editorInfo.eipos += 5;
-					if (editorInfo.eipos >= 9) editorInfo.eipos -= 10;
-					if (editorInfo.eipos < 0) editorInfo.eipos = 8;
+					if (editorInfo.eipos >= LAST_INST) editorInfo.eipos -= (LAST_INST);	//+1);
+					if (editorInfo.eipos < 0) editorInfo.eipos = LAST_INST-1;
 				}
 			}
 		}
@@ -97,40 +96,40 @@ void instrumentcommands(GTOBJECT *gt)
 	case KEY_LEFT:
 		if (!ctrlpressed)
 		{
-			if (editorInfo.eipos < 9)
+			if (editorInfo.eipos < LAST_INST)
 			{
 				editorInfo.eicolumn--;
 				if (editorInfo.eicolumn < 0)
 				{
 					editorInfo.eicolumn = 1;
 					editorInfo.eipos -= 5;
-					if (editorInfo.eipos < 0) editorInfo.eipos += 10;
-					if (editorInfo.eipos >= 9) editorInfo.eipos = 8;
+					if (editorInfo.eipos < 0) editorInfo.eipos += (LAST_INST);	//+1);
+					if (editorInfo.eipos >= LAST_INST) editorInfo.eipos = LAST_INST-1;
 				}
 			}
 		}
 		break;
 
 	case KEY_DOWN:
-		if (editorInfo.eipos < 9)
+		if (editorInfo.eipos < LAST_INST)
 		{
 			editorInfo.eipos++;
-			if (editorInfo.eipos > 8) editorInfo.eipos = 0;
+			if (editorInfo.eipos > (LAST_INST-1)) editorInfo.eipos = 0;
 		}
 		break;
 
 	case KEY_UP:
-		if (editorInfo.eipos < 9)
+		if (editorInfo.eipos < LAST_INST)
 		{
 			editorInfo.eipos--;
-			if (editorInfo.eipos < 0) editorInfo.eipos = 8;
+			if (editorInfo.eipos < 0) editorInfo.eipos = LAST_INST-1;
 		}
 		break;
 
 	case KEY_N:
-		if ((editorInfo.eipos != 9) && (shiftOrCtrlPressed))
+		if ((editorInfo.eipos != LAST_INST) && (shiftOrCtrlPressed))
 		{
-			editorInfo.eipos = 9;
+			editorInfo.eipos = LAST_INST;
 			return;
 		}
 		break;
@@ -144,7 +143,7 @@ void instrumentcommands(GTOBJECT *gt)
 		break;
 
 	case KEY_SPACE:
-		if (editorInfo.eipos != 9)
+		if (editorInfo.eipos != LAST_INST)
 		{
 			if (!shiftOrCtrlPressed)
 				playtestnote(FIRSTNOTE + editorInfo.epoctave * 12, editorInfo.einum, editorInfo.epchn, gt);
@@ -196,14 +195,19 @@ void instrumentcommands(GTOBJECT *gt)
 		}
 		return;
 
-		case 9:
+		case LAST_INST:
 			editorInfo.eipos = 0;
 			break;
 		}
 		break;
 	}
-	if ((editorInfo.eipos == 9) && (editorInfo.einum)) editstring(instr[editorInfo.einum].name, MAX_INSTRNAMELEN);
-	if ((hexnybble >= 0) && (editorInfo.eipos < 9) && (editorInfo.einum))
+	
+	if ((editorInfo.eipos == LAST_INST) && (editorInfo.einum))
+	{
+		editstring(instr[editorInfo.einum].name, MAX_INSTRNAMELEN);
+	}
+
+	if ((hexnybble >= 0) && (editorInfo.eipos < LAST_INST) && (editorInfo.einum))
 	{
 		unsigned char *ptr = &instr[editorInfo.einum].ad;
 		ptr += editorInfo.eipos;
@@ -224,7 +228,7 @@ void instrumentcommands(GTOBJECT *gt)
 			{
 				editorInfo.eicolumn = 0;
 				editorInfo.eipos++;
-				if (editorInfo.eipos >= 9) editorInfo.eipos = 0;
+				if (editorInfo.eipos >= LAST_INST) editorInfo.eipos = 0;
 			}
 			break;
 		}
@@ -250,6 +254,7 @@ void clearinstr(int num)
 			instr[num].gatetimer = 1;
 
 		instr[num].firstwave = 0x9;
+		instr[num].pan = 0x77;
 	}
 }
 
@@ -270,15 +275,18 @@ void nextinstr(void)
 
 	sprintf(infoTextBuffer, "instr:%d", editorInfo.einum);
 
-	if (editorInfo.einum >= MAX_INSTR) editorInfo.einum = MAX_INSTR - 1;
+	if (editorInfo.einum >= MAX_INSTR)
+		editorInfo.einum = MAX_INSTR - 1;
 	showinstrtable();
 }
 
 void previnstr(void)
 {
 	editorInfo.einum--;
-	if (editorInfo.einum < 0) editorInfo.einum = 0;
-	showinstrtable();setTableBackgroundColours(editorInfo.einum);
+	if (editorInfo.einum < 0)
+		editorInfo.einum = 0;
+	showinstrtable();
+	setTableBackgroundColours(editorInfo.einum);
 }
 
 void showinstrtable(void)

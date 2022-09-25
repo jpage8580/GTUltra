@@ -46,7 +46,10 @@ void ExternalFilterFP::set_clock_frequency(float clock_frequency)
 // ----------------------------------------------------------------------------
 void ExternalFilterFP::reset()
 {
-  // State of filter.
-  Vlp = 0;
-  Vhp = 0;
+	for (int i = 0;i < 2;i++)
+	{
+		// State of filter.
+		Vlp[i] = 0;
+		Vhp[i] = 0;
+	}
 }

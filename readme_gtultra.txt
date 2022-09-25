@@ -1,7 +1,7 @@
 GTUltra v1.2.0
 ------------------
 Release: 29th March 2022
-Last Update: 17th May 2022
+Last Update: 25th September 2022
 Editor and C64 GT player enhancements - Jason Page / MultiStyle Labs
 Charset & additional palettes: LMan
 
@@ -13,6 +13,22 @@ Thanks to MultiStyle Labs (Jammer, Linus, LMan, Mibri and Shogoon)
 
 Linus help:
 Special thanks to tlr and theK
+
+
+V 1.3.0:
+- Expanded Order List editing
+- True Stereo Panning (15 positions) per instrument (emulation only)
+- Definable SID Chip Pan positions (eg. place the 3rd SID in the center!)
+- Automatic regular .sng backups (user definable duration between saves)
+- Inter-pattern (marked area) looping is now optional
+- Optional “Classic” F1-F3 key use (shift-click on record button to enable)
+- Improved 6502 code for 9 and 12 channel SIDs for simpler playback
+- SID emulation now disabled when seeking to start position (the delay was noticeable and annoying)
+- Option to fully disable MIDI within now within .cfg file (set port to 9999)
+- Editor settings are now saved in .sng files:
+  - FV, PO, RO, NTSC/PAL, SID Type, HR Value, Speed,  # SIDs, Stereo mode
+
+
 
 V 1.2.0
 

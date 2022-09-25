@@ -43,24 +43,24 @@ public:
   void enable_filter(bool enable);
   void set_chip_model(chip_model model);
 
-  RESID_INLINE void clock(sound_sample Vi);
-  RESID_INLINE void clock(cycle_count delta_t, sound_sample Vi);
+  RESID_INLINE void clock(sound_sample Vi,int LR);
+  RESID_INLINE void clock(cycle_count delta_t, sound_sample Vi,int LR);
   void reset();
 
   // Audio output (20 bits).
-  RESID_INLINE sound_sample output();
+  RESID_INLINE sound_sample output(int LR);
 
 protected:
   // Filter enabled.
-  bool enabled;
+	bool enabled;
 
   // Maximum mixer DC offset.
   sound_sample mixer_DC;
 
   // State of filters.
-  sound_sample Vlp; // lowpass
-  sound_sample Vhp; // highpass
-  sound_sample Vo;
+  sound_sample Vlp[2]; // lowpass
+  sound_sample Vhp[2]; // highpass
+  sound_sample Vo[2];
 
   // Cutoff frequencies.
   sound_sample w0lp;
@@ -82,13 +82,15 @@ friend class SID;
 // SID clocking - 1 cycle.
 // ----------------------------------------------------------------------------
 RESID_INLINE
-void ExternalFilter::clock(sound_sample Vi)
+void ExternalFilter::clock(sound_sample Vi,int LR)
 {
+//	enabled = false;
+
   // This is handy for testing.
   if (!enabled) {
     // Remove maximum DC level since there is no filter to do it.
-    Vlp = Vhp = 0;
-    Vo = Vi - mixer_DC;
+    Vlp[LR] = Vhp[LR] = 0;
+    Vo[LR] = Vi - mixer_DC;
     return;
   }
 
@@ -100,11 +102,11 @@ void ExternalFilter::clock(sound_sample Vi)
   // Vlp = Vlp + w0lp*(Vi - Vlp)*delta_t;
   // Vhp = Vhp + w0hp*(Vlp - Vhp)*delta_t;
 
-  sound_sample dVlp = (w0lp >> 8)*(Vi - Vlp) >> 12;
-  sound_sample dVhp = w0hp*(Vlp - Vhp) >> 20;
-  Vo = Vlp - Vhp;
-  Vlp += dVlp;
-  Vhp += dVhp;
+  sound_sample dVlp = (w0lp >> 8)*(Vi - Vlp[LR]) >> 12;
+  sound_sample dVhp = w0hp*(Vlp[LR] - Vhp[LR]) >> 20;
+  Vo[LR] = Vlp[LR] - Vhp[LR];
+  Vlp[LR] += dVlp;
+  Vhp[LR] += dVhp;
 }
 
 // ----------------------------------------------------------------------------
@@ -112,13 +114,14 @@ void ExternalFilter::clock(sound_sample Vi)
 // ----------------------------------------------------------------------------
 RESID_INLINE
 void ExternalFilter::clock(cycle_count delta_t,
-         sound_sample Vi)
+         sound_sample Vi, int LR)
 {
+
   // This is handy for testing.
   if (!enabled) {
     // Remove maximum DC level since there is no filter to do it.
-    Vlp = Vhp = 0;
-    Vo = Vi - mixer_DC;
+    Vlp[LR] = Vhp[LR] = 0;
+    Vo[LR] = Vi - mixer_DC;
     return;
   }
 
@@ -139,11 +142,11 @@ void ExternalFilter::clock(cycle_count delta_t,
     // Vlp = Vlp + w0lp*(Vi - Vlp)*delta_t;
     // Vhp = Vhp + w0hp*(Vlp - Vhp)*delta_t;
 
-    sound_sample dVlp = (w0lp*delta_t_flt >> 8)*(Vi - Vlp) >> 12;
-    sound_sample dVhp = w0hp*delta_t_flt*(Vlp - Vhp) >> 20;
-    Vo = Vlp - Vhp;
-    Vlp += dVlp;
-    Vhp += dVhp;
+    sound_sample dVlp = (w0lp*delta_t_flt >> 8)*(Vi - Vlp[LR]) >> 12;
+    sound_sample dVhp = w0hp*delta_t_flt*(Vlp[LR] - Vhp[LR]) >> 20;
+    Vo[LR] = Vlp[LR] - Vhp[LR];
+    Vlp[LR] += dVlp;
+    Vhp[LR] += dVhp;
 
     delta_t -= delta_t_flt;
   }
@@ -154,9 +157,9 @@ void ExternalFilter::clock(cycle_count delta_t,
 // Audio output (19.5 bits).
 // ----------------------------------------------------------------------------
 RESID_INLINE
-sound_sample ExternalFilter::output()
+sound_sample ExternalFilter::output(int LR)
 {
-  return Vo;
+  return Vo[LR];
 }
 
 #endif // RESID_INLINING || defined(__EXTFILT_CC__)

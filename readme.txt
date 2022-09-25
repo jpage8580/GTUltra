@@ -15,7 +15,7 @@ Microtonal support by Birgit Jauernig.
 
 GTUltra:
 Editor + 6510 code changes: Jason Page
-Linux help: Special thanks to tlr and theK
+Linux help - Special thanks to: tlr, theK
 Uses RtMidi library
 
 Distributed under GNU General Public License

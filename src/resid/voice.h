@@ -39,6 +39,8 @@ public:
   // Range [-2048*255, 2047*255].
   RESID_INLINE sound_sample output();
 
+  RESID_INLINE float getPan();
+
 protected:
   WaveformGenerator wave;
   EnvelopeGenerator envelope;
@@ -70,6 +72,12 @@ sound_sample Voice::output()
 {
   // Multiply oscillator output with envelope output.
   return (wave.output() - wave_zero)*envelope.output() + voice_DC;
+}
+
+RESID_INLINE
+float Voice::getPan()
+{
+	return wave.getPan();
 }
 
 #endif // RESID_INLINING || defined(__VOICE_CC__)

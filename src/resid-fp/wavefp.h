@@ -53,6 +53,9 @@ public:
 
   inline float output(WaveformGeneratorFP& source);
 
+  inline float getPan();
+  
+
 protected:
   void clock_noise(const bool clock);
   reg12 outputN___();
@@ -74,6 +77,10 @@ protected:
   reg16 freq;
   // PWout = (PWn/40.95)%
   reg12 pw;
+
+  
+  reg8 pan;
+
 
   // The control register right-shifted 4 bits; used for output function
   // table lookup.
@@ -142,6 +149,12 @@ void WaveformGeneratorFP::synchronize(WaveformGeneratorFP& sync_dest, WaveformGe
   }
 }
 
+
+inline
+float WaveformGeneratorFP::getPan()
+{
+	return pan;
+}
 // ----------------------------------------------------------------------------
 // Select one of 16 possible combinations of waveforms.
 // ----------------------------------------------------------------------------

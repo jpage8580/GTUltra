@@ -29,73 +29,76 @@
 class SIDFP
 {
 public:
-  SIDFP();
-  ~SIDFP();
+	SIDFP();
+	~SIDFP();
 
-  static float kinked_dac(const int x, const float nonlinearity, const int bits);
+	static float kinked_dac(const int x, const float nonlinearity, const int bits);
 
-  void set_chip_model(chip_model model);
-  FilterFP& get_filter() { return filter; }
-  void enable_filter(bool enable);
-  bool set_sampling_parameters(double clock_freq, sampling_method method,
-			       double sample_freq, double pass_freq = 20000);
-  void set_voice_nonlinearity(float nl);
+	void set_chip_model(chip_model model);
+	FilterFP& get_filter() { return filter; }
+	void enable_filter(bool enable);
+	bool set_sampling_parameters(double clock_freq, sampling_method method,
+		double sample_freq, double pass_freq = 20000);
+	void set_voice_nonlinearity(float nl);
 
-  void clock();
-  int clock(cycle_count& delta_t, short* buf, int n, int interleave = 1);
-  int clock_fast(cycle_count& delta_t, short* buf, int n, int interleave = 1);
-  void reset();
-  
-  // Read/write registers.
-  reg8 read(reg8 offset);
-  void write(reg8 offset, reg8 value);
-  void mute(reg8 channel, bool enable);
+	void clock();
+	int clock(cycle_count& delta_t, short* buf, int n, int bufferHalfSize, int interleave = 1);
+	int clock_fast(cycle_count& delta_t, short* buf, int n, int bufferHalfSize, int interleave = 1);
+	void reset();
 
-  // 16-bit input (EXT IN).
-  void input(int sample);
+	// Read/write registers.
+	reg8 read(reg8 offset);
+	void write(reg8 offset, reg8 value);
+	void mute(reg8 channel, bool enable);
 
-  // 16-bit output (AUDIO OUT).
-  float output();
+	// 16-bit input (EXT IN).
+	void input(int sample);
+
+	// 16-bit output (AUDIO OUT).
+	float output(float *left, float *right);
 
 private:
-  static double I0(double x);
-  inline int clock_interpolate(cycle_count& delta_t, short* buf, int n,
-				     int interleave);
-  inline int clock_resample_interpolate(cycle_count& delta_t, short* buf,
-					      int n, int interleave);
-  inline void age_bus_value(cycle_count);
+	static double I0(double x);
+	inline int clock_interpolate(cycle_count& delta_t, short* buf, int n,int bufferHalfSize,
+		int interleave);
+	inline int clock_resample_interpolate(cycle_count& delta_t, short* buf,
+		int n,int bufferHalfSize, int interleave);
+	inline void age_bus_value(cycle_count);
 
-  VoiceFP voice[3];
-  FilterFP filter;
-  ExternalFilterFP extfilt;
-  PotentiometerFP potx;
-  PotentiometerFP poty;
+	VoiceFP voice[3];
+	FilterFP filter;
+	ExternalFilterFP extfilt;
+	PotentiometerFP potx;
+	PotentiometerFP poty;
 
-  reg8 bus_value;
-  cycle_count bus_value_ttl;
+	reg8 bus_value;
+	cycle_count bus_value_ttl;
 
-  // External audio input.
-  float ext_in;
+	// External audio input.
+	float ext_in;
 
-  // Sampling variables.
-  sampling_method sampling;
-  float cycles_per_sample;
-  float sample_offset;
-  int sample_index;
-  int fir_N;
-  int fir_RES;
-  /* for linear interpolation mode */
-  float sample_prev;
+	// Sampling variables.
+	sampling_method sampling;
+	float cycles_per_sample;
+	float sample_offset;
+	int sample_index;
+	int fir_N;
+	int fir_RES;
 
-  // Ring buffer with overflow for contiguous storage of RINGSIZE samples.
-  float* sample;
+	/* for linear interpolation mode */
+	float sample_prevL;
+	float sample_prevR;
 
-  // FIR_RES filter tables (FIR_N*FIR_RES).
-  float* fir;
+	// Ring buffer with overflow for contiguous storage of RINGSIZE samples.
+	float* sampleL;
+	float* sampleR;
 
-  /* analog parts are run at half the rate of digital ones. */
-  float lastsample[3];
-  unsigned char filtercyclegate;
+	// FIR_RES filter tables (FIR_N*FIR_RES).
+	float* fir;
+
+	/* analog parts are run at half the rate of digital ones. */
+	float lastsample[6];	// 6 = 3 L, 3 R
+	unsigned char filtercyclegate;
 };
 
 #endif // not __SIDFP_H__

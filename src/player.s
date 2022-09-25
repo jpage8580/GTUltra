@@ -70,11 +70,6 @@ SETCUTOFF       = $00
 
                 jmp mt_init
                 jmp mt_play
-.IF (NOGLOBALTEMPO == 0)	; JP - Address of first channel tempo (others are offset by 7,14,21..)
-mt_jp_tempoBaseAddress:
-.BYTE (mt_chntempo % 256)
-.BYTE (mt_chntempo / 256)
-.ENDIF
               .IF (SOUNDSUPPORT != 0)
                 jmp mt_playsfx
               .ENDIF
@@ -149,6 +144,7 @@ mt_tick0_0:
                 jmp mt_tick0_34
               .ELSE
               .IF (NOVIB == 0)
+                lda #$00
                 jmp mt_tick0_34
               .ENDIF
               .ENDIF
@@ -345,13 +341,6 @@ mt_tick0_f_setglobaltempo:
                 sta mt_chntempo+21
                 sta mt_chntempo+28
                 sta mt_chntempo+35
-mt_jp_SecondSIDTempo:
-                sta mt_chntempo		; will be remapped to other .SID file so that global tempo changes affect everything
-                sta mt_chntempo+7
-                sta mt_chntempo+14
-                sta mt_chntempo+21
-                sta mt_chntempo+28
-                sta mt_chntempo+35
                 rts
               .ENDIF
 mt_tick0_f_setchantempo:
@@ -510,100 +499,14 @@ mt_effect_3_found:
         ;Init routine
 
 mt_init:
-
-	.IF (FIRSTSID9CHANNEL == 1)
-	sta .jpta+1
-
-; Hand shake between the two SID files within this single .SID file
-
-	lda #$ff
-	jsr $FFFF	; << get tempo position from other SID (calls other SID init routine)
-	lda #$fe
-	jsr mt_actual_init	; Set tempo position for this SID
-	lda #$ff
-	jsr mt_actual_init	; get tempo position for this SID
-	lda #$fe
-	jsr $FFFF	; << set tempo position from other SID
-
-.jpta:
-	ldy #0	; <<< self mod (actual song number)
-	iny
-	tya
-	jsr $FFFF	; init other song
-
-	lda .jpta+1	; fall through to actual init routine for this SID
-	.ENDIF
-
-mt_actual_init:
-
-; JP - Address of first channel tempo (others are offset by 7,14,21..);
-
-	.IF (NOGLOBALTEMPO == 0)
-	cmp #$ff
-	bne .mt_no_get_tempo
-	ldx mt_jp_tempoBaseAddress		; X = Lo address
-	ldy mt_jp_tempoBaseAddress+1	; Y = Hi address
-	rts
-.mt_no_get_tempo:
-	cmp #$fe
-	bne .mt_no_set_tempo
-
-	stx .jp_tempo_lo+1
-	sty .jp_tempo_hi+1
-
-	lda #(mt_jp_SecondSIDTempo/256)
-	sta .jp_tempo_destHi+2
-	sta .jp_tempo_destLo+2
-	lda #(mt_jp_SecondSIDTempo%256)
-	sta .jp_tempo_destLo+1
-	sta .jp_tempo_destHi+1
-
-	ldx #1	; skip sta opcode
-	ldy #0
-
-.mt_jp_tempoloop:
-
-.jp_tempo_lo:
-	lda #$00
-.jp_tempo_destLo:
-	sta $3456,x
-	inx
-.jp_tempo_hi:
-	lda $#00
-.jp_tempo_destHi:
-	sta $3457,x
-	
-	lda .jp_tempo_lo+1
-	clc
-	adc #7
-	sta .jp_tempo_lo+1
-	lda .jp_tempo_hi+1
-	adc #0
-	sta .jp_tempo_hi+1
-
-	inx
-	inx
-	iny
-
-	cpy #6	; 1+3*6
-	bne .mt_jp_tempoloop
-	rts
-
-.mt_no_set_tempo:
-	.ENDIF
-
               .IF (NUMSONGS > 1)
                 asl
-                sta .tempo3	;.mt_mult+1
+                sta mt_init+6
                 asl
-
-                adc .tempo3	;#$00
+                adc #$00
               .ENDIF
                 sta mt_initsongnum+1
                 rts
-.tempo3:
-.BYTE (0)
-
 
         ;Play soundeffect -routine
 
@@ -640,17 +543,7 @@ mt_setmastervol:
 
         ;Playroutine
 
-mt_play:
-	.IF (FIRSTSID9CHANNEL == 1)
-	jsr jp_actualPlay
-			jsr $FFFE;	// Other SID Update
-			rts
-	.ENDIF
-
-jp_actualPlay:
-
-
-ldx #$00                        ;Channel index
+mt_play:        ldx #$00                        ;Channel index
 
         ;Song initialization
 
@@ -1651,12 +1544,6 @@ mt_funktempotbl:
                 .BYTE (8,5)
               .ENDIF
               .ENDIF
-
-jp_silentSID:
-                .BYTE (0,0,0,0,0,0,0)
-                .BYTE (0,0,0,0,0,0,0)
-                .BYTE (0,0,0,0,0,0,0)
-                .BYTE (0,0,0,0,0,0,0)
 
               .IF ((NOEFFECTS == 0) || (NOWAVEDELAY == 0) || (NOTRANS == 0) || (NOREPEAT == 0) || (FIXEDPARAMS == 0) || (BUFFEREDWRITES != 0) || (NOCALCULATEDSPEED == 0))
 

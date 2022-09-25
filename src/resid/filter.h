@@ -128,11 +128,11 @@ public:
 
   RESID_INLINE
   void clock(sound_sample voice1, sound_sample voice2, sound_sample voice3,
-       sound_sample ext_in);
+       sound_sample ext_in,int LR);
   RESID_INLINE
   void clock(cycle_count delta_t,
          sound_sample voice1, sound_sample voice2, sound_sample voice3,
-       sound_sample ext_in);
+       sound_sample ext_in,int LR);
   void reset();
 
   // Write registers.
@@ -142,7 +142,7 @@ public:
   void writeMODE_VOL(reg8);
 
   // SID audio output (16 bits).
-  sound_sample output();
+  sound_sample output(int LR);
 
   // Spline functions.
   void fc_default(const fc_point*& points, int& count);
@@ -177,10 +177,10 @@ protected:
   sound_sample mixer_DC;
 
   // State of filter.
-  sound_sample Vhp; // highpass
-  sound_sample Vbp; // bandpass
-  sound_sample Vlp; // lowpass
-  sound_sample Vnf; // not filtered
+  sound_sample Vhp[2]; // highpass
+  sound_sample Vbp[2]; // bandpass
+  sound_sample Vlp[2]; // lowpass
+  sound_sample Vnf[2]; // not filtered
 
   // Cutoff frequency, resonance.
   sound_sample w0, w0_ceil_1, w0_ceil_dt;
@@ -215,7 +215,8 @@ RESID_INLINE
 void Filter::clock(sound_sample voice1,
        sound_sample voice2,
        sound_sample voice3,
-       sound_sample ext_in)
+       sound_sample ext_in,
+		int LR)
 {
   // Scale each voice down from 20 to 13 bits.
   voice1 >>= 7;
@@ -232,10 +233,11 @@ void Filter::clock(sound_sample voice1,
 
   ext_in >>= 7;
 
+
   // This is handy for testing.
   if (!enabled) {
-    Vnf = voice1 + voice2 + voice3 + ext_in;
-    Vhp = Vbp = Vlp = 0;
+    Vnf[LR] = voice1 + voice2 + voice3 + ext_in;
+    Vhp[LR] = Vbp[LR] = Vlp[LR] = 0;
     return;
   }
 
@@ -251,67 +253,67 @@ void Filter::clock(sound_sample voice1,
   default:
   case 0x0:
     Vi = 0;
-    Vnf = voice1 + voice2 + voice3 + ext_in;
+	Vnf[LR] = voice1 + voice2 + voice3 + ext_in;
     break;
   case 0x1:
     Vi = voice1;
-    Vnf = voice2 + voice3 + ext_in;
+    Vnf[LR] = voice2 + voice3 + ext_in;
     break;
   case 0x2:
     Vi = voice2;
-    Vnf = voice1 + voice3 + ext_in;
+    Vnf[LR] = voice1 + voice3 + ext_in;
     break;
   case 0x3:
     Vi = voice1 + voice2;
-    Vnf = voice3 + ext_in;
+    Vnf[LR] = voice3 + ext_in;
     break;
   case 0x4:
     Vi = voice3;
-    Vnf = voice1 + voice2 + ext_in;
+    Vnf[LR] = voice1 + voice2 + ext_in;
     break;
   case 0x5:
     Vi = voice1 + voice3;
-    Vnf = voice2 + ext_in;
+    Vnf[LR] = voice2 + ext_in;
     break;
   case 0x6:
     Vi = voice2 + voice3;
-    Vnf = voice1 + ext_in;
+    Vnf[LR] = voice1 + ext_in;
     break;
   case 0x7:
     Vi = voice1 + voice2 + voice3;
-    Vnf = ext_in;
+    Vnf[LR] = ext_in;
     break;
   case 0x8:
     Vi = ext_in;
-    Vnf = voice1 + voice2 + voice3;
+    Vnf[LR] = voice1 + voice2 + voice3;
     break;
   case 0x9:
     Vi = voice1 + ext_in;
-    Vnf = voice2 + voice3;
+    Vnf[LR] = voice2 + voice3;
     break;
   case 0xa:
     Vi = voice2 + ext_in;
-    Vnf = voice1 + voice3;
+    Vnf[LR] = voice1 + voice3;
     break;
   case 0xb:
     Vi = voice1 + voice2 + ext_in;
-    Vnf = voice3;
+    Vnf[LR] = voice3;
     break;
   case 0xc:
     Vi = voice3 + ext_in;
-    Vnf = voice1 + voice2;
+    Vnf[LR] = voice1 + voice2;
     break;
   case 0xd:
     Vi = voice1 + voice3 + ext_in;
-    Vnf = voice2;
+    Vnf[LR] = voice2;
     break;
   case 0xe:
     Vi = voice2 + voice3 + ext_in;
-    Vnf = voice1;
+    Vnf[LR] = voice1;
     break;
   case 0xf:
     Vi = voice1 + voice2 + voice3 + ext_in;
-    Vnf = 0;
+    Vnf[LR] = 0;
     break;
   }
     
@@ -323,11 +325,11 @@ void Filter::clock(sound_sample voice1,
   // dVbp = -w0*Vhp*dt;
   // dVlp = -w0*Vbp*dt;
 
-  sound_sample dVbp = (w0_ceil_1*Vhp >> 20);
-  sound_sample dVlp = (w0_ceil_1*Vbp >> 20);
-  Vbp -= dVbp;
-  Vlp -= dVlp;
-  Vhp = (Vbp*_1024_div_Q >> 10) - Vlp - Vi;
+  sound_sample dVbp = (w0_ceil_1*Vhp[LR] >> 20);
+  sound_sample dVlp = (w0_ceil_1*Vbp[LR] >> 20);
+  Vbp[LR] -= dVbp;
+  Vlp[LR] -= dVlp;
+  Vhp[LR] = (Vbp[LR] *_1024_div_Q >> 10) - Vlp[LR] - Vi;
 }
 
 // ----------------------------------------------------------------------------
@@ -338,7 +340,8 @@ void Filter::clock(cycle_count delta_t,
        sound_sample voice1,
        sound_sample voice2,
        sound_sample voice3,
-       sound_sample ext_in)
+       sound_sample ext_in,
+		int LR)
 {
   // Scale each voice down from 20 to 13 bits.
   voice1 >>= 7;
@@ -359,9 +362,10 @@ void Filter::clock(cycle_count delta_t,
   // This is not really part of SID, but is useful for testing.
   // On slow CPUs it may be necessary to bypass the filter to lower the CPU
   // load.
+
   if (!enabled) {
-    Vnf = voice1 + voice2 + voice3 + ext_in;
-    Vhp = Vbp = Vlp = 0;
+    Vnf[LR] = voice1 + voice2 + voice3 + ext_in;
+    Vhp[LR] = Vbp[LR] = Vlp[LR] = 0;
     return;
   }
 
@@ -377,67 +381,67 @@ void Filter::clock(cycle_count delta_t,
   default:
   case 0x0:
     Vi = 0;
-    Vnf = voice1 + voice2 + voice3 + ext_in;
+    Vnf[LR] = voice1 + voice2 + voice3 + ext_in;
     break;
   case 0x1:
     Vi = voice1;
-    Vnf = voice2 + voice3 + ext_in;
+    Vnf[LR] = voice2 + voice3 + ext_in;
     break;
   case 0x2:
     Vi = voice2;
-    Vnf = voice1 + voice3 + ext_in;
+    Vnf[LR] = voice1 + voice3 + ext_in;
     break;
   case 0x3:
     Vi = voice1 + voice2;
-    Vnf = voice3 + ext_in;
+    Vnf[LR] = voice3 + ext_in;
     break;
   case 0x4:
     Vi = voice3;
-    Vnf = voice1 + voice2 + ext_in;
+    Vnf[LR] = voice1 + voice2 + ext_in;
     break;
   case 0x5:
     Vi = voice1 + voice3;
-    Vnf = voice2 + ext_in;
+    Vnf[LR] = voice2 + ext_in;
     break;
   case 0x6:
     Vi = voice2 + voice3;
-    Vnf = voice1 + ext_in;
+    Vnf[LR] = voice1 + ext_in;
     break;
   case 0x7:
     Vi = voice1 + voice2 + voice3;
-    Vnf = ext_in;
+    Vnf[LR] = ext_in;
     break;
   case 0x8:
     Vi = ext_in;
-    Vnf = voice1 + voice2 + voice3;
+    Vnf[LR] = voice1 + voice2 + voice3;
     break;
   case 0x9:
     Vi = voice1 + ext_in;
-    Vnf = voice2 + voice3;
+    Vnf[LR] = voice2 + voice3;
     break;
   case 0xa:
     Vi = voice2 + ext_in;
-    Vnf = voice1 + voice3;
+    Vnf[LR] = voice1 + voice3;
     break;
   case 0xb:
     Vi = voice1 + voice2 + ext_in;
-    Vnf = voice3;
+    Vnf[LR] = voice3;
     break;
   case 0xc:
     Vi = voice3 + ext_in;
-    Vnf = voice1 + voice2;
+    Vnf[LR] = voice1 + voice2;
     break;
   case 0xd:
     Vi = voice1 + voice3 + ext_in;
-    Vnf = voice2;
+    Vnf[LR] = voice2;
     break;
   case 0xe:
     Vi = voice2 + voice3 + ext_in;
-    Vnf = voice1;
+    Vnf[LR] = voice1;
     break;
   case 0xf:
     Vi = voice1 + voice2 + voice3 + ext_in;
-    Vnf = 0;
+    Vnf[LR] = 0;
     break;
   }
 
@@ -460,11 +464,11 @@ void Filter::clock(cycle_count delta_t,
     // dVlp = -w0*Vbp*dt;
     sound_sample w0_delta_t = w0_ceil_dt*delta_t_flt >> 6;
 
-    sound_sample dVbp = (w0_delta_t*Vhp >> 14);
-    sound_sample dVlp = (w0_delta_t*Vbp >> 14);
-    Vbp -= dVbp;
-    Vlp -= dVlp;
-    Vhp = (Vbp*_1024_div_Q >> 10) - Vlp - Vi;
+    sound_sample dVbp = (w0_delta_t*Vhp[LR] >> 14);
+    sound_sample dVlp = (w0_delta_t*Vbp[LR] >> 14);
+    Vbp[LR] -= dVbp;
+    Vlp[LR] -= dVlp;
+    Vhp[LR] = (Vbp[LR]*_1024_div_Q >> 10) - Vlp[LR] - Vi;
 
     delta_t -= delta_t_flt;
   }
@@ -475,11 +479,14 @@ void Filter::clock(cycle_count delta_t,
 // SID audio output (20 bits).
 // ----------------------------------------------------------------------------
 RESID_INLINE
-sound_sample Filter::output()
+sound_sample Filter::output(int LR)
 {
+
+//	enabled = false;
+
   // This is handy for testing.
   if (!enabled) {
-    return (Vnf + mixer_DC)*static_cast<sound_sample>(vol);
+    return (Vnf[LR] + mixer_DC)*static_cast<sound_sample>(vol);
   }
 
   // Mix highpass, bandpass, and lowpass outputs. The sum is not
@@ -499,31 +506,31 @@ sound_sample Filter::output()
     Vf = 0;
     break;
   case 0x1:
-    Vf = Vlp;
+    Vf = Vlp[LR];
     break;
   case 0x2:
-    Vf = Vbp;
+    Vf = Vbp[LR];
     break;
   case 0x3:
-    Vf = Vlp + Vbp;
+    Vf = Vlp[LR] + Vbp[LR];
     break;
   case 0x4:
-    Vf = Vhp;
+    Vf = Vhp[LR];
     break;
   case 0x5:
-    Vf = Vlp + Vhp;
+    Vf = Vlp[LR] + Vhp[LR];
     break;
   case 0x6:
-    Vf = Vbp + Vhp;
+    Vf = Vbp[LR] + Vhp[LR];
     break;
   case 0x7:
-    Vf = Vlp + Vbp + Vhp;
+    Vf = Vlp[LR] + Vbp[LR] + Vhp[LR];
     break;
   }
 
   // Sum non-filtered and filtered output.
   // Multiply the sum with volume.
-  return (Vnf + Vf + mixer_DC)*static_cast<sound_sample>(vol);
+  return (Vnf[LR] + Vf + mixer_DC)*static_cast<sound_sample>(vol);
 }
 
 #endif // RESID_INLINING || defined(__FILTER_CC__)

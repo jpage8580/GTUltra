@@ -451,7 +451,8 @@ void countpatternlengths(void)
     {
       for (d = 0; d < MAX_SONGLEN; d++)
       {
-        if (songorder[e][c][d] >= LOOPSONG) break;
+        if (songorder[e][c][d] >= LOOPSONG)
+			break;
         if (songorder[e][c][d] < MAX_PATT)
         {
           if (songorder[e][c][d] > highestusedpattern)

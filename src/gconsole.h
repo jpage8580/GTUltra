@@ -2,7 +2,7 @@
 #define GCONSOLE_H
 
 #define MAX_COLUMNS 100
-#define MAX_ROWS 37
+#define MAX_ROWS 41
 #define HOLDDELAY 24
 #define DOUBLECLICKDELAY 15
 #define UNDERLINE_MASK 0x8000

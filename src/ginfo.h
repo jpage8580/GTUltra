@@ -22,7 +22,7 @@ typedef struct
 #ifndef GINFO_C
 extern int lastInfoDisplayed;
 extern int clearInfoLine;
-
+extern int forceInfoLine;
 extern int lastEditWindow;
 
 extern int lastInfoPatternCh;

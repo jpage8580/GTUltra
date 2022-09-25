@@ -73,7 +73,10 @@ void ExternalFilter::set_chip_model(chip_model model)
 void ExternalFilter::reset()
 {
   // State of filter.
-  Vlp = 0;
-  Vhp = 0;
-  Vo = 0;
+	for (int i = 0;i < 2;i++)
+	{
+		Vlp[i] = 0;
+		Vhp[i] = 0;
+	//	Vo[i] = 0;
+	}
 }

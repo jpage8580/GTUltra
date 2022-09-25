@@ -11,6 +11,19 @@ unsigned char ltable[MAX_TABLES][MAX_TABLELEN];
 unsigned char rtable[MAX_TABLES][MAX_TABLELEN];
 unsigned char songorder[MAX_SONGS][MAX_CHN][MAX_SONGLEN + 2];
 
+unsigned char songOrderPatterns[MAX_SONGS][MAX_CHN][MAX_SONGLEN_EXPANDED];
+unsigned short songOrderTranspose[MAX_SONGS][MAX_CHN][MAX_SONGLEN_EXPANDED];
+unsigned int songOrderLength[MAX_SONGS][MAX_CHN];
+unsigned int songCompressedSize[MAX_SONGS][MAX_CHN];
+
+unsigned char songOrderPatternsCopyPaste[MAX_CHN][MAX_SONGLEN_EXPANDED];
+unsigned short songOrderTransposeCopyPaste[MAX_CHN][MAX_SONGLEN_EXPANDED];
+int copyPasteW;
+int copyPasteH;
+int copyExpandedSongValidFlag;	// 1 - we've performed a copy/cut already. 0 - we haven't
+
+
+
 unsigned int detailedTableLValue[MAX_TABLELEN];
 unsigned char detailedTableMaxLValue[MAX_TABLELEN];
 unsigned char detailedTableMinLValue[MAX_TABLELEN];
@@ -79,12 +92,12 @@ int checkFor3ChannelSong()
 					}
 					int p = songorder[d][c][i];
 
-			//		sprintf(textbuffer, "echeck. p:%d", p);
-			//		printtext(70, 36, 0xe, textbuffer);
+					//		sprintf(textbuffer, "echeck. p:%d", p);
+					//		printtext(70, 36, 0xe, textbuffer);
 					if (patternContainsData(p))
 					{
-			//			sprintf(textbuffer, "not empty");
-			//			printtext(86, 36, 0xe, textbuffer);
+						//			sprintf(textbuffer, "not empty");
+						//			printtext(86, 36, 0xe, textbuffer);
 						return 6;				// found a pattern that contains data. Save as 6 channel SID
 					}
 				}
@@ -92,8 +105,8 @@ int checkFor3ChannelSong()
 		}
 	}
 
-//	sprintf(textbuffer, "empty");
-//	printtext(86, 36, 0xe, textbuffer);
+	//	sprintf(textbuffer, "empty");
+	//	printtext(86, 36, 0xe, textbuffer);
 	return 3;	// no pattern data found 
 }
 
@@ -107,7 +120,7 @@ int patternContainsData(int p)
 
 		for (int j = 1;j < 4;j++)
 		{
-			if (pattern[p][(i * 4)+j] != 0)
+			if (pattern[p][(i * 4) + j] != 0)
 				return 1;	// pattern contains data
 		}
 	}
@@ -122,6 +135,9 @@ int savesong(void)
 	char ident[] = { 'G', 'T', 'S', '5' };
 	FILE *handle;
 	int amount;
+
+	if (editorInfo.expandOrderListView == 1)	// ensure that the compressed data song data is up to date if currently viewing expanded orderlist
+		compressAllSongs();
 
 	// Determine amount of songs to be saved
 	c = MAX_SONGS - 1;
@@ -217,6 +233,28 @@ int savesong(void)
 			fwrite8(handle, length);
 			fwrite(pattern[c], length * 4, 1, handle);
 		}
+
+		// JP: New. write GTUltra editor settings
+
+		fwrite8(handle, 0x1f);	// GTULTRA Editor Info ID
+		fwrite8(handle, usefinevib);
+		fwrite8(handle, optimizepulse);
+		fwrite8(handle, optimizerealtime);
+		fwrite8(handle, ntsc);
+		fwrite8(handle, sidmodel);
+		fwritele32(handle, adparam);
+		fwritele32(handle, multiplier);
+		fwritele32(handle, maxSIDChannels);
+		fwrite8(handle, stereoMode);
+
+		// JP: New. write instrument pan info
+//		char ID = 0;
+		fwrite8(handle, 0x9a);	// PAN ID
+		for (c = 1; c <= highestusedinstr; c++)
+		{
+			fwrite8(handle, instr[c].pan);
+		}
+
 		fclose(handle);
 		strcpy(loadedsongfilename, songfilename);
 		return 1;
@@ -276,11 +314,14 @@ int saveinstrument(void)
 
 int loadedSongCount = 0;
 
+
 int loadsong(GTOBJECT *gt)
 {
 	int c;
 	int ok = 0;
 	char ident[4];
+	unsigned char ID;
+
 	FILE *handle;
 	int channelstoload = MAX_CHN;
 
@@ -348,8 +389,9 @@ int loadsong(GTOBJECT *gt)
 				}
 			}
 			// Read instruments
-			amount = fread8(handle);
-			for (c = 1; c <= amount; c++)
+
+			int instrCount = fread8(handle);
+			for (c = 1; c <= instrCount; c++)
 			{
 				instr[c].ad = fread8(handle);
 				instr[c].sr = fread8(handle);
@@ -376,6 +418,46 @@ int loadsong(GTOBJECT *gt)
 				length = fread8(handle) * 4;
 				fread(pattern[c], length, 1, handle);
 			}
+
+			int getNext = 0;
+			do
+			{
+				getNext = 0;
+				ID = 0;
+				// JP - Need to check that this works (previously read into a char array and then copied into uchar...)
+				fread(&ID, 1, 1, handle);
+
+				// JP: New. Load GTUltra settings (FV/R0/P0/HR/SIDType & Speed)
+				if (ID == 0x1f)	// ID for info
+				{
+					usefinevib = (unsigned int)fread8(handle);		// FV
+					optimizepulse = (unsigned int)fread8(handle);		// PO
+					optimizerealtime = (unsigned int)fread8(handle);		// RO
+					ntsc = (unsigned int)fread8(handle);		// NTSC / PAL
+					sidmodel = (unsigned int)fread8(handle);	// sidmodel
+					adparam = (unsigned int)freadle32(handle);	// HR
+					multiplier = (unsigned int)freadle32(handle);	// speed multiplier
+					maxSIDChannels = (int)freadle32(handle);		// sid channels
+					stereoMode = (unsigned int)fread8(handle);
+
+					validateStereoMode();
+					reInitSID();
+					getNext++;
+				}
+
+
+				// JP: New. Load instrument pan info (if it exists)
+
+				if (ID == 0x9a)	// ID for pan
+				{
+					for (c = 1; c <= instrCount; c++)
+					{
+						instr[c].pan = fread8(handle);
+					}
+					getNext++;
+				}
+			} while (getNext != 0);
+
 			countpatternlengths();
 			songchange(gt, 1);
 		}
@@ -1447,6 +1529,7 @@ void clearsong(int cs, int cp, int ci, int ct, int cn, GTOBJECT *gt)
 	editorInfo.epmarkchn = -1;
 	editorInfo.etmarknum = -1;
 	editorInfo.esmarkchn = -1;
+	editorInfo.esmarkchnend = -1;
 	followplay = 0;
 
 	for (c = 0; c < maxSIDChannels; c++)
@@ -1491,9 +1574,9 @@ void clearsong(int cs, int cp, int ci, int ct, int cn, GTOBJECT *gt)
 
 			for (int i = 0;i < a;i++)
 			{
-				gt->editorInfo[c + (i * 6)].epnum = songorder[i][c][0];
-				gt->editorInfo[c + (i * 6)].espos = 0;
-				gt->editorInfo[c + (i * 6)].esend = 0;
+				gt->editorUndoInfo.editorInfo[c + (i * 6)].epnum = songorder[i][c][0];
+				gt->editorUndoInfo.editorInfo[c + (i * 6)].espos = 0;
+				gt->editorUndoInfo.editorInfo[c + (i * 6)].esend = 0;
 			}
 		}
 	}
@@ -1540,9 +1623,11 @@ void clearsong(int cs, int cp, int ci, int ct, int cn, GTOBJECT *gt)
 			settableview(c, 0);
 		}
 	}
-	countpatternlengths();
 
-	// JP: is this correct? shouldn't I just do undo? back up all patterns, orderlist, tables, instruments?
+
+	countpatternlengths();
+	expandAllSongs();	// Must be called after countpatternlengths()
+
 	if (cs)
 		undoInitAllAreas(gt);	// may just reinit no matter what part is getting cleared. ?
 }
@@ -1586,10 +1671,11 @@ void countthispattern(GTOBJECT *gt)
 
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);	// 0-12
 
-	c = gt->editorInfo[c2].epnum;
+	c = gt->editorUndoInfo.editorInfo[c2].epnum;
 	for (d = 0; d <= MAX_PATTROWS; d++)
 	{
-		if (pattern[c][d * 4] == ENDPATT) break;
+		if (pattern[c][d * 4] == ENDPATT)
+			break;
 	}
 	pattlen[c] = d;
 
@@ -1597,8 +1683,10 @@ void countthispattern(GTOBJECT *gt)
 	c = editorInfo.eschn;
 	for (d = 0; d < MAX_SONGLEN; d++)
 	{
-		if (songorder[e][c][d] >= LOOPSONG) break;
-		if (songorder[e][c][d] > highestusedpattern)
+		if (songorder[e][c][d] >= LOOPSONG)
+			break;
+		if ((songorder[e][c][d] < REPEAT) && (songorder[e][c][d] > highestusedpattern))
+			//	if (songorder[e][c][d] > highestusedpattern)
 			highestusedpattern = songorder[e][c][d];
 	}
 	songlen[e][c] = d;
@@ -1613,7 +1701,7 @@ int insertpattern(int p, GTOBJECT *gt)
 	if (pattused[MAX_PATT - 1]) return 0;
 
 	// Mark all patterns from this point onwards for undo.
-	for (int i=p+1;i<MAX_PATT-p-2;i++)
+	for (int i = p + 1;i < MAX_PATT - p - 2;i++)
 	{
 		undoAreaSetCheckForChange(UNDO_AREA_PATTERN, i, UNDO_AREA_DIRTY_CHECK);
 	}
@@ -1621,18 +1709,40 @@ int insertpattern(int p, GTOBJECT *gt)
 	memmove(pattern[p + 2], pattern[p + 1], (MAX_PATT - p - 2)*(MAX_PATTROWS * 4 + 4));	// Move ALL pattern data past the insert point up one pattern
 	countpatternlengths();
 
-	for (c = 0; c < MAX_SONGS; c++)
+	if (editorInfo.expandOrderListView == 0)
 	{
-		if ((songlen[c][0]) &&
-			(songlen[c][1]) &&
-			(songlen[c][2]))
+		for (c = 0; c < MAX_SONGS; c++)
 		{
-			for (d = 0; d < MAX_CHN; d++)
+			if ((songlen[c][0]) &&
+				(songlen[c][1]) &&
+				(songlen[c][2]))
 			{
-				for (e = 0; e < songlen[c][d]; e++)
+				for (d = 0; d < MAX_CHN; d++)
 				{
-					if ((songorder[c][d][e] < REPEAT) && (songorder[c][d][e] > p) && (songorder[c][d][e] != MAX_PATT - 1))
-						songorder[c][d][e]++;
+					for (e = 0; e < songlen[c][d]; e++)
+					{
+						if ((songorder[c][d][e] < REPEAT) && (songorder[c][d][e] > p) && (songorder[c][d][e] != MAX_PATT - 1))
+							songorder[c][d][e]++;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		for (c = 0; c < MAX_SONGS; c++)
+		{
+			if ((songOrderLength[c][0]) &&
+				(songOrderLength[c][1]) &&
+				(songOrderLength[c][2]))
+			{
+				for (d = 0; d < MAX_CHN; d++)
+				{
+					for (e = 0; e < songOrderLength[c][d]; e++)
+					{
+						if ((songOrderPatterns[c][d][e] < REPEAT) &&(songOrderPatterns[c][d][e] > p) && (songOrderPatterns[c][d][e] != MAX_PATT - 1))
+							songOrderPatterns[c][d][e]++;
+					}
 				}
 			}
 		}
@@ -1641,8 +1751,8 @@ int insertpattern(int p, GTOBJECT *gt)
 	for (c = 0; c < MAX_CHN; c++)
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
-		if ((gt->editorInfo[c2].epnum > p) && (gt->editorInfo[c2].epnum != MAX_PATT - 1))
-			gt->editorInfo[c2].epnum++;
+		if ((gt->editorUndoInfo.editorInfo[c2].epnum > p) && (gt->editorUndoInfo.editorInfo[c2].epnum != MAX_PATT - 1))
+			gt->editorUndoInfo.editorInfo[c2].epnum++;
 	}
 
 	return 1;
@@ -1658,18 +1768,40 @@ void deletepattern(int p, GTOBJECT *gt)
 	clearpattern(MAX_PATT - 1);
 	countpatternlengths();
 
-	for (c = 0; c < MAX_SONGS; c++)
+	if (editorInfo.expandOrderListView == 0)
 	{
-		if ((songlen[c][0]) &&
-			(songlen[c][1]) &&
-			(songlen[c][2]))
+		for (c = 0; c < MAX_SONGS; c++)
 		{
-			for (d = 0; d < MAX_CHN; d++)
+			if ((songlen[c][0]) &&
+				(songlen[c][1]) &&
+				(songlen[c][2]))
 			{
-				for (e = 0; e < songlen[c][d]; e++)
+				for (d = 0; d < MAX_CHN; d++)
 				{
-					if ((songorder[c][d][e] < REPEAT) && (songorder[c][d][e] > p))
-						songorder[c][d][e]--;
+					for (e = 0; e < songlen[c][d]; e++)
+					{
+						if ((songorder[c][d][e] < REPEAT) && (songorder[c][d][e] > p))
+							songorder[c][d][e]--;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		for (c = 0; c < MAX_SONGS; c++)
+		{
+			if ((songOrderLength[c][0]) &&
+				(songOrderLength[c][1]) &&
+				(songOrderLength[c][2]))
+			{
+				for (d = 0; d < MAX_CHN; d++)
+				{
+					for (e = 0; e < songOrderLength[c][d]; e++)
+					{
+						if ((songOrderPatterns[c][d][e] < REPEAT) && songOrderPatterns[c][d][e] > p)
+							songOrderPatterns[c][d][e]--;
+					}
 				}
 			}
 		}
@@ -1678,8 +1810,8 @@ void deletepattern(int p, GTOBJECT *gt)
 	for (c = 0; c < MAX_CHN; c++)
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
-		if (gt->editorInfo[c2].epnum > p)
-			gt->editorInfo[c2].epnum--;
+		if (gt->editorUndoInfo.editorInfo[c2].epnum > p)
+			gt->editorUndoInfo.editorInfo[c2].epnum--;
 	}
 }
 
@@ -1700,21 +1832,35 @@ void findusedpatterns(void)
 	memset(pattused, 0, sizeof pattused);
 	for (c = 0; c < MAX_SONGS; c++)
 	{
-		if ((songlen[c][0]) &&
-			(songlen[c][1]) &&
-			(songlen[c][2]))
+		if (editorInfo.expandOrderListView == 0)
 		{
-			for (d = 0; d < MAX_CHN; d++)
+			if ((songlen[c][0]) &&
+				(songlen[c][1]) &&
+				(songlen[c][2]))
 			{
-				for (e = 0; e < songlen[c][d]; e++)
+				for (d = 0; d < MAX_CHN; d++)
 				{
-					if (songorder[c][d][e] < REPEAT)
+					for (e = 0; e < songlen[c][d]; e++)
 					{
-						if (songorder[c][d][e] == 0xcf)
+						if (songorder[c][d][e] < REPEAT)
 						{
-
+							pattused[songorder[c][d][e]] = 1;
 						}
-						pattused[songorder[c][d][e]] = 1;
+					}
+				}
+			}
+		}
+		else
+		{
+			if ((songOrderLength[c][0]) &&
+				(songOrderLength[c][1]) &&
+				(songOrderLength[c][2]))
+			{
+				for (d = 0; d < MAX_CHN; d++)
+				{
+					for (e = 0; e < songOrderLength[c][d]; e++)
+					{
+						pattused[songOrderPatterns[c][d][e]] = 1;
 					}
 				}
 			}
@@ -1740,18 +1886,40 @@ void findduplicatepatterns(GTOBJECT *gt)
 					{
 						int f, g, h;
 
-						for (f = 0; f < MAX_SONGS; f++)
+						if (editorInfo.expandOrderListView == 0)
 						{
-							if ((songlen[f][0]) &&
-								(songlen[f][1]) &&
-								(songlen[f][2]))
+							for (f = 0; f < MAX_SONGS; f++)
 							{
-								for (g = 0; g < MAX_CHN; g++)
+								if ((songlen[f][0]) &&
+									(songlen[f][1]) &&
+									(songlen[f][2]))
 								{
-									for (h = 0; h < songlen[f][g]; h++)
+									for (g = 0; g < MAX_CHN; g++)
 									{
-										if (songorder[f][g][h] == d)
-											songorder[f][g][h] = c;
+										for (h = 0; h < songlen[f][g]; h++)
+										{
+											if (songorder[f][g][h] == d)
+												songorder[f][g][h] = c;
+										}
+									}
+								}
+							}
+						}
+						else
+						{
+							for (f = 0; f < MAX_SONGS; f++)
+							{
+								if ((songOrderLength[f][0]) &&
+									(songOrderLength[f][1]) &&
+									(songOrderLength[f][2]))
+								{
+									for (g = 0; g < MAX_CHN; g++)
+									{
+										for (h = 0; h < songOrderLength[f][g]; h++)
+										{
+											if (songOrderPatterns[f][g][h] == d)
+												songOrderPatterns[f][g][h] = c;
+										}
 									}
 								}
 							}
@@ -1759,8 +1927,8 @@ void findduplicatepatterns(GTOBJECT *gt)
 						for (f = 0; f < maxSIDChannels; f++)
 						{
 							//				int c2 = getActualChannel(esnum, f);	// 0-12
-							if (gt->editorInfo[f].epnum == d)
-								gt->editorInfo[f].epnum = c;
+							if (gt->editorUndoInfo.editorInfo[f].epnum == d)
+								gt->editorUndoInfo.editorInfo[f].epnum = c;
 						}
 					}
 				}
@@ -1814,11 +1982,13 @@ void optimizeeverything(int oi, int ot, GTOBJECT *gt)
 					clearinstr(MAX_INSTR - 2);
 					for (d = 0; d < MAX_PATT; d++)
 					{
+
 						for (e = 0; e < pattlen[d]; e++)
 						{
 							if ((pattern[d][e * 4 + 1] > c) && (pattern[d][e * 4 + 1] != MAX_INSTR - 1))
 								pattern[d][e * 4 + 1]--;
 						}
+
 					}
 				}
 			}
@@ -2076,6 +2246,261 @@ int getQuickPlayChannels(int song, int channel, int patternOffset, GTOBJECT *gt,
 		return 1;
 	}
 	return 0;
+}
+
+
+void compressAllSongs()
+{
+	for (int s = 0;s < MAX_SONGS;s++)
+	{
+		compressSong(s);
+	}
+}
+
+void compressSong(int s)
+{
+	for (int c = 0;c < MAX_CHN;c++)
+	{
+		generateCompressedSongChannel(s, c, 0);
+	}
+
+	undoInvalidateBuffer(UNDO_AREA_ORDERLIST);
+	undoInvalidateBuffer(UNDO_AREA_ORDERLIST_LEN);
+}
+
+int generateCompressedSongChannel(int s, int c, int validateOnly)
+{
+	int endIndex = findFirstEndMarkerIndex(s, c);
+	int loopIndex = songOrderTranspose[s][c][endIndex];
+
+	// compress in two parts: start>loopIndex-1 and loopIndex>end
+	// This then allows for pattern repeat counts not breaking if we loop to the middle.
+
+	int p = 0;	// index through compressed song data
+	int lastTranspose = -1;
+
+	compressChannel(s, c, 0, loopIndex, &p, &lastTranspose, validateOnly);	// compress from start to loop position
+	int compressedLoopIndex = p;				// get compressed loop position, so we can store that at the end of the order list.
+	compressChannel(s, c, loopIndex, endIndex, &p, &lastTranspose, validateOnly);	// compress from loop position to end
+	if (!validateOnly)
+	{
+		songorder[s][c][p++] = ENDPATT;		// store end marker
+		songorder[s][c][p++] = compressedLoopIndex;
+		songlen[s][c] = p - 2;
+		songCompressedSize[s][c] = p;
+	}
+	else
+		p += 2;
+
+	return p;
+}
+
+
+void compressChannel(int s, int c, int startIndex, int endIndex, int *p, int *lastTranspose, int validateOnly)
+{
+	int repeatCount = 0;
+
+	int lastPattern = -1;	//songOrderPatterns[s][c][0];
+	int repeatPattern = 1;
+
+	int writeOffset = *p;
+
+	if (startIndex == endIndex)
+		return;
+
+	for (int i = startIndex;i < endIndex;i++)
+	{
+		int transpose = songOrderTranspose[s][c][i];
+		int pattern = songOrderPatterns[s][c][i];
+
+		if (transpose != *lastTranspose)
+		{
+			if (repeatCount > 0)
+			{
+				if (validateOnly)
+					writeOffset++;
+				else
+					songorder[s][c][writeOffset++] = REPEAT + (repeatCount & 0xf);
+			}
+			if (lastPattern != -1)
+			{
+				if (validateOnly)
+					writeOffset++;
+				else
+					songorder[s][c][writeOffset++] = lastPattern;
+			}
+			lastPattern = -1;
+			repeatCount = 0;
+
+			*lastTranspose = transpose;
+			int compressedTrans = transpose + TRANSUP;
+			if (transpose & 0x80)
+			{
+				if (transpose & 0x7f)
+					compressedTrans = TRANSDOWN - (transpose & 0x7f);
+				else
+					compressedTrans = TRANSUP;
+			}
+			if (validateOnly)
+				writeOffset++;
+			else
+				songorder[s][c][writeOffset++] = compressedTrans;
+		}
+
+		if (pattern == lastPattern)
+		{
+			repeatCount++;
+			if (repeatCount == 0xf)
+			{
+				if (validateOnly)
+					writeOffset += 2;
+				else
+				{
+					songorder[s][c][writeOffset++] = REPEAT + (repeatCount & 0xf);	// R0 = repeat 16 times..
+					songorder[s][c][writeOffset++] = lastPattern;
+				}
+				lastPattern = -1;
+				repeatCount = 0;
+			}
+		}
+		else
+		{
+			if (repeatCount > 0)
+			{
+				if (validateOnly)
+					writeOffset++;
+				else
+					songorder[s][c][writeOffset++] = REPEAT + (repeatCount & 0xf);
+			}
+			if (lastPattern != -1)
+			{
+				if (validateOnly)
+					writeOffset++;
+				else
+					songorder[s][c][writeOffset++] = lastPattern;
+			}
+			lastPattern = pattern;
+			repeatCount = 0;
+		}
+	}
+
+	if (repeatCount > 0)
+	{
+		if (validateOnly)
+			writeOffset++;
+		else
+			songorder[s][c][writeOffset++] = REPEAT + (repeatCount & 0xf);
+	}
+	if (lastPattern != -1)
+	{
+		if (validateOnly)
+			writeOffset++;
+		else
+			songorder[s][c][writeOffset++] = lastPattern;
+	}
+
+	*p = writeOffset;
+}
+
+
+void expandAllSongs()
+{
+	for (int s = 0;s < MAX_SONGS;s++)
+	{
+		for (int c = 0;c < MAX_CHN;c++)
+		{
+			clearExpandedSongChannel(s, c);
+			generateExpandedSongChannel(s, c);
+			songCompressedSize[s][c] = generateCompressedSongChannel(s, c, 1);
+		}
+	}
+
+	undoInvalidateBuffer(UNDO_AREA_ORDERLIST_PATTERN_EXPANDED);
+	undoInvalidateBuffer(UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED);
+	undoInvalidateBuffer(UNDO_AREA_ORDERLIST_LENGTH_EXPANDED);
+
+}
+
+int validateAllSongs()
+{
+	int maxChannelSize = 0;
+	for (int s = 0;s < MAX_SONGS;s++)
+	{
+		for (int c = 0;c < MAX_CHN;c++)
+		{
+			songCompressedSize[s][c] = generateCompressedSongChannel(s, c, 1);
+			if (songCompressedSize[s][c] > maxChannelSize)
+				maxChannelSize = songCompressedSize[s][c];
+		}
+	}
+	return maxChannelSize;
+}
+
+void generateExpandedSongChannel(int s, int c)
+{
+	int p = 0;
+	int v = 0;
+	int transpose = 0;
+	int loopPos = songorder[s][c][songlen[s][c] + 1];
+
+	int expandedLoopPos = 0;
+	for (int i = 0;i < songlen[s][c] + 1;i++)
+	{
+		if (i == loopPos)
+			expandedLoopPos = p;
+
+		int gotPattern = 1;
+		int repeatCount = 1;
+		do {
+
+			gotPattern = 1;
+
+			v = songorder[s][c][i];
+			if ((v >= TRANSDOWN) && (v < LOOPSONG))
+			{
+				if (v < TRANSUP)
+				{
+					transpose = TRANSUP - v;
+					transpose |= 0x80;
+				}
+				else
+					transpose = v - TRANSUP;
+				gotPattern = 0;	// get another value
+				i++;
+			}
+			else if ((v >= REPEAT) && (v < TRANSDOWN))
+			{
+				repeatCount = v - REPEAT;
+				repeatCount++;
+				gotPattern = 0;	// get another value
+				i++;
+			}
+		} while (gotPattern == 0);
+
+		for (int r = 0;r < repeatCount;r++)
+		{
+			songOrderPatterns[s][c][p] = v;
+			songOrderTranspose[s][c][p] = transpose;
+			p++;
+		}
+	}
+
+
+	songOrderTranspose[s][c][p - 1] = expandedLoopPos;
+	songOrderLength[s][c] = p;
+}
+
+
+
+void clearExpandedSongChannel(int s, int c)
+{
+	for (int p = 0;p < MAX_SONGLEN_EXPANDED;p++)
+	{
+		songOrderPatterns[s][c][p] = 0;
+		songOrderTranspose[s][c][p] = 0;
+	}
+	songOrderTranspose[s][c][MAX_SONGLEN_EXPANDED - 1] = MAX_SONGLEN_EXPANDED - 1;
+	songOrderPatterns[s][c][MAX_SONGLEN_EXPANDED - 1] = 0xff;
 }
 
 

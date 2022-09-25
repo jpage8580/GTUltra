@@ -42,10 +42,13 @@ enum UNDO_AREA {
 	UNDO_AREA_FILTER_TABLE,
 	UNDO_AREA_SPEED_TABLE,
 	UNDO_AREA_CHANNEL_EDITOR_INFO,
-	UNDO_AREA_ORDERLIST_LEN	
+	UNDO_AREA_ORDERLIST_LEN,
+	UNDO_AREA_ORDERLIST_PATTERN_EXPANDED,
+	UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED,
+	UNDO_AREA_ORDERLIST_LENGTH_EXPANDED
 };
 
-#define UNDO_AREA_SIZE 512	// guess.. 256 patterns.. plus other stuff
+#define UNDO_AREA_SIZE 1024	//512	// guess.. 256 patterns.. plus other stuff
 #define UNDO_AREA_DIRTY_CHECK 0x5a
 #define UNDO_AREA_CLEAN 0
 
@@ -53,6 +56,7 @@ enum UNDO_AREA {
 #ifndef GUNDO_C
 extern GTUNDO_OBJECT undoList[MAX_UNDO];
 extern int currentUndoPosition;
+extern int lastUndoPosition;
 extern int currentUndoCounter;
 extern int maxUndoSize;
 extern int initAreaListFlag;
@@ -60,6 +64,7 @@ extern int initUndoBufferFlag;
 extern int jcounter;
 extern int undoCounter;
 extern unsigned int undoBufferSize;
+extern int debugCurrentUndoBufferSize;
 #endif
 
 void initUndoBuffer();
@@ -80,6 +85,7 @@ int getUndoPacket(int *currentOffset, char *cmp1, char *cmp2, int *startOffset, 
 void undoDisplay();
 void refreshVariables();
 void updateUndoBuffer(int undoAreaType);
+int undoInvalidateBuffer(int areaType);
 
 
 #endif

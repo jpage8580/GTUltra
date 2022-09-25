@@ -123,10 +123,13 @@ Filter::Filter()
   vol = 0;
 
   // State of filter.
-  Vhp = 0;
-  Vbp = 0;
-  Vlp = 0;
-  Vnf = 0;
+  for (int i = 0;i < 2;i++)
+  {
+	  Vhp[i] = 0;
+	  Vbp[i] = 0;
+	  Vlp[i] = 0;
+	  Vnf[i] = 0;
+  }
 
   enable_filter(true);
 
@@ -205,10 +208,13 @@ void Filter::reset()
   vol = 0;
 
   // State of filter.
-  Vhp = 0;
-  Vbp = 0;
-  Vlp = 0;
-  Vnf = 0;
+  for (int i = 0;i < 2;i++)
+  {
+	  Vhp[i] = 0;
+	  Vbp[i] = 0;
+	  Vlp[i] = 0;
+	  Vnf[i] = 0;
+  }
 
   set_w0();
   set_Q();

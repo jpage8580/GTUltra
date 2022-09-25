@@ -34,6 +34,7 @@
 #define MAX_INSTRNAMELEN 16
 #define MAX_PATTROWS 128
 #define MAX_SONGLEN 254
+#define MAX_SONGLEN_EXPANDED 0x800
 #define MAX_SONGS 32
 #define MAX_NOTES 96
 
@@ -69,6 +70,7 @@ typedef struct
   unsigned char vibdelay;
   unsigned char gatetimer;
   unsigned char firstwave;
+  unsigned char pan;
   char name[MAX_INSTRNAMELEN];
 } INSTR;
 

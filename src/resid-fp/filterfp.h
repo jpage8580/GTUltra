@@ -133,7 +133,8 @@ public:
 
   inline
   float clock(float voice1, float voice2, float voice3,
-	      float ext_in);
+	      float ext_in,int LR);
+
   void reset();
 
   // Write registers.
@@ -190,7 +191,7 @@ private:
   float type4_k, type4_b;
 
   // State of filter.
-  float Vhp, Vbp, Vlp;
+  float Vhp[2], Vbp[2], Vlp[2];
 
   /* Resonance/Distortion/Type3/Type4 helpers. */
   float type4_w0_cache, _1_div_Q, type3_fc_kink_exp, distortion_CT;
@@ -269,14 +270,26 @@ inline float FilterFP::waveshaper1(float value)
 
 // ----------------------------------------------------------------------------
 // SID clocking - 1 cycle.
+// JP added LR (left/right) index 0 (left) 1 (right)
 // ----------------------------------------------------------------------------
 inline
 float FilterFP::clock(float voice1,
 		   float voice2,
 		   float voice3,
-		   float ext_in)
+		   float ext_in,
+			int LR)
 {
+
     float Vi = 0.f, Vf = 0.f;
+
+	float *vLptr;
+	float *vHptr;
+	float *vBptr;
+
+	vLptr = &Vlp[LR];
+	vHptr = &Vhp[LR];
+	vBptr = &Vbp[LR];
+
 
     // Route voices into or around filter.
     ((filt & 1) ? Vi : Vf) += voice1;
@@ -291,39 +304,61 @@ float FilterFP::clock(float voice1,
     ((filt & 8) ? Vi : Vf) += ext_in;
 
     if (hp_bp_lp & 1) {
-	Vf += Vlp;
+		Vf += *vLptr;	//Vlp[LR];
     }
     if (hp_bp_lp & 2) {
-	Vf += Vbp;
+		Vf += *vBptr;	//Vbp[LR];
     }
     if (hp_bp_lp & 4) {
-	Vf += Vhp;
+		Vf += *vHptr;	//Vhp[LR];
     }
     
     if (model == MOS6581) {
-        Vlp -= Vbp * type3_w0(Vbp);
-        Vbp -= Vhp * type3_w0(Vhp);
-        Vhp = (Vbp * _1_div_Q - Vlp - Vi * 0.85f) * attenuation;
+       // Vlp[LR] -= Vbp[LR] * type3_w0(Vbp[LR]);
+       // Vbp[LR] -= Vhp[LR] * type3_w0(Vhp[LR]);
+       // Vhp[LR] = (Vbp[LR] * _1_div_Q - Vlp[LR] - Vi * 0.85f) * attenuation;
+
+		*vLptr -= *vBptr * type3_w0(*vBptr);
+		*vBptr -= *vHptr * type3_w0(*vHptr);
+		*vHptr = (*vBptr * _1_div_Q - *vLptr - Vi * 0.85f) * attenuation;
+
 
         /* output strip mixing to filter state */
+		/*
         if (hp_bp_lp & 1) {
-            Vlp += Vf * intermixing_leaks;
+            Vlp[LR] += Vf * intermixing_leaks;
         }
         if (hp_bp_lp & 2) {
-            Vbp += Vf * intermixing_leaks;
+            Vbp[LR] += Vf * intermixing_leaks;
         }
         if (hp_bp_lp & 4) {
-            Vhp += Vf * intermixing_leaks;
+            Vhp[LR] += Vf * intermixing_leaks;
         }
+		*/
+
+		if (hp_bp_lp & 1) {
+			*vLptr += Vf * intermixing_leaks;
+		}
+		if (hp_bp_lp & 2) {
+			*vBptr += Vf * intermixing_leaks;
+		}
+		if (hp_bp_lp & 4) {
+			*vHptr += Vf * intermixing_leaks;
+		}
 
         /* saturate. This is likely the output inverter saturation. */
         Vf *= volf;
         Vf = waveshaper1(Vf);
     } else {
         /* On the 8580, BP appears mixed in phase with the rest. */
-        Vlp += Vbp * type4_w0_cache;
-        Vbp += Vhp * type4_w0_cache;
-        Vhp = -Vbp * _1_div_Q - Vlp - Vi;
+      //  Vlp[LR] += Vbp[LR] * type4_w0_cache;
+      // Vbp[LR] += Vhp[LR] * type4_w0_cache;
+      //  Vhp[LR] = -Vbp[LR] * _1_div_Q - Vlp[LR] - Vi;
+
+		*vLptr += *vBptr * type4_w0_cache;
+		*vBptr += *vHptr * type4_w0_cache;
+		*vHptr = -*vBptr * _1_div_Q - *vLptr - Vi;
+
         Vf *= volf;
     }
     
@@ -333,11 +368,14 @@ float FilterFP::clock(float voice1,
 inline
 void FilterFP::nuke_denormals()
 {
-    /* We only need this for systems that don't do -msse and -mfpmath=sse */
-    if (Vbp > -1e-12f && Vbp < 1e-12f)
-        Vbp = 0;
-    if (Vlp > -1e-12f && Vlp < 1e-12f)
-        Vlp = 0;
+	for (int i = 0;i < 2;i++)
+	{
+		/* We only need this for systems that don't do -msse and -mfpmath=sse */
+		if (Vbp[i] > -1e-12f && Vbp[i] < 1e-12f)
+			Vbp[i] = 0;
+		if (Vlp[i] > -1e-12f && Vlp[i] < 1e-12f)
+			Vlp[i] = 0;
+	}
 }
 
 #endif // not __FILTER_H__

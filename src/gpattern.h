@@ -35,6 +35,7 @@ typedef struct {
 	int esmarkchn;	// = -1;
 	int esmarkstart;
 	int esmarkend;
+	int esmarkchnend;	// for expanded view selection
 	int enpos;
 
 // From pattern.c
@@ -68,6 +69,7 @@ typedef struct {
 	int etmarkend;
 
 	int etDetailedWaveTableColumn;
+	int expandOrderListView;
 
 }EDITOR_INFO;
 
@@ -87,7 +89,7 @@ void splitpattern(GTOBJECT *gt);
 void joinpattern(GTOBJECT *gt);
 
 void displayPatternInfo(GTOBJECT *gt);
-void handleShiftSpace(GTOBJECT *gt, int c2, int startPatternPos, int follow, int enableLoop);
+void handleShiftSpace(GTOBJECT *gt, int playChannel, int startPatternPos, int follow, int enableLoop);
 int handlePolyphonicKeyboard(GTOBJECT *gt);
 int handleMIDIPolykeyboard(GTOBJECT *gt, MIDI_MESSAGE midiData);
 int getNote(int rawkey);

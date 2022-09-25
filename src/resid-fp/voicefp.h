@@ -39,6 +39,8 @@ public:
   // Range [-2048*255, 2047*255].
   inline float output(WaveformGeneratorFP& source);
 
+  inline float getPan();
+
 protected:
   WaveformGeneratorFP wave;
   EnvelopeGeneratorFP envelope;
@@ -57,6 +59,12 @@ inline
 float VoiceFP::output(WaveformGeneratorFP& source)
 {
     return wave.output(source) * envelope.output() + voice_DC;
+}
+
+inline
+float VoiceFP::getPan()
+{
+	return wave.getPan();
 }
 
 #endif // not __VOICEFP_H__

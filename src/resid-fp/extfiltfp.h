@@ -44,18 +44,22 @@ public:
 
   void set_clock_frequency(float);
 
-  inline void clock(float Vi);
+  inline void clock(float Vi,int LR);
   void reset();
 
   // Audio output (20 bits).
-  inline float output();
+  inline float output(int LR);
+
+  inline float outputL();
+  inline float outputR();
 
 private:
   inline void nuke_denormals();
 
   // State of filters.
-  float Vlp; // lowpass
-  float Vhp; // highpass
+  // JP - 2 for stereo
+  float Vlp[2]; // lowpass
+  float Vhp[2]; // highpass
 
   // Cutoff frequencies.
   float w0lp;
@@ -66,32 +70,52 @@ friend class SIDFP;
 
 // ----------------------------------------------------------------------------
 // SID clocking - 1 cycle.
+// JP added LR index
 // ----------------------------------------------------------------------------
 inline
-void ExternalFilterFP::clock(float Vi)
+void ExternalFilterFP::clock(float Vi,int LR)
 {
-  float dVlp = w0lp * (Vi - Vlp);
-  float dVhp = w0hp * (Vlp - Vhp);
-  Vlp += dVlp;
-  Vhp += dVhp;
+	float *vLptr = &Vlp[LR];
+	float *vHptr = &Vhp[LR];
+
+
+  float dVlp = w0lp * (Vi - *vLptr);
+  float dVhp = w0hp * (*vLptr - *vHptr);
+  *vLptr += dVlp;
+  *vHptr += dVhp;
 }
 
 // ----------------------------------------------------------------------------
 // Audio output (19.5 bits).
 // ----------------------------------------------------------------------------
 inline
-float ExternalFilterFP::output()
+float ExternalFilterFP::output(int LR)
 {
-  return Vlp - Vhp;
+  return Vlp[LR] - Vhp[LR];
+}
+
+inline
+float ExternalFilterFP::outputL()
+{
+	return Vlp[0] - Vhp[0];
+}
+
+inline
+float ExternalFilterFP::outputR()
+{
+	return Vlp[1] - Vhp[1];
 }
 
 inline
 void ExternalFilterFP::nuke_denormals()
 {
-    if (Vhp > -1e-12f && Vhp < 1e-12f)
-        Vhp = 0;
-    if (Vlp > -1e-12f && Vlp < 1e-12f)
-        Vlp = 0;
+	for (int i = 0;i < 2;i++)
+	{
+		if (Vhp[i] > -1e-12f && Vhp[i] < 1e-12f)
+			Vhp[i] = 0;
+		if (Vlp[i] > -1e-12f && Vlp[i] < 1e-12f)
+			Vlp[i] = 0;
+	}
 }
 
 #endif // not __EXTFILTFP_H__

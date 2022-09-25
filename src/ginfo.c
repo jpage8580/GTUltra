@@ -8,6 +8,7 @@
 #include "ginfo.h"
 
 int clearInfoLine = 0;
+int forceInfoLine = 0;
 
 int lastInfoDisplayed = INFO_CLEAR;
 void infoDisplay()
@@ -189,7 +190,7 @@ void displayWaveTableLeft(GTOBJECT *gt, char *leftright)
 	else if (ldata < 0xf0)
 	{
 		waveformDisplayInfo.displayOnOff = 1;
-		waveformDisplayInfo.value = ldata-0xe0;
+		waveformDisplayInfo.value = ldata - 0xe0;
 		waveformDisplayInfo.destAddress = &ltable[WTBL][editorInfo.etpos];
 		sprintf(infoTextBuffer, "(%s):Inaudible waveform $%02X (converts to %02X)", leftright, ldata, ldata - 0xe0);
 	}
@@ -394,8 +395,18 @@ void displayPatternInfo(GTOBJECT *gt)
 	}
 	infoWaitMS = 0;
 
-	if (editorInfo.etnum == lastInfoTableNum && editorInfo.etpos == lastInfoTablePos && c2 == lastInfoPatternCh && gt->editorInfo[c2].epnum == lastInfoPattern && editorInfo.eppos == lastInfoPatternPos && editorInfo.editmode == lastEditWindow)
+	if (transportLoopPatternSelectArea)
+	{
+		sprintf(textbuffer, "%x hit loop %x %x   ", jdebug[15]++, editorInfo.editmode, lastEditWindow);
+		printtext(70, 12, 0xe, textbuffer);
+
+	}
+
+	if (editorInfo.etnum == lastInfoTableNum && editorInfo.etpos == lastInfoTablePos && c2 == lastInfoPatternCh && gt->editorUndoInfo.editorInfo[c2].epnum == lastInfoPattern && editorInfo.eppos == lastInfoPatternPos && editorInfo.editmode == lastEditWindow)
 		return;
+
+
+
 
 	waveformDisplayInfo.displayOnOff = 0;
 
@@ -403,16 +414,22 @@ void displayPatternInfo(GTOBJECT *gt)
 	lastInfoTableNum = editorInfo.etnum;
 	lastInfoTablePos = editorInfo.etpos;
 	lastInfoPatternCh = c2;
-	lastInfoPattern = gt->editorInfo[c2].epnum;
+	lastInfoPattern = gt->editorUndoInfo.editorInfo[c2].epnum;
 	lastInfoPatternPos = editorInfo.eppos;
 	lastEditWindow = editorInfo.editmode;
 
-	if (pattern[gt->editorInfo[c2].epnum][editorInfo.eppos * 4 + 2])	// instruction not 0?
+	if (forceInfoLine)
 	{
-		int instr = pattern[gt->editorInfo[c2].epnum][editorInfo.eppos * 4 + 2];
+		forceInfoLine = 0;
+		return;
+	}
+
+	if (pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 2])	// instruction not 0?
+	{
+		int instr = pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 2];
 		int instrIndex = instr - 1;
 
-		int data = pattern[gt->editorInfo[c2].epnum][editorInfo.eppos * 4 + 3];
+		int data = pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 3];
 
 		if (instr == 1 || instr == 2 || instr == 3)
 		{
@@ -421,15 +438,15 @@ void displayPatternInfo(GTOBJECT *gt)
 		}
 		else if (instr == 5 || instr == 6 || instr == 0xb)
 		{
-			int nybHi = (pattern[gt->editorInfo[c2].epnum][editorInfo.eppos * 4 + 3] & 0xf0) >> 4;
-			int nybLo = pattern[gt->editorInfo[c2].epnum][editorInfo.eppos * 4 + 3] & 0xf;
+			int nybHi = (pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 3] & 0xf0) >> 4;
+			int nybLo = pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 3] & 0xf;
 			sprintf(infoTextBuffer, patternInstructionInfoString[instrIndex], nybHi, nybLo);
 		}
 		else if (instr == 7 || instr == 8 || instr == 9 || instr == 0xa || instr == 0xc || instr == 0xd)
 		{
 			if (instr == 7)
 			{
-				waveformDisplayInfo.destAddress = &pattern[gt->editorInfo[c2].epnum][editorInfo.eppos * 4 + 3];
+				waveformDisplayInfo.destAddress = &pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 3];
 				waveformDisplayInfo.displayOnOff = 1;
 				waveformDisplayInfo.value = data;
 			}

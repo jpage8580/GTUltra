@@ -13,7 +13,14 @@ typedef struct
 	int espos;	//[MAX_CHN];
 	int esend;	//[MAX_CHN];
 	int epnum;	//int epnum[MAX_CHN];
+
 }CHN_EDITOR_INFO;
+
+typedef struct
+{
+	CHN_EDITOR_INFO editorInfo[MAX_PLAY_CH];
+//	int expandOrderListView;
+}EDITOR_UNDO_INFO;
 
 typedef struct
 {
@@ -26,13 +33,16 @@ typedef struct
   unsigned char newnote;
   unsigned pattptr;
   unsigned char pattnum;
-  unsigned char songptr;
-  unsigned char songLoopPtr;
+  unsigned int songptr;
+  unsigned int nextPatternTriggered;
+  unsigned int songLoopPtr;
   unsigned char repeat;
   unsigned short freq;
   unsigned char gate;
   unsigned char wave;
   unsigned short pulse;
+  unsigned char pan;
+
   unsigned char ptr[2];
   unsigned char pulsetime;
   unsigned char wavetime;
@@ -83,8 +93,9 @@ typedef struct
 	int songinit;
 	int lastsonginit;
 	CHN chn[MAX_PLAY_CH];
-	CHN_EDITOR_INFO editorInfo[MAX_PLAY_CH];
+//	CHN_EDITOR_INFO editorInfo[MAX_PLAY_CH];
 
+	EDITOR_UNDO_INFO editorUndoInfo;	//
 
 	// Loop info
 	/*
@@ -97,6 +108,7 @@ typedef struct
 	CHN patternLoopEndChn[MAX_PLAY_CH];
 	CHN tempPlayPatternChn[MAX_PLAY_CH];
 	int masterLoopChannel;	// This is the channel (0-12) that is checked to know if there's a loop END. If so, all channels reset to the correct position
+	int masterLoopSubSong;	// This is the subsong which is controlling the master loop channel
 	int loopEnabledFlag;
 	int interPatternLoopEnabledFlag;
 	int disableLoopSearch;
@@ -156,4 +168,8 @@ int getFilterResonance(GTOBJECT *gt, int ch);
 int getFilterCutoff(GTOBJECT *gt, int ch);
 
 int getClosestNote(int freq);
+
+void updateExpandedSeq(int c, CHN *cptr, GTOBJECT *gt);
+void updateCompressedSeq(int c, CHN *cptr, GTOBJECT *gt);
+
 #endif

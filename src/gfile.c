@@ -74,8 +74,12 @@ int fileselector(char *name, char *path, char *filter, char *title, int filemode
 	}
 #endif
 
+	int originalFileMode = filemode;
 	// Read new directory
 NEWPATH:
+
+	filemode = originalFileMode;	// JP - Restore filemode (we may be saving, but changed folder, which would set filemode to 0)
+
 	getcwd(path, MAX_PATHNAME);
 	files = 0;
 	// Deallocate old names
@@ -254,6 +258,7 @@ NEWPATH:
 				}
 
 				// Select file from list
+				// filemode 3 = SAVE
 				if ((mousey >= 3) && (mousey <= 3 + VISIBLEFILES + 2) && (mousex >= 6 + 10) && (mousex <= 73 + 10))
 				{
 					if (filemode != 3)
@@ -265,6 +270,10 @@ NEWPATH:
 
 					if (!direntry[filepos].attribute)
 						strcpy(name, direntry[filepos].name);
+
+
+					if (direntry[filepos].attribute)
+						filemode = 0;
 
 					if ((!prevmouseb) && (lastclick) && (lastfile == filepos)) goto ENTERFILE;
 				}
@@ -466,7 +475,7 @@ NEWPATH:
 			switch (rawkey)
 			{
 			case KEY_Y:
-				exitfilesel = 0;
+				exitfilesel = 1;		// JP FIX for V1.2.3
 				break;
 			case KEY_N:
 				checkForFileExists = 0;
@@ -584,7 +593,7 @@ void editstring(char *buffer, int maxlength)
 		if (len < maxlength - 1)
 		{
 			buffer[len] = key;
-			buffer[len + 1] = 0;
+			buffer[len + 1] = 0;			
 		}
 	}
 	if ((rawkey == KEY_BACKSPACE) && (len > 0))

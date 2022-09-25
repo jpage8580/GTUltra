@@ -84,6 +84,7 @@ void WaveformGenerator::writePW_LO(reg8 pw_lo)
 void WaveformGenerator::writePW_HI(reg8 pw_hi)
 {
   pw = (pw_hi << 8) & 0xf00 | pw & 0x0ff;
+  pan = (pw_hi >> 4) & 0xf;
 }
 
 void WaveformGenerator::writeCONTROL_REG(reg8 control)

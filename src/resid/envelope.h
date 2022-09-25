@@ -20,6 +20,8 @@
 #ifndef __ENVELOPE_H__
 #define __ENVELOPE_H__
 
+#include <stdio.h>
+
 #include "siddefs.h"
 
 // ----------------------------------------------------------------------------
@@ -201,6 +203,7 @@ void EnvelopeGenerator::clock(cycle_count delta_t)
   if (rate_step <= 0) {
     rate_step += 0x7fff;
   }
+
 
   while (delta_t) {
     if (delta_t < rate_step) {

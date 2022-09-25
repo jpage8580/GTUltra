@@ -1,8 +1,9 @@
 #ifndef GINSTR_H
 #define GINSTR_H
 
-#ifndef GINSTR_C
+#define LAST_INST 10
 
+#ifndef GINSTR_C
 extern INSTR instrcopybuffer;
 #endif
 
