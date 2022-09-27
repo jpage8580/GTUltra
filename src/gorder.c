@@ -46,7 +46,6 @@ void orderlistcommands(GTOBJECT *gt)
 			orderListHandleHexInputExpandedView(gt);
 	}
 
-
 	switch (rawkey)
 	{
 	case KEY_UP:
@@ -251,7 +250,7 @@ void orderlistcommands(GTOBJECT *gt)
 				int transposeOnly = 0;
 				if (editorInfo.escolumn > 2)
 					transposeOnly++;
-				orderListPasteToCursor_External(gt,0, transposeOnly);
+				orderListPasteToCursor_External(gt, 0, transposeOnly);
 			}
 		}
 		break;
@@ -260,7 +259,7 @@ void orderlistcommands(GTOBJECT *gt)
 		if (shiftOrCtrlPressed)
 		{
 			if (editorInfo.expandOrderListView == 1)
-				orderListPasteToCursor_External(gt,1, 0);
+				orderListPasteToCursor_External(gt, 1, 0);
 		}
 		break;
 
@@ -505,11 +504,17 @@ void orderlistcommands(GTOBJECT *gt)
 					editorInfo.eschn = maxCh - 1;
 
 				setMasterLoopChannel(gt, "debug_1");
-				if (shiftOrCtrlPressed)
+
+			}
+			if (shiftOrCtrlPressed)
+			{
+				if (editorInfo.esmarkchn == -1)
 				{
-					editorInfo.esmarkchn = -1;
-					editorInfo.esmarkchnend = -1;
+					editorInfo.esmarkchn = editorInfo.esmarkchnend = editorInfo.eschn;
+					editorInfo.esmarkstart = editorInfo.esmarkend = editorInfo.eseditpos;
 				}
+				else
+					editorInfo.esmarkchnend = editorInfo.eschn;
 			}
 		}
 
@@ -537,12 +542,20 @@ void orderlistcommands(GTOBJECT *gt)
 					editorInfo.eschn = 0;
 
 				setMasterLoopChannel(gt, "debug_2");
-				if (shiftOrCtrlPressed)
-				{
-					editorInfo.esmarkchn = -1;
-					editorInfo.esmarkchnend = -1;
-				}
 			}
+
+			if (shiftOrCtrlPressed)
+			{
+				if (editorInfo.esmarkchn == -1)
+				{
+					editorInfo.esmarkchn = editorInfo.esmarkchnend = editorInfo.eschn;
+					editorInfo.esmarkstart = editorInfo.esmarkend = editorInfo.eseditpos;
+				}
+				else
+					editorInfo.esmarkchnend = editorInfo.eschn;
+			}
+
+
 		}
 		break;
 
@@ -565,8 +578,22 @@ void orderlistcommands(GTOBJECT *gt)
 		}
 		else
 		{
+			if (shiftOrCtrlPressed)
+			{
+				if (editorInfo.esmarkchn == -1)
+				{
+					editorInfo.esmarkchn = editorInfo.esmarkchnend = editorInfo.eschn;
+					editorInfo.esmarkstart = editorInfo.esmarkend = editorInfo.eseditpos;
+				}
+			}
+
 			if (editorInfo.eseditpos > 0)
+			{
+
 				editorInfo.eseditpos--;
+				if (shiftOrCtrlPressed)
+					editorInfo.esmarkend = editorInfo.eseditpos;
+			}
 		}
 		break;
 
@@ -591,8 +618,21 @@ void orderlistcommands(GTOBJECT *gt)
 		}
 		else
 		{
+			if (shiftOrCtrlPressed)
+			{
+				if (editorInfo.esmarkchn == -1)
+				{
+					editorInfo.esmarkchn = editorInfo.esmarkchnend = editorInfo.eschn;
+					editorInfo.esmarkstart = editorInfo.esmarkend = editorInfo.eseditpos;
+				}
+			}
+
 			if (editorInfo.eseditpos < 0x7ff)
+			{
 				editorInfo.eseditpos++;
+				if (shiftOrCtrlPressed)
+					editorInfo.esmarkend = editorInfo.eseditpos;
+			}
 		}
 		break;
 	}
@@ -1218,10 +1258,10 @@ void playFromCurrentPosition(GTOBJECT *gt, int currentPos)
 void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, int focusChannel, int enableSIDWrites)
 {
 
-//	sprintf(textbuffer, "spp %d ssp %d, fc %d mlc %d", startPatternPos, startSongPos, focusChannel, gt->masterLoopChannel);
-//	printtext(PANEL_NAMES_X, PANEL_NAMES_Y + 3, 0xe, textbuffer);
+	//	sprintf(textbuffer, "spp %d ssp %d, fc %d mlc %d", startPatternPos, startSongPos, focusChannel, gt->masterLoopChannel);
+	//	printtext(PANEL_NAMES_X, PANEL_NAMES_Y + 3, 0xe, textbuffer);
 
-	//		int t1 = followplay;
+		//		int t1 = followplay;
 	int t2 = gt->interPatternLoopEnabledFlag;
 
 	if (editorInfo.expandOrderListView == 0)
@@ -1522,8 +1562,8 @@ void countInstrumentsInPattern(int pat)
 void setMasterLoopChannel(GTOBJECT *gt, char *debugText)
 {
 
-//	sprintf(textbuffer, "%x master %s", jdebug[15]++, debugText);
-//	printtext(70, 12, 0xe, textbuffer);
+	//	sprintf(textbuffer, "%x master %s", jdebug[15]++, debugText);
+	//	printtext(70, 12, 0xe, textbuffer);
 
 	int loopChannel = -1;
 	if (editorInfo.editmode == EDIT_PATTERN)
@@ -1996,7 +2036,7 @@ void orderListPasteToCursor_External(GTOBJECT *gt, int insert, int transposeOnly
 			{
 				for (int y = 0;y < copyPasteH;y++)
 				{
-					orderListInsertRowAtCursor_External(gt,editorInfo.esnum, xd, editorInfo.eseditpos);
+					orderListInsertRowAtCursor_External(gt, editorInfo.esnum, xd, editorInfo.eseditpos);
 				}
 			}
 		}
@@ -2011,7 +2051,7 @@ void orderListPasteToCursor_External(GTOBJECT *gt, int insert, int transposeOnly
 
 			if (transposeOnly)
 			{
-				if (yd >= songOrderLength[editorInfo.esnum][xd]-1)
+				if (yd >= songOrderLength[editorInfo.esnum][xd] - 1)
 					break;
 			}
 			else
@@ -2041,7 +2081,7 @@ void orderListInsertRowAtCursor_External(GTOBJECT *gt, int sng, int chn, int row
 	songOrderPatterns[sng][chn][row] = 0;
 	songOrderTranspose[sng][chn][row] = 0;
 
-//	int index = findFirstEndMarkerIndex(sng, chn);
+	//	int index = findFirstEndMarkerIndex(sng, chn);
 	songOrderLength[sng][chn]++;
 
 
@@ -2064,7 +2104,7 @@ void orderListDeleteRowAtCursor_External(int sng, int chn, int row)
 	songOrderTranspose[sng][chn][MAX_SONGLEN_EXPANDED - 1] = 0;
 	songOrderLength[sng][chn]--;
 
-	songCompressedSize[sng][chn] = generateCompressedSongChannel(sng,chn, 1);
+	songCompressedSize[sng][chn] = generateCompressedSongChannel(sng, chn, 1);
 }
 
 
@@ -2084,15 +2124,15 @@ void orderListInsert_External(GTOBJECT *gt)
 	{
 		for (int i = x;i < (x + w);i++)
 		{
-			orderListInsertRowAtCursor_External(gt,editorInfo.esnum, i, y);
+			orderListInsertRowAtCursor_External(gt, editorInfo.esnum, i, y);
 		}
 	}
 
-//	for (int i = x;i < (x + w);i++)
-//	{
-	//	int index = findFirstEndMarkerIndex(editorInfo.esnum, i);
-	//	songOrderLength[editorInfo.esnum][i] = index;
-	//}
+	//	for (int i = x;i < (x + w);i++)
+	//	{
+		//	int index = findFirstEndMarkerIndex(editorInfo.esnum, i);
+		//	songOrderLength[editorInfo.esnum][i] = index;
+		//}
 }
 
 void orderListDelete_External()
