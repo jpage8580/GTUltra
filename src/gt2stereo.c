@@ -136,7 +136,7 @@ char tempSngFilename[MAX_PATHNAME];
 char backupSngFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.3.0";
+char *programname = "$VER: GTUltra V1.3.1";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];

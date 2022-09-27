@@ -550,6 +550,28 @@ void playroutine(GTOBJECT *gt)
 					{
 						gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = iptr->ad;
 						gt->sidreg[sidIndex][0x6 + 7 * (c % 3)] = iptr->sr;
+
+						if (stereoMode == 2)	// TrueStereo panning enabled
+						{
+							// set pan
+							int panMin = instr[cptr->instr].pan >> 4;
+							int panMax = instr[cptr->instr].pan & 0xf;
+
+							if (panMax > panMin)
+								cptr->pan = panMin += rand() % (panMax - panMin);
+							else if (panMin > panMax)
+								cptr->pan = panMax += rand() % (panMin - panMax);
+							else
+								cptr->pan = panMin;
+						}
+						else if (monomode == 1)	// mono
+							cptr->pan = 0x7;
+						else
+						{
+							int sidChip = c / 3;
+							int pan = SID_StereoPanPositions[(maxSIDChannels / 3) - 1][sidChip];
+							cptr->pan = pan;
+						}
 					}
 
 					int rIndex = iptr->sr & 0xf;
@@ -1160,6 +1182,7 @@ void playroutine(GTOBJECT *gt)
 					cptr->gate = 0xff;
 				if (newnote <= LASTNOTE)
 				{
+
 					cptr->requestKeyOff = 0xff;
 					playingChannelOnKey[c] = -1;
 
@@ -1177,37 +1200,7 @@ void playroutine(GTOBJECT *gt)
 									gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = adparam >> 8;
 									gt->sidreg[sidIndex][0x6 + 7 * (c % 3)] = adparam & 0xff;
 
-									if (stereoMode == 2)	// TrueStereo panning enabled
-									{
-										// set pan
-										int panMin = instr[cptr->instr].pan >> 4;
-										int panMax = instr[cptr->instr].pan & 0xf;
-
-										if (panMax > panMin)
-											cptr->pan = panMin += rand() % (panMax - panMin);
-										else if (panMin > panMax)
-											cptr->pan = panMax += rand() % (panMin - panMax);
-										else
-											cptr->pan = panMin;
-									}
-									else if (monomode == 1)	// mono
-										cptr->pan = 0x7;
-									else
-									{
-										int sidChip = c / 3;
-										int pan = SID_StereoPanPositions[(maxSIDChannels / 3) - 1][sidChip];
-										cptr->pan = pan;
-
-										/*
-																				if (sidChip == 0 || sidChip == 2)
-																					cptr->pan = 0x0;	// hard left
-																				else
-																					cptr->pan = 0xe;	// hard right
-
-																				if (maxSIDChannels == 9 && sidChip == 2)	// 3 SIDS? 3rd SID = center
-																					cptr->pan = 0x7;
-										*/
-									}
+// pan code was here
 								}
 							}
 						}
@@ -1215,6 +1208,7 @@ void playroutine(GTOBJECT *gt)
 				}
 			}
 		NEXTCHN:
+
 			if (cptr->mute)
 			{
 				if (!gt->noSIDWrites)
