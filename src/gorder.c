@@ -446,7 +446,7 @@ void orderlistcommands(GTOBJECT *gt)
 		}
 		else
 		{
-			editorInfo.eseditpos = songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1;	//  MAX_SONGLEN_EXPANDED - 1;
+			editorInfo.eseditpos = songOrderLength[editorInfo.esnum][editorInfo.eschn];		// 1.3.4
 		}
 		break;
 
@@ -2073,7 +2073,7 @@ void orderListPasteToCursor_External(GTOBJECT *gt, int insert, int transposeOnly
 
 void orderListInsertRowAtCursor_External(GTOBJECT *gt, int sng, int chn, int row)
 {
-	for (int y = MAX_SONGLEN_EXPANDED - 1;y >= row;y--)
+	for (int y = MAX_SONGLEN_EXPANDED - 2;y >= row;y--)	// 1.3.4
 	{
 		songOrderPatterns[sng][chn][y] = songOrderPatterns[editorInfo.esnum][chn][y - 1];
 		songOrderTranspose[sng][chn][y] = songOrderTranspose[editorInfo.esnum][chn][y - 1];
@@ -2095,13 +2095,13 @@ void orderListInsertRowAtCursor_External(GTOBJECT *gt, int sng, int chn, int row
 
 void orderListDeleteRowAtCursor_External(int sng, int chn, int row)
 {
-	for (int y = row;y < MAX_SONGLEN_EXPANDED - 1;y++)
+	for (int y = row;y < MAX_SONGLEN_EXPANDED - 2;y++)	// 1.3.4
 	{
 		songOrderPatterns[sng][chn][y] = songOrderPatterns[editorInfo.esnum][chn][y + 1];
 		songOrderTranspose[sng][chn][y] = songOrderTranspose[editorInfo.esnum][chn][y + 1];
 	}
-	songOrderPatterns[sng][chn][MAX_SONGLEN_EXPANDED - 1] = 0;
-	songOrderTranspose[sng][chn][MAX_SONGLEN_EXPANDED - 1] = 0;
+	songOrderPatterns[sng][chn][MAX_SONGLEN_EXPANDED - 2] = 0;		// 1.3.4
+	songOrderTranspose[sng][chn][MAX_SONGLEN_EXPANDED - 2] = 0;
 	songOrderLength[sng][chn]--;
 
 	songCompressedSize[sng][chn] = generateCompressedSongChannel(sng, chn, 1);
