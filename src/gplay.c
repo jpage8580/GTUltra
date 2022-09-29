@@ -259,7 +259,7 @@ void playroutine(GTOBJECT *gt)
 				}
 				else
 				{
-					if (gt->editorUndoInfo.editorInfo[c2].espos >= songOrderLength[songNum][c3])
+					if (gt->editorUndoInfo.editorInfo[c2].espos >= songOrderLength[songNum][c3] - 1)	// 1.3.3
 						gt->songinit = 0x01;
 				}
 
@@ -268,7 +268,7 @@ void playroutine(GTOBJECT *gt)
 
 		for (c = 0; c < MAX_PLAY_CH; c++)
 		{
-			
+
 			cptr->instr = 0;
 			cptr->nextPatternTriggered = 0;
 			cptr->releaseTime = 0;
@@ -1200,7 +1200,7 @@ void playroutine(GTOBJECT *gt)
 									gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = adparam >> 8;
 									gt->sidreg[sidIndex][0x6 + 7 * (c % 3)] = adparam & 0xff;
 
-// pan code was here
+									// pan code was here
 								}
 							}
 						}
@@ -1384,9 +1384,9 @@ void playroutine(GTOBJECT *gt)
 		{
 			gt->chn[gt->masterLoopChannel].songLoopPtr = gt->chn[gt->masterLoopChannel].songptr;
 
-	//		sprintf(textbuffer, "end song %x mlc %x ec %x em %x %d", gt->chn[gt->masterLoopChannel].songLoopPtr, gt->masterLoopChannel, editorInfo.epchn, editorInfo.editmode, jpd++);
-	//		printtext(PANEL_NAMES_X + 24, PANEL_NAMES_Y + 3, 0xe, textbuffer);
-			//	printtext(70, 36, 0xe, textbuffer);
+			//		sprintf(textbuffer, "end song %x mlc %x ec %x em %x %d", gt->chn[gt->masterLoopChannel].songLoopPtr, gt->masterLoopChannel, editorInfo.epchn, editorInfo.editmode, jpd++);
+			//		printtext(PANEL_NAMES_X + 24, PANEL_NAMES_Y + 3, 0xe, textbuffer);
+					//	printtext(70, 36, 0xe, textbuffer);
 			calculateLoopInfo2(gt->psnum, gt->masterLoopChannel, gt->chn[gt->masterLoopChannel].songptr - 1, &gtLoopObject);
 			gtObject.loopEnabledFlag = 1;
 		}

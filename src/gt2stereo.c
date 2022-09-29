@@ -136,7 +136,7 @@ char tempSngFilename[MAX_PATHNAME];
 char backupSngFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.3.2";
+char *programname = "$VER: GTUltra V1.3.3";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -4506,7 +4506,6 @@ void checkForMouseInOrderList(GTOBJECT *gt, int maxCh)
 				editorInfo.escolumn = newcolumn;
 				setMasterLoopChannel(gt, "debug_f");
 				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
-
 			}
 			else
 			{

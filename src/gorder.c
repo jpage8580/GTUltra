@@ -1271,7 +1271,7 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 	}
 	else
 	{
-		if (startSongPos >= songOrderLength[editorInfo.esnum][focusChannel % 6])
+		if (startSongPos >= songOrderLength[editorInfo.esnum][focusChannel % 6]-1)	// 1.3.3
 			return;
 	}
 
@@ -1372,7 +1372,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 	}
 	else
 	{
-		if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn])
+		if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn]-1)	// 1.3.3
 			return;
 	}
 	// V1.2.2. fix - rather than using eschn or epchn, use masterLoopChannel instead. works if you're editing pattern or song.
@@ -1851,7 +1851,7 @@ int handleEnterInCompressedView(GTOBJECT *gt)
 
 int handleEnterInExpandedView(GTOBJECT *gt)
 {
-	if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn])
+	if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn]-1)	// 1.3.3
 		return 0;
 
 	if (!shiftOrCtrlPressed)
