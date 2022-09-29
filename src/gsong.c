@@ -2446,12 +2446,13 @@ void generateExpandedSongChannel(int s, int c)
 	int expandedLoopPos = 0;
 	for (int i = 0;i < songlen[s][c] + 1;i++)
 	{
-		if (i == loopPos)
-			expandedLoopPos = p;
 
 		int gotPattern = 1;
 		int repeatCount = 1;
 		do {
+
+			if (i == loopPos)
+				expandedLoopPos = p;
 
 			gotPattern = 1;
 
