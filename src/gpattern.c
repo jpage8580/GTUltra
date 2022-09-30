@@ -1655,6 +1655,7 @@ void handleShiftSpace(GTOBJECT *gt, int playChannel, int startPatternPos, int fo
 	// (This preserves the previously keyed on instruments)
 	// However, if any of the patterns in the pattern editor do not match the order list, use the originan PLAY_PATTERN option.
 	// 
+
 	if (enableLoop)
 	{
 

@@ -136,7 +136,7 @@ char tempSngFilename[MAX_PATHNAME];
 char backupSngFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.3.5";
+char *programname = "$VER: GTUltra V1.3.6";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -1990,7 +1990,6 @@ void generalcommands(GTOBJECT *gt)
 
 			if (editorInfo.editmode == EDIT_ORDERLIST)	// 1.1.7: Fast select / playback when in OrderList. Just press F3 to play from the cursor pos
 			{
-
 				orderSelectPatternsFromSelected(gt);
 				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
 			}
