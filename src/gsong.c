@@ -2337,7 +2337,7 @@ void compressChannel(int s, int c, int startIndex, int endIndex, int *p, int *la
 			if (transpose & 0x80)
 			{
 				if (transpose & 0x7f)
-					compressedTrans = TRANSDOWN - (transpose & 0x7f);
+					compressedTrans = TRANSDOWN + ((0x10-transpose) & 0x7f);	// 1.3.7 fix. Negative transpose was compressed back to repeat values instead
 				else
 					compressedTrans = TRANSUP;
 			}
