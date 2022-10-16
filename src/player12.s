@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------------
-; GoatTracker 3SID playroutine
+; GoatTracker 4SID playroutine - player12.s
 ;
 ; NOTE: This playroutine source code does not fall under the GPL license!
 ; Use it, or song binaries created from it freely for any purpose, commercial
@@ -635,7 +635,10 @@ mt_play:
 
 mt_initsongnum:
                 ldy #$00
-                bmi mt_filtstep
+	            bpl m_jp1
+				jmp mt_filtstep
+
+m_jp1:
                 txa
                 ldx #NUMCHANNELS * 14 - 1
 mt_resetloop:
@@ -1579,7 +1582,9 @@ mt_loadregs:
                 bne mt_sfxexec
               .ENDIF
 			    cpx #63
-				bcs mt_loadregs_sid4
+				bcc mt_jp2
+				jmp mt_loadregs_sid4
+mt_jp2:
 				cpx #42
 				bcs mt_loadregs_sid3
                 cpx #21

@@ -1490,6 +1490,10 @@ void relocator(GTOBJECT *gt)
 	if (maxSIDChannels >= 9)
 		songSize = ((songs + 1) / 2)*maxSIDChannels;
 
+//	sprintf(textbuffer,";JP: songs %d songsize %d\n", songs, songSize);
+//	insertlabel(textbuffer);
+
+
 	for (c = 0; c < songSize; c++)		// * 6 JP
 	{
 		sprintf(textbuffer, "mt_song%d", c);

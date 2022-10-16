@@ -399,7 +399,8 @@ void orderlistcommands(GTOBJECT *gt)
 			editorInfo.eppos = 0;
 			editorInfo.epview = -VISIBLEPATTROWS / 2;
 			editorInfo.editmode = EDIT_PATTERN;
-			if (editorInfo.epchn == editorInfo.epmarkchn) editorInfo.epmarkchn = -1;
+			if (editorInfo.epchn == editorInfo.epmarkchn)
+				editorInfo.epmarkchn = -1;
 		}
 		break;
 
@@ -1789,7 +1790,11 @@ void orderListHandleHexInputExpandedView(GTOBJECT *gt)
 	songCompressedSize[editorInfo.esnum][editorInfo.eschn] = generateCompressedSongChannel(editorInfo.esnum, editorInfo.eschn, 1);
 
 	int index = findFirstEndMarkerIndex(editorInfo.esnum, editorInfo.eschn);
-	songOrderLength[editorInfo.esnum][editorInfo.eschn] = index;
+	songOrderLength[editorInfo.esnum][editorInfo.eschn] = index+1;
+
+	//sprintf(textbuffer, "j %x, chn %x, songorderLen %x\n", editorInfo.esnum, editorInfo.eschn, (songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1));
+	//printtext(70, 1, 0xe, textbuffer);
+
 	//	songOrderPatterns[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos]++;
 	return;
 }
@@ -1851,6 +1856,10 @@ int handleEnterInCompressedView(GTOBJECT *gt)
 
 int handleEnterInExpandedView(GTOBJECT *gt)
 {
+
+//	sprintf(textbuffer, "snd %x, chn %x, songorderLen %x\n", editorInfo.esnum, editorInfo.eschn,(songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1));
+//	printtext(70,1, 0xe, textbuffer);
+
 	if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn]-1)	// 1.3.3
 		return 0;
 
@@ -2061,7 +2070,7 @@ void orderListPasteToCursor_External(GTOBJECT *gt, int insert, int transposeOnly
 			}
 		}
 		int index = findFirstEndMarkerIndex(editorInfo.esnum, xd);
-		songOrderLength[editorInfo.esnum][xd] = index;
+		songOrderLength[editorInfo.esnum][xd] = index+1;	// 1.3.8
 
 		songCompressedSize[editorInfo.esnum][xd] = generateCompressedSongChannel(editorInfo.esnum, xd, 1);
 
@@ -2075,8 +2084,8 @@ void orderListInsertRowAtCursor_External(GTOBJECT *gt, int sng, int chn, int row
 {
 	for (int y = MAX_SONGLEN_EXPANDED - 2;y >= row;y--)	// 1.3.4
 	{
-		songOrderPatterns[sng][chn][y] = songOrderPatterns[editorInfo.esnum][chn][y - 1];
-		songOrderTranspose[sng][chn][y] = songOrderTranspose[editorInfo.esnum][chn][y - 1];
+		songOrderPatterns[sng][chn][y] = songOrderPatterns[sng][chn][y - 1];
+		songOrderTranspose[sng][chn][y] = songOrderTranspose[sng][chn][y - 1];
 	}
 	songOrderPatterns[sng][chn][row] = 0;
 	songOrderTranspose[sng][chn][row] = 0;
@@ -2084,11 +2093,13 @@ void orderListInsertRowAtCursor_External(GTOBJECT *gt, int sng, int chn, int row
 	//	int index = findFirstEndMarkerIndex(sng, chn);
 	songOrderLength[sng][chn]++;
 
+//	sprintf(textbuffer, "sng %x, chn %x songorderLen %x\n", sng,chn, (songOrderLength[sng][chn] - 1));
+//	printtext(70, 1, 0xe, textbuffer);
 
-	int c2 = getActualChannel(sng, chn);	// 0-12
+	int c2 = getActualChannel(sng, chn);	// 0-11
 
-	if (gt->editorUndoInfo.editorInfo[chn].espos >= row)
-		gt->editorUndoInfo.editorInfo[chn].espos++;
+	if (gt->editorUndoInfo.editorInfo[c2].espos >= row)	// 1.3.8 Was chn
+		gt->editorUndoInfo.editorInfo[c2].espos++;
 
 	songCompressedSize[sng][chn] = generateCompressedSongChannel(sng, chn, 1);
 }
@@ -2158,7 +2169,7 @@ void orderListDelete_External()
 	for (int i = x;i < (x + w);i++)
 	{
 		int index = findFirstEndMarkerIndex(editorInfo.esnum, i);
-		songOrderLength[editorInfo.esnum][i] = index;
+		songOrderLength[editorInfo.esnum][i] = index+1;
 	}
 
 	editorInfo.esmarkchn = -1;
