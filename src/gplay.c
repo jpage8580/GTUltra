@@ -77,17 +77,17 @@ void initchannels(GTOBJECT *gt)
 	{
 		gt->chn[c].trans = 0;
 		gt->chn[c].instr = 1;
-		if (multiplier)
-			cptr->tempo = 6 * multiplier - 1;
+		if (editorInfo.multiplier)
+			cptr->tempo = 6 * editorInfo.multiplier - 1;
 		else
 			cptr->tempo = 6 - 1;
 		cptr++;
 	}
 
-	if (multiplier)
+	if (editorInfo.multiplier)
 	{
-		gt->funktable[0] = 9 * multiplier - 1;
-		gt->funktable[1] = 6 * multiplier - 1;
+		gt->funktable[0] = 9 * editorInfo.multiplier - 1;
+		gt->funktable[1] = 6 * editorInfo.multiplier - 1;
 	}
 	else
 	{
@@ -186,8 +186,8 @@ void playtestnote(int note, int ins, int chnnum, GTOBJECT *gt)
 			if (!gt->noSIDWrites)
 			{
 				int i = c2 / 3;
-				gt->sidreg[i][0x5 + (c2 % 3) * 7] = (adparam >> 8); // Hardrestart
-				gt->sidreg[i][0x6 + (c2 % 3) * 7] = (adparam & 0xff);
+				gt->sidreg[i][0x5 + (c2 % 3) * 7] = (editorInfo.adparam >> 8); // Hardrestart
+				gt->sidreg[i][0x6 + (c2 % 3) * 7] = (editorInfo.adparam & 0xff);
 
 			}
 		}
@@ -245,7 +245,7 @@ void playroutine(GTOBJECT *gt)
 
 		if ((gt->songinit == 0x02) || (gt->songinit == 0x03))
 		{
-			for (c = 0; c < maxSIDChannels; c++)
+			for (c = 0; c < editorInfo.maxSIDChannels; c++)
 			{
 				int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 				int songNum = getActualSongNumber(editorInfo.esnum, c2);
@@ -285,8 +285,8 @@ void playroutine(GTOBJECT *gt)
 			cptr->ptr[WTBL] = 0;
 			cptr->newnote = 0;
 			cptr->repeat = 0;
-			if (multiplier)
-				cptr->tick = 6 * multiplier - 1;
+			if (editorInfo.multiplier)
+				cptr->tick = 6 * editorInfo.multiplier - 1;
 			else
 				cptr->tick = 6 - 1;
 			cptr->gatetimer = instr[1].gatetimer & 0x3f;
@@ -297,16 +297,16 @@ void playroutine(GTOBJECT *gt)
 
 			if (cptr->tempo < 2) cptr->tempo = 0;
 
-			if (c < maxSIDChannels)
+			if (c < editorInfo.maxSIDChannels)
 			{
 				switch (gt->songinit)
 				{
 				case PLAY_BEGINNING:
-					if (multiplier)
+					if (editorInfo.multiplier)
 					{
-						gt->funktable[0] = 9 * multiplier - 1;
-						gt->funktable[1] = 6 * multiplier - 1;
-						cptr->tempo = 6 * multiplier - 1;
+						gt->funktable[0] = 9 * editorInfo.multiplier - 1;
+						gt->funktable[1] = 6 * editorInfo.multiplier - 1;
+						cptr->tempo = 6 * editorInfo.multiplier - 1;
 					}
 					else
 					{
@@ -344,7 +344,7 @@ void playroutine(GTOBJECT *gt)
 
 		int baseSong = getActualSongNumber(gt->psnum, 0);
 
-		for (int i = 0;i < maxSIDChannels;i++)
+		for (int i = 0;i < editorInfo.maxSIDChannels;i++)
 		{
 
 			int j = i / 6;
@@ -447,10 +447,10 @@ void playroutine(GTOBJECT *gt)
 
 			// Reset tempo in jammode
 			// JP 22Aug2022 - Fix .. Only had one & 
-			if ((gt->songinit == PLAY_STOPPED && cptr->tempo < 2) || c >= maxSIDChannels)// JP FEB 17 added maxSIDChannel check
+			if ((gt->songinit == PLAY_STOPPED && cptr->tempo < 2) || c >= editorInfo.maxSIDChannels)// JP FEB 17 added maxSIDChannel check
 			{
-				if (multiplier)
-					cptr->tempo = 6 * multiplier - 1;
+				if (editorInfo.multiplier)
+					cptr->tempo = 6 * editorInfo.multiplier - 1;
 				else
 					cptr->tempo = 6 - 1;
 			}
@@ -569,7 +569,7 @@ void playroutine(GTOBJECT *gt)
 						else
 						{
 							int sidChip = c / 3;
-							int pan = SID_StereoPanPositions[(maxSIDChannels / 3) - 1][sidChip];
+							int pan = SID_StereoPanPositions[(editorInfo.maxSIDChannels / 3) - 1][sidChip];
 							cptr->pan = pan;
 						}
 					}
@@ -677,7 +677,7 @@ void playroutine(GTOBJECT *gt)
 				}
 				{
 					int d;
-					for (d = 0; d < maxSIDChannels; d++)
+					for (d = 0; d < editorInfo.maxSIDChannels; d++)
 						gt->chn[d].tempo = 0;
 				}
 				break;
@@ -693,7 +693,7 @@ void playroutine(GTOBJECT *gt)
 				else
 				{
 					int d;
-					for (d = 0; d < maxSIDChannels; d++)
+					for (d = 0; d < editorInfo.maxSIDChannels; d++)
 						gt->chn[d].tempo = newtempo;
 				}
 			}
@@ -969,7 +969,7 @@ void playroutine(GTOBJECT *gt)
 
 			// Tick N command
 		TICKNEFFECTS:
-			if ((!optimizerealtime) || (cptr->tick))
+			if ((!editorInfo.optimizerealtime) || (cptr->tick))
 			{
 				switch (cptr->command)
 				{
@@ -1092,9 +1092,9 @@ void playroutine(GTOBJECT *gt)
 
 
 		PULSEEXEC:
-			if (optimizepulse)
+			if (editorInfo.optimizepulse)
 			{
-				if (c < maxSIDChannels)
+				if (c < editorInfo.maxSIDChannels)
 				{
 					if ((gt->songinit != PLAY_STOPPED) && (cptr->tick == cptr->gatetimer))
 						goto GETNEWNOTES;
@@ -1104,7 +1104,7 @@ void playroutine(GTOBJECT *gt)
 			if (cptr->ptr[PTBL])
 			{
 				// Skip pulse when sequencer has been executed
-				if (optimizepulse)
+				if (editorInfo.optimizepulse)
 				{
 					if ((!cptr->tick) && (!cptr->pattptr)) goto NEXTCHN;
 				}
@@ -1153,7 +1153,7 @@ void playroutine(GTOBJECT *gt)
 			// JP Check for max playing SID count here!
 			// (we process 12 channels to allow for poly mode, but only want to process, say, 3 channels for playing song)
 
-			if ((gt->songinit == PLAY_STOPPED) || (cptr->tick != cptr->gatetimer) || (c >= maxSIDChannels))
+			if ((gt->songinit == PLAY_STOPPED) || (cptr->tick != cptr->gatetimer) || (c >= editorInfo.maxSIDChannels))
 				goto NEXTCHN;
 
 			// New notes processing
@@ -1197,8 +1197,8 @@ void playroutine(GTOBJECT *gt)
 							{
 								if (!gt->noSIDWrites)
 								{
-									gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = adparam >> 8;
-									gt->sidreg[sidIndex][0x6 + 7 * (c % 3)] = adparam & 0xff;
+									gt->sidreg[sidIndex][0x5 + 7 * (c % 3)] = editorInfo.adparam >> 8;
+									gt->sidreg[sidIndex][0x6 + 7 * (c % 3)] = editorInfo.adparam & 0xff;
 
 									// pan code was here
 								}
@@ -1261,7 +1261,7 @@ void playroutine(GTOBJECT *gt)
 
 			if (gt->chn[c3].pattptr != (markEnd) * 4)
 			{
-				for (int i = 0; i < maxSIDChannels; i++)
+				for (int i = 0; i < editorInfo.maxSIDChannels; i++)
 				{
 					gt->chn[i].pattnum = gt->patternLoopStartChn[i].pattnum;
 					gt->chn[i].songptr = gt->patternLoopStartChn[i].songptr;
@@ -1288,7 +1288,7 @@ void playroutine(GTOBJECT *gt)
 
 		if (gt->chn[gt->masterLoopChannel].advance)	// V1.3.6
 		{
-			for (int i = 0; i < maxSIDChannels; i++)
+			for (int i = 0; i < editorInfo.maxSIDChannels; i++)
 			{
 				if (gt->chn[i].pattptr == gt->loopEndChn[i].pattptr && gt->chn[i].songptr == gt->loopEndChn[i].songptr && gt->loopEndChn[i].tick == gt->chn[i].tick)
 				{
@@ -1412,7 +1412,7 @@ void playroutine(GTOBJECT *gt)
 
 void sequencer(int c, CHN *cptr, GTOBJECT *gt)
 {
-	if (c >= maxSIDChannels)
+	if (c >= editorInfo.maxSIDChannels)
 		return;
 
 	if ((gt->songinit != PLAY_STOPPED) && (cptr->pattptr == 0x7fffffff))
@@ -1562,7 +1562,7 @@ Used for accessing songorder[n] etc.
 */
 int getActualSongNumber(int currentSong, int channel)
 {
-	if (maxSIDChannels > 6)
+	if (editorInfo.maxSIDChannels > 6)
 	{
 		int baseSong = currentSong & 0xfffffffe;	// base song = 0,2,4,6,8....
 		int nextSong = baseSong + 1;	// next song = 1,3,5,9....
@@ -1580,7 +1580,7 @@ Used for accessing chn[n] array
 */
 int getActualChannel(int currentSong, int channel)
 {
-	if (maxSIDChannels > 6)
+	if (editorInfo.maxSIDChannels > 6)
 	{
 		// Return 0-11
 		int baseSong = currentSong & 1;		// 1

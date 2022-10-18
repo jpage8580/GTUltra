@@ -67,6 +67,7 @@
 
 #ifndef GOATTRK2_C
 
+
 extern char appFileName[MAX_PATHNAME];
 extern int menu;
 //extern int editmode;
@@ -79,23 +80,23 @@ extern int defaultpatternlength;
 extern int cursorflash;
 extern int cursorcolortable[];
 extern int exitprogram;
-extern int eacolumn;
+//extern int editorInfo.eacolumn;
 extern int eamode;
 extern unsigned keypreset;
 extern unsigned playerversion;
 extern int fileformat;
 extern int zeropageadr;
 extern int playeradr;
-extern unsigned sidmodel;
-extern unsigned multiplier;
-extern unsigned adparam;
-extern unsigned ntsc;
+//extern unsigned editorInfo.sidmodel;
+//extern unsigned editorInfo.multiplier;
+//extern unsigned editorInfo.adparam;
+//extern unsigned editorInfo.ntsc;
 extern unsigned patterndispmode;
 extern unsigned sidaddress;
-extern unsigned finevibrato;
-extern unsigned optimizepulse;
-extern unsigned optimizerealtime;
-extern unsigned usefinevib;
+//extern unsigned finevibrato;
+//extern unsigned editorInfo.optimizepulse;
+//extern unsigned editorInfo.optimizerealtime;
+//extern unsigned editorInfo.usefinevib;
 extern unsigned b;
 extern unsigned mr;
 extern unsigned writer;
@@ -147,7 +148,7 @@ extern short tableBackgroundColors[MAX_TABLES][MAX_TABLELEN];
 extern unsigned char paletteR[256];
 extern unsigned char paletteG[256];
 extern unsigned char paletteB[256];
-extern int maxSIDChannels;
+//extern int editorInfo.maxSIDChannels;
 extern char infoTextBuffer[256];
 
 extern int SID_StereoPanPositions[4][4];
@@ -195,8 +196,8 @@ int load(GTOBJECT *gt);
 void save(GTOBJECT *gt);
 void quit(GTOBJECT *gt);
 void clear(GTOBJECT *gt);
-void prevmultiplier(void);
-void nextmultiplier(void);
+int prevmultiplier(void);
+int nextmultiplier(void);
 void editadsr(GTOBJECT *gt);
 void calculatefreqtable(void);
 void setspecialnotenames(void);
@@ -256,5 +257,6 @@ void saveBackupSong();
 int createBackupFolder();
 int copyBackupFile(char *sourceName, char *destName);
 int replacechar(char *str, char orig, char rep);
+void handleLoad(GTOBJECT *gt);
 
 #endif

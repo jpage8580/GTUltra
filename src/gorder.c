@@ -35,7 +35,7 @@ void orderlistcommands(GTOBJECT *gt)
 
 	int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
 	int maxCh = 6;
-	if ((maxSIDChannels == 3) || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+	if ((editorInfo.maxSIDChannels == 3) || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 		maxCh = 3;
 
 	if (hexnybble >= 0)
@@ -309,7 +309,7 @@ void orderlistcommands(GTOBJECT *gt)
 		}
 		else
 		{
-			for (c = 0; c < maxSIDChannels; c++)
+			for (c = 0; c < editorInfo.maxSIDChannels; c++)
 			{
 				int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 				int songNum = getActualSongNumber(editorInfo.esnum, c2);
@@ -358,7 +358,7 @@ void orderlistcommands(GTOBJECT *gt)
 
 			if ((gt->editorUndoInfo.editorInfo[c2].esend != editorInfo.eseditpos) && (editorInfo.eseditpos > gt->editorUndoInfo.editorInfo[c2].espos))
 			{
-				for (c = 0; c < maxSIDChannels; c++)
+				for (c = 0; c < editorInfo.maxSIDChannels; c++)
 				{
 					int c3 = c % 6;
 					int playingSong = getActualSongNumber(editorInfo.esnum, c);	// JP added this.
@@ -378,7 +378,7 @@ void orderlistcommands(GTOBJECT *gt)
 			}
 			else
 			{
-				for (c = 0; c < maxSIDChannels; c++)
+				for (c = 0; c < editorInfo.maxSIDChannels; c++)
 					gt->editorUndoInfo.editorInfo[c].esend = 0;
 			}
 		}
@@ -889,7 +889,7 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 	editorInfo.highlightLoopPatternNumber = -1;
 	editorInfo.highlightLoopStart = editorInfo.highlightLoopEnd = 0;
 
-	if (maxSIDChannels <= 6)
+	if (editorInfo.maxSIDChannels <= 6)
 		lastSong = s + 1;
 	if (s != lastSong)
 	{
@@ -911,14 +911,14 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 
 
 
-	if ((maxSIDChannels == 3) || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+	if ((editorInfo.maxSIDChannels == 3) || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 	{
 		if (editorInfo.eschn >= 3)
 			editorInfo.eschn = 2;
 	}
 
 
-	for (c = 0; c < maxSIDChannels; c++)
+	for (c = 0; c < editorInfo.maxSIDChannels; c++)
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 		int songNum = getActualSongNumber(editorInfo.esnum, c2);
@@ -981,7 +981,7 @@ void initEditorSongInfo(GTOBJECT *gt)
 
 void resetSongInfo(GTOBJECT *gt, int jc2)
 {
-	for (int c = 0; c < maxSIDChannels; c++)
+	for (int c = 0; c < editorInfo.maxSIDChannels; c++)
 	{
 		gt->editorUndoInfo.editorInfo[c].espos = 0;		// highlighted (green) position
 		gt->editorUndoInfo.editorInfo[c].esend = 0;		// end position (length of song)
@@ -1003,7 +1003,7 @@ void updateviewtopos(GTOBJECT *gt)
 	//	if (editPaletteMode)
 	//		return;
 
-	for (c = 0; c < maxSIDChannels; c++)
+	for (c = 0; c < editorInfo.maxSIDChannels; c++)
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 		int songNum = getActualSongNumber(editorInfo.esnum, c2);
@@ -1113,7 +1113,7 @@ int calcStartofInterPatternLoop(int songNum, int channelNum, int startSongPos, G
 	int c2 = channelNum;	//getActualChannel(songNum, channelNum);
 	int sng = songNum;	//getActualSongNumber(songNum, c2);
 
-	if (c2 >= maxSIDChannels)
+	if (c2 >= editorInfo.maxSIDChannels)
 		return -1;
 
 	gtloop->loopEnabledFlag = 0;
@@ -1185,7 +1185,7 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 	int c3 = getActualChannel(songNum, channelNum);
 	int sng = songNum;
 
-	if (c3 >= maxSIDChannels)
+	if (c3 >= editorInfo.maxSIDChannels)
 		return -1;
 
 	gtloop->loopEnabledFlag = 0;
@@ -1279,7 +1279,7 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 	int c2 = getActualChannel(editorInfo.esnum, focusChannel);
 	int sng = getActualSongNumber(editorInfo.esnum, c2);
 
-	if (c2 >= maxSIDChannels)
+	if (c2 >= editorInfo.maxSIDChannels)
 		return;
 
 	if (gt->songinit != PLAY_STOPPED)
@@ -1381,7 +1381,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 	int c2 = gt->masterLoopChannel;
 	int sng = getActualSongNumber(editorInfo.esnum, c2);
 
-	if (c2 >= maxSIDChannels)
+	if (c2 >= editorInfo.maxSIDChannels)
 		return;
 	int ep = editorInfo.eseditpos;
 
@@ -1400,7 +1400,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 
 		} while (gte->chn[c2].songptr - 1 < ep);
 
-		for (int c = 0; c < maxSIDChannels; c++)
+		for (int c = 0; c < editorInfo.maxSIDChannels; c++)
 		{
 			c2 = c;
 			int sng = getActualSongNumber(editorInfo.esnum, c2);
@@ -1427,7 +1427,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 	}
 	else
 	{
-		for (int c = 0; c < maxSIDChannels; c++)
+		for (int c = 0; c < editorInfo.maxSIDChannels; c++)
 		{
 			c2 = c;
 			int sng = getActualSongNumber(editorInfo.esnum, c2);
@@ -1827,7 +1827,7 @@ int handleEnterInCompressedView(GTOBJECT *gt)
 	{
 		int c, d;
 
-		for (c = 0; c < maxSIDChannels; c++)
+		for (c = 0; c < editorInfo.maxSIDChannels; c++)
 		{
 			int start;
 
@@ -1874,7 +1874,7 @@ int handleEnterInExpandedView(GTOBJECT *gt)
 	{
 		int c, d;
 
-		for (c = 0; c < maxSIDChannels; c++)
+		for (c = 0; c < editorInfo.maxSIDChannels; c++)
 		{
 			int start;
 

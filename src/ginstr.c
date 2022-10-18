@@ -167,7 +167,7 @@ void instrumentcommands(GTOBJECT *gt)
 			{
 				if ((editorInfo.eipos == 5) && (shiftOrCtrlPressed))
 				{
-					instr[editorInfo.einum].ptr[STBL] = makespeedtable(instr[editorInfo.einum].ptr[STBL], finevibrato, 1) + 1;
+					instr[editorInfo.einum].ptr[STBL] = makespeedtable(instr[editorInfo.einum].ptr[STBL], editorInfo.finevibrato, 1) + 1;
 					break;
 				}
 				pos = instr[editorInfo.einum].ptr[editorInfo.eipos - 2] - 1;
@@ -248,8 +248,8 @@ void clearinstr(int num)
 	memset(&instr[num], 0, sizeof(INSTR));
 	if (num)
 	{
-		if (multiplier)
-			instr[num].gatetimer = 2 * multiplier;
+		if (editorInfo.multiplier)
+			instr[num].gatetimer = 2 * editorInfo.multiplier;
 		else
 			instr[num].gatetimer = 1;
 

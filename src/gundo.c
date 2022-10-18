@@ -76,7 +76,7 @@ void undoInitAllAreas(GTOBJECT *gt)
 	for (int s = 0;s < MAX_SONGS;s++)
 	{
 		for (int i = 0;i < MAX_CHN;i++)
-		{	
+		{
 			undoInitUndoArea((char*)&songOrderPatterns[s][i], MAX_SONGLEN_EXPANDED * sizeof(char), UNDO_AREA_ORDERLIST_PATTERN_EXPANDED, i + (s*MAX_CHN));
 			undoInitUndoArea((char*)&songOrderTranspose[s][i], MAX_SONGLEN_EXPANDED * sizeof(short), UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED, i + (s*MAX_CHN));
 
@@ -275,6 +275,22 @@ void* undoCreateUndoObject(char *mem, int size, int offset)
 	return gu;
 }
 
+// Copy current buffer to the undo buffer, so that no changes will be saved in the undo list
+// Used when changing sng files, so that the undo buffer doesn't get massive
+// changing sng file index will copy from the sng file buffer to current buffer
+void undoInvalidateUndoAreas()
+{
+	for (int i = 0;i < undoAreaIndex;i++)
+	{
+		GTUNDO_AREA *ga = (GTUNDO_AREA *)undoAreaList[i];
+		GTUNDO_OBJECT *gu = ga->undoObject;
+
+		char *mem2 = gu->dest + gu->offset;
+		memcpy(gu->data, mem2, gu->size);
+	}
+}
+
+
 int undoPackageCounter = 0;
 int jcounter = 0;
 
@@ -440,8 +456,8 @@ int quickAddObjectToList(char *m, GTUNDO_AREA *gArea)
 		int newMaxUndoSize = maxUndoSize + 100;
 		debugCurrentUndoBufferSize = newMaxUndoSize;
 
-	//	sprintf(textbuffer, "Alloc 0x%x", newMaxUndoSize);
-	//	printtext(70, 1, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+		//	sprintf(textbuffer, "Alloc 0x%x", newMaxUndoSize);
+		//	printtext(70, 1, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 
 		char **newUndoList = malloc((sizeof(char*)) * newMaxUndoSize);
 		memcpy(newUndoList, undoList, (sizeof(char*)) * maxUndoSize);
@@ -490,7 +506,7 @@ void undoFinalizeUndoPackage(GTUNDO_OBJECT *editorSettings)
 
 	quickAddObjectToList((char*)editorSettings, NULL);
 
-	EDITOR_INFO *ed = (EDITOR_INFO*)editorSettings->data;
+	//	EDITOR_INFO *ed = (EDITOR_INFO*)editorSettings->data;
 
 	for (int i = 0;i < undoPackageCounter;i++)
 	{
@@ -502,11 +518,52 @@ void undoFinalizeUndoPackage(GTUNDO_OBJECT *editorSettings)
 	undoPackageCounter = 0;
 }
 
+GTUNDO_OBJECT *undoEditorInfoBackup;
 
-int undoPerform()
+void undoCreateEditorInfoBackup()
+{
+	undoEditorInfoBackup = undoCreateEditorInfo();
+
+}
+
+
+int dcount = 0;
+void undoAddEditorSettingsToList()
+{
+	if (memcmp(&editorInfo, undoEditorInfoBackup->data, sizeof(EDITOR_INFO)))
+	{
+//		sprintf(textbuffer, "d%d", dcount++);
+//		printtext(75, 1, 0xe, textbuffer);
+
+		undoCounter++;	// we can use this to know if anything has been modified in the editor
+
+		GTUNDO_OBJECT *undoEditorInfoBackup2;
+
+		//		undoEditorInfoBackup2 = malloc(sizeof(GTUNDO_OBJECT));
+		//		memcpy((char*)undoEditorInfoBackup2, (char*)undoEditorInfoBackup, sizeof(GTUNDO_OBJECT));
+		undoEditorInfoBackup->counter = -1;
+
+		quickAddObjectToList((char*)undoEditorInfoBackup, NULL);
+		undoPackageCounter = 0;
+	}
+	else
+	{
+		undoFreeUndoObject(undoEditorInfoBackup);
+
+		sprintf(textbuffer, "same");
+		printtext(75, 1, 0xe, textbuffer);
+
+	}
+}
+
+
+int undoPerform(GTOBJECT *gt)
 {
 	if (REMOVE_UNDO)
 		return 0;
+
+	sprintf(textbuffer, "                   ", currentUndoPosition, undoCounter);
+	printtext(80, 1, 0xe, textbuffer);
 
 	GTUNDO_OBJECT *gu;
 
@@ -515,6 +572,11 @@ int undoPerform()
 
 	gu = (GTUNDO_OBJECT*)undoList[currentUndoPosition - 1];
 
+
+	undoCounter = 0;
+
+
+	int sngFileIndex = editorInfo.currentSongFile;
 
 	int counter;
 	do {
@@ -538,7 +600,26 @@ int undoPerform()
 
 	} while (counter > 0);
 
+
+	sprintf(textbuffer, "undo pos %d (%d undos)", currentUndoPosition, undoCounter);
+	printtext(80, 1, 0xe, textbuffer);
+
 	// These need to be in their own routine, called on init, load and here.
+
+	// Changed Song File?
+	if (editorInfo.currentSongFile != sngFileIndex)
+	{
+		int t = editorInfo.currentSongFile;		// make a copy, as copycurrentToSngBuffer updates it..
+		copyCurrentToSngBuffer(gt, currentSongFile);	// Copy current song work buffers to songBuffer[n]
+		currentSongFile = t;	// set new Song Buffer global var
+		copySngBufferToCurrent(gt, currentSongFile);	// Copy SongBuffer[n] to work buffers
+		editorInfo.currentSongFile = currentSongFile;	// set editor to the same, so this check works for all undo's
+
+// Invalidate all area undo buffers (copy the work buffer over the undo buffer)
+// so that undo buffer doesn't record the massive changes each time we swap between song files
+	
+		undoInvalidateUndoAreas();
+	}
 
 	refreshVariables();
 	undoDisplay();

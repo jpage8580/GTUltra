@@ -1,10 +1,39 @@
 #ifndef GSONG_H
 #define GSONG_H
 
+typedef struct {
+	char *instrumentData;
+	char *editorInfo;
+	char *ltable;
+	char *rtable;
+	char *songorder;
+	char *songOrderPatternsExpanded;
+	char *songOrderTransposeExpanded;
+	char *songOrderLengthExpanded;
+	char *songCompressedSizeExpanded;
+	char *songOrderPatternsCopyPasteExpanded;
+	char *songOrderTransposeCopyPasteExpanded;
+	char *pattern;
+	char *songName;
+	char *loadedSongFileName;
+	char *authorName;
+	char *copyrightName;
+	char *patternLen;
+	char *songLen;
+
+	char *editorUndoInfo;
+	int highestUsedPattern;
+	int highestUsedInstr;
+}SNG_INFO;
+
 #ifndef GSONG_C
+
+
+
 extern INSTR instr[MAX_INSTR];
 
-
+extern int lastValidSongFileIndex;
+extern int currentSongFile;
 
 extern unsigned char detailedTableRValue[MAX_TABLELEN];
 extern unsigned char detailedTableMaxRValue[MAX_TABLELEN];
@@ -40,6 +69,8 @@ extern int songlen[MAX_SONGS][MAX_CHN];
 extern int highestusedpattern;
 extern int highestusedinstr;
 extern int loadedSongCount;
+
+extern SNG_INFO songInfo[16];
 #endif
 
 int loadsong(GTOBJECT *gt);
@@ -69,6 +100,10 @@ void compressSong(int s);
 int generateCompressedSongChannel(int s, int c, int validateOnly);
 void compressChannel(int s, int c, int startIndex, int endIndex, int *p, int *lastTranspose, int validateOnly);
 int validateAllSongs();
+int allocateSngMemory(int sngIndex);
+int copyCurrentToSngBuffer(GTOBJECT *gt, int sngIndex);
+int copySngBufferToCurrent(GTOBJECT *gt, int sngIndex);
+void initSngMemory();
 
 
 typedef struct

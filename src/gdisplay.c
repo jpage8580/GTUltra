@@ -79,7 +79,7 @@ void printstatus(GTOBJECT *gt)
 	int cc = cursorcolortable[cursorflash];
 	menu = 0;
 
-	if ((mouseb > MOUSEB_LEFT) && (mousey <= 1) && (!eamode))
+	if ((mouseb > MOUSEB_LEFT) && (mousey == 0) && (!eamode))
 		menu = 1;
 
 	displayTopBar(menu, cc);
@@ -93,6 +93,12 @@ void printstatus(GTOBJECT *gt)
 		lastExpandOrderListView = editorInfo.expandOrderListView;
 		fillArea(PANEL_ORDER_X, PANEL_ORDER_Y, 40, EXTENDEDVISIBLEORDERLIST + 2, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), 32);	//65);
 	}
+
+
+	int lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
+	sprintf(textbuffer, "FILE %d/%d", currentSongFile,lastValidSongFileIndex+1);
+	printtext(PANEL_ORDER_X, PANEL_ORDER_Y-1, lockPatternColor, textbuffer);
+
 
 	if (editorInfo.expandOrderListView == 0)	// display original orderlist + instrument information
 	{
@@ -144,10 +150,10 @@ void incrementtime(GTOBJECT *gt)
 {
 	{
 		gt->timeframe++;
-		if (!ntsc)
+		if (!editorInfo.ntsc)
 		{
-			if (((multiplier) && (gt->timeframe >= PALFRAMERATE * multiplier))
-				|| ((!multiplier) && (gt->timeframe >= PALFRAMERATE / 2)))
+			if (((editorInfo.multiplier) && (gt->timeframe >= PALFRAMERATE * editorInfo.multiplier))
+				|| ((!editorInfo.multiplier) && (gt->timeframe >= PALFRAMERATE / 2)))
 			{
 				gt->timeframe = 0;
 				gt->timesec++;
@@ -155,8 +161,8 @@ void incrementtime(GTOBJECT *gt)
 		}
 		else
 		{
-			if (((multiplier) && (gt->timeframe >= NTSCFRAMERATE * multiplier))
-				|| ((!multiplier) && (gt->timeframe >= NTSCFRAMERATE / 2)))
+			if (((editorInfo.multiplier) && (gt->timeframe >= NTSCFRAMERATE * editorInfo.multiplier))
+				|| ((!editorInfo.multiplier) && (gt->timeframe >= NTSCFRAMERATE / 2)))
 			{
 				gt->timeframe = 0;
 				gt->timesec++;
@@ -259,7 +265,7 @@ void displayOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 			if ((gt->editorUndoInfo.editorInfo[c2].esend) && (p == gt->editorUndoInfo.editorInfo[c2].esend))
 				color = CORDER_INST_TABLE_EDITING;
 
-			if (c2 >= maxSIDChannels)
+			if (c2 >= editorInfo.maxSIDChannels)
 				color = CORDER_INST_BACKGROUND;	// Hide channels 3-6 if SID set to 1 or 3
 
 
@@ -402,7 +408,7 @@ void displayPattern(GTOBJECT *gt)
 //	printtext(61, 1, 0xe, textbuffer);
 
 	int maxChan = MAX_CHN;
-	if ((editorInfo.esnum & 1 && maxSIDChannels == 9) || maxSIDChannels == 3)
+	if ((editorInfo.esnum & 1 && editorInfo.maxSIDChannels == 9) || editorInfo.maxSIDChannels == 3)
 		maxChan = 3;
 
 	if (maxChan != lastDisplayChanCount)	// clear pattern display area if swapping between 3/6 channel views
@@ -440,7 +446,7 @@ void displayPattern6Chn(GTOBJECT *gt)
 	int highlightPatternLoop = 0;
 
 	int maxChan = MAX_CHN;
-	if ((editorInfo.esnum & 1 && maxSIDChannels == 9) || maxSIDChannels == 3)
+	if ((editorInfo.esnum & 1 && editorInfo.maxSIDChannels == 9) || editorInfo.maxSIDChannels == 3)
 		maxChan = 3;
 
 
@@ -544,7 +550,7 @@ void displayPattern6Chn(GTOBJECT *gt)
 			else if ((p% stepsize) == 0)
 				color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
 
-			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= maxSIDChannels || c >= maxChan)
+			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= editorInfo.maxSIDChannels || c >= maxChan)
 			{
 				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 
@@ -689,7 +695,7 @@ void displayPattern6Chn(GTOBJECT *gt)
 			}
 
 
-			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= maxSIDChannels || invalidColumn)
+			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= editorInfo.maxSIDChannels || invalidColumn)
 			{
 				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 				colorNoChange = 1;
@@ -874,7 +880,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 	int highlightPatternLoop = 0;
 
 	int maxChan = MAX_CHN;
-	if ((editorInfo.esnum & 1 && maxSIDChannels == 9) || maxSIDChannels == 3)
+	if ((editorInfo.esnum & 1 && editorInfo.maxSIDChannels == 9) || editorInfo.maxSIDChannels == 3)
 		maxChan = 3;
 
 	int chnWidth = 14;
@@ -979,7 +985,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 			else if ((p% stepsize) == 0)
 				color = getColor(CPATTERN_FIRST_FOREGROUND1, CPATTERN_FIRST_BACKGROUND1);
 
-			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= maxSIDChannels || c >= maxChan)
+			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= editorInfo.maxSIDChannels || c >= maxChan)
 			{
 				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 
@@ -1133,7 +1139,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 			}
 
 
-			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= maxSIDChannels || invalidColumn)
+			if ((p < 0) || (p > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]) || c2 >= editorInfo.maxSIDChannels || invalidColumn)
 			{
 				color = getColor(CUNUSED_MUTED_FOREGROUND, CUNUSED_MUTED_BACKGROUND);
 				colorNoChange = 1;
@@ -1373,13 +1379,13 @@ void displayTransportBar(GTOBJECT *gt)
 
 
 
-	int tdiv = 25 * multiplier;
+	int tdiv = 25 * editorInfo.multiplier;
 
-	if (multiplier && ntsc)
-		tdiv = 30 * multiplier;
-	else if (!multiplier && !ntsc)
+	if (editorInfo.multiplier && editorInfo.ntsc)
+		tdiv = 30 * editorInfo.multiplier;
+	else if (!editorInfo.multiplier && !editorInfo.ntsc)
 		tdiv = gt->timeframe / 13;
-	else if (!multiplier && ntsc)
+	else if (!editorInfo.multiplier && editorInfo.ntsc)
 		tdiv = gt->timeframe / 15;
 
 	int v = 0;
@@ -1551,7 +1557,7 @@ void displayTransportBarMonoStereo(int x, int y)
 	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
 	int b = 0x195;
-	if (monomode || (maxSIDChannels == 3 && stereoMode == 1))	// either in mono mode, or 3 channels and forced stereo
+	if (monomode || (editorInfo.maxSIDChannels == 3 && stereoMode == 1))	// either in mono mode, or 3 channels and forced stereo
 	{
 		printbyte(x, y + 1, color, 0x20);
 		printbyte(x + 1, y + 1, color, 0x9c);
@@ -1596,7 +1602,7 @@ void displayTransportBarSIDCount(int x, int y)
 	{
 		printbyte(x + i, y + 1, color, 0xe9 + i);
 	}
-	sprintf(textbuffer, "%1X", maxSIDChannels / 3);
+	sprintf(textbuffer, "%1X", editorInfo.maxSIDChannels / 3);
 	printtext(x + 1, y + 1, color, textbuffer);
 
 }
@@ -1846,7 +1852,7 @@ void updateDisplayWhenFollowingAndPlaying_Compressed(GTOBJECT *gt)
 	//	if ((followplay) && (!transportLoopPattern) && (isplaying(gt)))	// 1.1.7 FIX (added !transportLoopPattern) 3/5/2022
 	if ((followplay) && (isplaying(gt)))	// 1.2.1 - removed (!transportLoopPattern) as it stopped follow+loop..gotta look into why I added that!
 	{
-		for (int c = 0; c < maxSIDChannels; c++)
+		for (int c = 0; c < editorInfo.maxSIDChannels; c++)
 		{
 			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 			int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
@@ -1909,7 +1915,7 @@ void updateDisplayWhenFollowingAndPlaying_Expanded(GTOBJECT *gt)
 	//	if ((followplay) && (!transportLoopPattern) && (isplaying(gt)))	// 1.1.7 FIX (added !transportLoopPattern) 3/5/2022
 	if ((followplay) && (isplaying(gt)))	// 1.2.1 - removed (!transportLoopPattern) as it stopped follow+loop..gotta look into why I added that!
 	{
-		for (int c = 0; c < maxSIDChannels; c++)
+		for (int c = 0; c < editorInfo.maxSIDChannels; c++)
 		{
 			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 			int playingSong = getActualSongNumber(editorInfo.esnum, c2);	// JP added this. Only highlight playing row if showing the right song
@@ -1979,37 +1985,42 @@ void displayTopBar(int menu, int cc)
 		if (!strlen(loadedsongfilename))
 			sprintf(textbuffer, "%s", programname);
 		else
-			sprintf(textbuffer, "%s - %s", programname, loadedsongfilename);
+		{
+		//	int lockPatternColor = getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND);	//0xe;
+			sprintf(textbuffer, "%s: %s", programname, loadedsongfilename);
+		//	printtext(PANEL_ORDER_X, PANEL_ORDER_Y - 1, lockPatternColor, textbuffer);
+		//	sprintf(textbuffer, "%s - %s", programname, loadedsongfilename);
+		}
 		textbuffer[57] = 0;
 		printtext(0, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
 
 		menuInfoXOffset += 2;
 
-		if (usefinevib)
+		if (editorInfo.usefinevib)
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "FV");
 		else
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "FV");
 
 		menuInfoXOffset += 3;
-		if (optimizepulse)
+		if (editorInfo.optimizepulse)
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "PO");
 		else
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "PO");
 		menuInfoXOffset += 3;
 
-		if (optimizerealtime)
+		if (editorInfo.optimizerealtime)
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "RO");
 		else
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND_OFF, TOPBAR_BACKGROUND), "RO");
 
 		menuInfoXOffset += 3;
-		if (ntsc)
+		if (editorInfo.ntsc)
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "NTSC");
 		else
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), " PAL");
 
 		menuInfoXOffset += 5;
-		if (!sidmodel)
+		if (!editorInfo.sidmodel)
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "6581");
 		else
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "8580");
@@ -2018,13 +2029,13 @@ void displayTopBar(int menu, int cc)
 
 		if (!editPan)
 		{
-			sprintf(textbuffer, "HR:%04X", adparam);
+			sprintf(textbuffer, "HR:%04X", editorInfo.adparam);
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
 		}
 		else
 		{
 			unsigned int v = 0;
-			int sidChips = maxSIDChannels / 3;
+			int sidChips = editorInfo.maxSIDChannels / 3;
 			for (int i = 0;i < sidChips;i++)
 			{
 				v <<= 4;
@@ -2043,14 +2054,14 @@ void displayTopBar(int menu, int cc)
 
 		menuInfoXOffset += 3;
 		if (eamode)
-			printbg(menuInfoXOffset + 20 + eacolumn, getColor(0, 0), cc << 8, 1);
+			printbg(menuInfoXOffset + 20 + editorInfo.eacolumn, getColor(0, 0), cc << 8, 1);
 
 		menuInfoXOffset += 5;
 
 
-		if (multiplier)
+		if (editorInfo.multiplier)
 		{
-			sprintf(textbuffer, "%2dX", multiplier);
+			sprintf(textbuffer, "%2dX", editorInfo.multiplier);
 			printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), textbuffer);
 		}
 		else printtext(menuInfoXOffset + 20, 0, getColor(TOPBAR_FOREGROUND, TOPBAR_BACKGROUND), "25Hz");
@@ -3175,7 +3186,7 @@ void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 			}
 
 			int maxCh = 5;
-			if ((maxSIDChannels == 3) || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+			if ((editorInfo.maxSIDChannels == 3) || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 				maxCh = 2;
 
 			int pattern = songOrderPatterns[editorInfo.esnum][c][p];

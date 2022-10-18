@@ -34,7 +34,7 @@ void onlinehelp(int standalone,int context,GTOBJECT *gt)
     "F12 This screen",
     "SHIFT+F1-F3 Follow play begin/pos/patt.",
     "SHIFT+F4 Mute current channel",
-    "SHIFT+F5-F6 Change speed multiplier",
+    "SHIFT+F5-F6 Change speed editorInfo.multiplier",
     "SHIFT+F7 Change hardrestart ADSR",
     "SHIFT+F8 Switch between 6581/8580 SID",
     "SHIFT+F9 Switch between mono and stereo",

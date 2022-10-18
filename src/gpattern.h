@@ -14,6 +14,20 @@ extern char keyOffsetText[100];
 
 typedef struct {
 // From gtstereo.c
+
+	int currentSongFile;
+	unsigned int eacolumn;
+	unsigned int multiplier;
+	unsigned int sidmodel; 
+	unsigned int adparam;
+	int maxSIDChannels;
+
+	unsigned int finevibrato;
+	unsigned int optimizepulse;
+	unsigned int optimizerealtime;
+	unsigned int ntsc;
+	unsigned int usefinevib;
+
 	int editmode;
 	int editTableMode;
 	int nameIndex;

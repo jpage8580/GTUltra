@@ -47,7 +47,7 @@ SIDFP *sidfp3 = 0;
 SIDFP *sidfp4 = 0;
 
 extern unsigned residdelay;
-extern unsigned adparam;
+//extern unsigned editorInfo.adparam;
 
 // from GTUltra.cfg:
 // interpolate = interpolate&1 (0 or 1)
@@ -262,7 +262,7 @@ void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsign
 	}
 }
 
-unsigned char sid_getorder(unsigned char index)
+unsigned char sid_getorder(unsigned char index,unsigned int adparam)
 {
 	if (adparam >= 0xf000)
 		return altsidorder[index];
@@ -282,7 +282,7 @@ int sid_debug()
 // TrueStereo = each buffer size = samples*2
 // Left = 0-samples-1
 // Right = samples>s(amples*2)-1
-int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int samples, int bufferHalfSize)
+int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int samples, int bufferHalfSize,unsigned int adparam)
 {
 	int tdelta;
 	int tdelta2;
@@ -298,7 +298,7 @@ int sid_fillbuffer(short *lptr, short *rptr, short *lptr2, short *rptr2, int sam
 
 	for (c = 0; c < NUMSIDREGS; c++)
 	{
-		unsigned char o = sid_getorder(c);
+		unsigned char o = sid_getorder(c,adparam);
 
 		// Extra delay for loading the waveform (and mt_chngate,x)
 		if ((o == 4) || (o == 11) || (o == 18))

@@ -76,7 +76,7 @@ void* undoCreateUndoObject(char *mem, int size,int offset);
 int undoValidateUndoAreas(GTUNDO_OBJECT *editorSettings);
 int undoAddUndoObjectToList(GTUNDO_OBJECT *gu, GTUNDO_AREA *gArea, char *mem, int size,int offset);
 GTUNDO_OBJECT* undoCreateEditorInfo();
-int undoPerform();
+int undoPerform(GTOBJECT *gt);
 void undoFreeUndoObject(GTUNDO_OBJECT *gu);
 void undoFinalizeUndoPackage(GTUNDO_OBJECT *editorSettings);
 void undoFreeAll();
@@ -86,6 +86,9 @@ void undoDisplay();
 void refreshVariables();
 void updateUndoBuffer(int undoAreaType);
 int undoInvalidateBuffer(int areaType);
+void undoAddEditorSettingsToList();
+void undoCreateEditorInfoBackup();
+void undoInvalidateUndoAreas();
 
 
 #endif

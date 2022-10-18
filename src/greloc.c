@@ -187,7 +187,7 @@ void relocator(GTOBJECT *gt)
 	printtext(1, 2, getColor(CTITLE, 0), "SELECT PLAYROUTINE OPTIONS: (CURSORS=MOVE/CHANGE, ENTER=ACCEPT, ESC=CANCEL)");
 
 	int maxOptions = MAX_OPTIONS;
-	if (maxSIDChannels != 3)
+	if (editorInfo.maxSIDChannels != 3)
 	{
 		maxOptions--;
 		playerversion &= ~PLAYER_FULsidbuffer1ED;
@@ -268,7 +268,7 @@ void relocator(GTOBJECT *gt)
 			break;
 		}
 
-		if (maxSIDChannels != 3)
+		if (editorInfo.maxSIDChannels != 3)
 		{
 			playerversion |= PLAYER_BUFFERED;
 			playerversion &= ~PLAYER_ZPGHOSTREGS;
@@ -339,7 +339,7 @@ void relocator(GTOBJECT *gt)
 	int sidAddr3 = sidAddr2 + 0x20;
 	int sidAddr4 = sidAddr3 + 0x20;
 
-	if (maxSIDChannels > 3)
+	if (editorInfo.maxSIDChannels > 3)
 	{
 		sprintf(textbuffer, "SELECT SID ADDRESS 2: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
 		printtext(1, yPos++, getColor(15, 0), textbuffer);
@@ -388,7 +388,7 @@ void relocator(GTOBJECT *gt)
 		sidaddress |= (sidAddr2 << 16);
 	}
 
-	if (maxSIDChannels > 6)
+	if (editorInfo.maxSIDChannels > 6)
 	{
 
 		sprintf(textbuffer, "SELECT SID ADDRESS 3: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
@@ -437,7 +437,7 @@ void relocator(GTOBJECT *gt)
 		yPos++;
 	}
 
-	if (maxSIDChannels > 9)
+	if (editorInfo.maxSIDChannels > 9)
 	{
 		sprintf(textbuffer, "SELECT SID ADDRESS 4: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
 		printtext(1, yPos++, getColor(15, 0), textbuffer);
@@ -622,9 +622,9 @@ void relocator(GTOBJECT *gt)
 			// See which patterns are used in the whole .sng file
 			for (d = 0; d < MAX_CHN; d++)
 			{
-				if (maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
+				if (editorInfo.maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
 					break;
-				if (maxSIDChannels == 3 && d >= 3)
+				if (editorInfo.maxSIDChannels == 3 && d >= 3)
 					break;
 
 				songdatasize += songlen[c][d] + 2;
@@ -969,10 +969,10 @@ void relocator(GTOBJECT *gt)
 
 	// Allocate memory for song-orderlists
 
-	if (maxSIDChannels >= 9)
-		songtblsize = ((songs + 1) / 2) * maxSIDChannels;	// 9 or 12 channels. Half the number of songs
+	if (editorInfo.maxSIDChannels >= 9)
+		songtblsize = ((songs + 1) / 2) * editorInfo.maxSIDChannels;	// 9 or 12 channels. Half the number of songs
 	else
-		songtblsize = songs * maxSIDChannels;		// 3 or 6 channels
+		songtblsize = songs * editorInfo.maxSIDChannels;		// 3 or 6 channels
 
 
 
@@ -1013,14 +1013,14 @@ void relocator(GTOBJECT *gt)
 		{
 			for (d = 0; d < MAX_CHN; d++)
 			{
-				if (maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
+				if (editorInfo.maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
 				{
 					songoffset[c][d] = sds;
 					songsize[c][d] = 0;
 					continue;
 				}
 
-				if (maxSIDChannels == 3 && d >= 3)
+				if (editorInfo.maxSIDChannels == 3 && d >= 3)
 				{
 					songoffset[c][d] = sds;
 					songsize[c][d] = 0;
@@ -1204,7 +1204,7 @@ void relocator(GTOBJECT *gt)
 	}
 
 	// Disable sameparam optimization for multispeed stability
-	if (multiplier > 1)
+	if (editorInfo.multiplier > 1)
 	{
 		fixedparams = 0;
 		numlegato++;
@@ -1350,11 +1350,11 @@ void relocator(GTOBJECT *gt)
 	insertdefine("zpbase", zeropageadr);
 
 	insertdefine("SIDBASE", sidAddr1);
-	if (maxSIDChannels > 3)
+	if (editorInfo.maxSIDChannels > 3)
 		insertdefine("SID2BASE", sidAddr2);
-	if (maxSIDChannels > 6)
+	if (editorInfo.maxSIDChannels > 6)
 		insertdefine("SID3BASE", sidAddr3);
-	if (maxSIDChannels > 9)
+	if (editorInfo.maxSIDChannels > 9)
 		insertdefine("SID4BASE", sidAddr4);
 
 
@@ -1363,12 +1363,12 @@ void relocator(GTOBJECT *gt)
 	insertdefine("VOLSUPPORT", (playerversion & PLAYER_VOLUME) ? 1 : 0);
 	insertdefine("BUFFEREDWRITES", (playerversion & PLAYER_BUFFERED) ? 1 : 0);
 	insertdefine("ZPGHOSTREGS", (playerversion & PLAYER_ZPGHOSTREGS) ? 1 : 0);
-	if (maxSIDChannels == 3)
+	if (editorInfo.maxSIDChannels == 3)
 		insertdefine("GHOSTREGS", (playerversion & (PLAYER_ZPGHOSTREGS | PLAYER_FULsidbuffer1ED)) ? 1 : 0);
 	insertdefine("FIXEDPARAMS", fixedparams);
 	insertdefine("SIMPLEPULSE", simplepulse);
-	insertdefine("PULSEOPTIMIZATION", optimizepulse);
-	insertdefine("REALTIMEOPTIMIZATION", optimizerealtime);
+	insertdefine("PULSEOPTIMIZATION", editorInfo.optimizepulse);
+	insertdefine("REALTIMEOPTIMIZATION", editorInfo.optimizerealtime);
 	insertdefine("NOAUTHORINFO", (playerversion & PLAYER_AUTHORINFO) ? 0 : 1);
 	insertdefine("NOEFFECTS", noeffects);
 	insertdefine("NOGATE", nogate);
@@ -1402,7 +1402,7 @@ void relocator(GTOBJECT *gt)
 	insertdefine("NOZEROSPEED", nozerospeed);
 
 	// Insert parameters
-	insertdefine("NUMCHANNELS", maxSIDChannels);
+	insertdefine("NUMCHANNELS", editorInfo.maxSIDChannels);
 	insertdefine("NUMSONGS", songs);
 	insertdefine("FIRSTNOTE", firstnote);
 	insertdefine("FIRSTNOHRINSTR", numnormal + 1);
@@ -1410,12 +1410,12 @@ void relocator(GTOBJECT *gt)
 	insertdefine("NUMHRINSTR", numnormal);
 	insertdefine("NUMNOHRINSTR", numnohr);
 	insertdefine("NUMLEGATOINSTR", numlegato);
-	insertdefine("ADPARAM", adparam >> 8);
-	insertdefine("SRPARAM", adparam & 0xff);
+	insertdefine("editorInfo.adparam", editorInfo.adparam >> 8);
+	insertdefine("SRPARAM", editorInfo.adparam & 0xff);
 	if ((instr[MAX_INSTR - 1].ad >= 2) && (!(instr[MAX_INSTR - 1].ptr[WTBL])))
 		insertdefine("DEFAULTTEMPO", instr[MAX_INSTR - 1].ad - 1);
 	else
-		insertdefine("DEFAULTTEMPO", multiplier ? (multiplier * 6 - 1) : 5);
+		insertdefine("DEFAULTTEMPO", editorInfo.multiplier ? (editorInfo.multiplier * 6 - 1) : 5);
 
 	// Fixed firstwave & gatetimer
 	if (fixedparams)
@@ -1425,24 +1425,24 @@ void relocator(GTOBJECT *gt)
 	}
 
 	// Insert source code of player
-	if (adparam >= 0xf000)
+	if (editorInfo.adparam >= 0xf000)
 	{
-		if (maxSIDChannels == 3)
+		if (editorInfo.maxSIDChannels == 3)
 			playername = "altplayer3.s";
-		else if (maxSIDChannels == 9)
+		else if (editorInfo.maxSIDChannels == 9)
 			playername = "altplayer9.s";
-		else if (maxSIDChannels == 12)
+		else if (editorInfo.maxSIDChannels == 12)
 			playername = "altplayer12.s";
 		else
 			playername = "altplayer.s";	// use 6 channel GT 6502
 	}
 	else
 	{
-		if (maxSIDChannels == 3)
+		if (editorInfo.maxSIDChannels == 3)
 			playername = "player3.s";
-		else if (maxSIDChannels == 9)
+		else if (editorInfo.maxSIDChannels == 9)
 			playername = "player9.s";
-		else if (maxSIDChannels == 12)
+		else if (editorInfo.maxSIDChannels == 12)
 			playername = "player12.s";
 		else
 			playername = "player.s"; // use 6 channel GT 6502
@@ -1486,9 +1486,9 @@ void relocator(GTOBJECT *gt)
 	// Insert songtable
 	insertlabel("mt_songtbllo");
 
-	int songSize = songs * maxSIDChannels;
-	if (maxSIDChannels >= 9)
-		songSize = ((songs + 1) / 2)*maxSIDChannels;
+	int songSize = songs * editorInfo.maxSIDChannels;
+	if (editorInfo.maxSIDChannels >= 9)
+		songSize = ((songs + 1) / 2)*editorInfo.maxSIDChannels;
 
 //	sprintf(textbuffer,";JP: songs %d songsize %d\n", songs, songSize);
 //	insertlabel(textbuffer);
@@ -1693,9 +1693,9 @@ void relocator(GTOBJECT *gt)
 
 		for (d = 0; d < MAX_CHN; d++)
 		{
-			if (maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
+			if (editorInfo.maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
 				break;
-			if (maxSIDChannels == 3 && d >= 3)
+			if (editorInfo.maxSIDChannels == 3 && d >= 3)
 				break;
 
 			sprintf(textbuffer, "mt_song%d", songIndex++);
@@ -1912,9 +1912,9 @@ void relocator(GTOBJECT *gt)
 
 		// Identification
 		unsigned char ident[] = { 'P', 'S', 'I', 'D', 0x00, 0x04, 0x00, 0x7c };
-		if (maxSIDChannels == 3)
+		if (editorInfo.maxSIDChannels == 3)
 			ident[5] = 2;	// JP - 3 channel, so we want to use ID 2 (otherwise it plays in stereo..urgh..)
-		else if (maxSIDChannels == 9)
+		else if (editorInfo.maxSIDChannels == 9)
 			ident[5] = 4;	// JP - 9 channel, so we want to use ID 4 (Only format that handles 3 SIDs)
 		else
 			ident[5] = 3;	// JP - original 6 channel ID (we don't care about 12 channel .SID file format, as the format only handles 3 SID max)
@@ -1928,7 +1928,7 @@ void relocator(GTOBJECT *gt)
 		fwrite8(songhandle, byte);
 
 		// Init address
-		if ((multiplier > 1) || (!multiplier))
+		if ((editorInfo.multiplier > 1) || (!editorInfo.multiplier))
 		{
 			unsigned speedvalue;
 			byte = (playeradr - 10) >> 8;
@@ -1936,14 +1936,14 @@ void relocator(GTOBJECT *gt)
 			byte = (playeradr - 10) & 0xff;
 			fwrite8(songhandle, byte);
 
-			if (multiplier)
+			if (editorInfo.multiplier)
 			{
-				if (ntsc) speedvalue = 0x42c6 / multiplier;
-				else speedvalue = 0x4cc7 / multiplier;
+				if (editorInfo.ntsc) speedvalue = 0x42c6 / editorInfo.multiplier;
+				else speedvalue = 0x4cc7 / editorInfo.multiplier;
 			}
 			else
 			{
-				if (ntsc) speedvalue = 0x42c6 * 2;
+				if (editorInfo.ntsc) speedvalue = 0x42c6 * 2;
 				else speedvalue = 0x4cc7 * 2;
 			}
 			speedcode[1] = speedvalue & 0xff;
@@ -1968,7 +1968,7 @@ void relocator(GTOBJECT *gt)
 		fwrite8(songhandle, byte);
 
 		int songCount = songs;
-		if (maxSIDChannels >= 9)
+		if (editorInfo.maxSIDChannels >= 9)
 			songCount /= 2;
 		byte = songCount;
 		fwrite8(songhandle, byte);
@@ -1981,7 +1981,7 @@ void relocator(GTOBJECT *gt)
 
 		// Song speed bits
 		byte = 0x00;
-		if ((ntsc) || (multiplier > 1) || (!multiplier)) byte = 0xff;
+		if ((editorInfo.ntsc) || (editorInfo.multiplier > 1) || (!editorInfo.multiplier)) byte = 0xff;
 		fwrite8(songhandle, byte);
 		fwrite8(songhandle, byte);
 		fwrite8(songhandle, byte);
@@ -1995,32 +1995,32 @@ void relocator(GTOBJECT *gt)
 		// Flags
 		byte = 0x00;
 		fwrite8(songhandle, byte);
-		if (ntsc) byte = 8;
+		if (editorInfo.ntsc) byte = 8;
 		else byte = 4;
 		// Set model for both SIDs
-		if (maxSIDChannels == 3)
+		if (editorInfo.maxSIDChannels == 3)
 		{
-			if (sidmodel) byte |= 32;
+			if (editorInfo.sidmodel) byte |= 32;
 			else byte |= 16;
 		}
 		else
 		{
-			if (sidmodel) byte |= 32 + 128;	//If bits for SID2+3 are 0, then use the bits for SID1
+			if (editorInfo.sidmodel) byte |= 32 + 128;	//If bits for SID2+3 are 0, then use the bits for SID1
 			else byte |= 16 + 64;
 		}
 
 		fwrite8(songhandle, byte);	// 0x75
 
-		if (maxSIDChannels == 9)
+		if (editorInfo.maxSIDChannels == 9)
 		{
-			if (sidmodel) byte = 1;	//If bits for SID2+3 are 0, then use the bits for SID1
+			if (editorInfo.sidmodel) byte = 1;	//If bits for SID2+3 are 0, then use the bits for SID1
 			else byte = 2;
 			fwrite8(songhandle, byte);
 		}
 		else
 			fwrite8(songhandle, 0);
 
-		if (maxSIDChannels == 3)
+		if (editorInfo.maxSIDChannels == 3)
 		{
 			// Reserved longword
 			byte = 0x00;
@@ -2038,13 +2038,13 @@ void relocator(GTOBJECT *gt)
 			fwrite8(songhandle, byte);	// 79 Page length
 
 			fwrite8(songhandle, ((sidAddr2 >> 0) & 0x0ff0) >> 4);	// SID 2
-			if (maxSIDChannels > 6)
+			if (editorInfo.maxSIDChannels > 6)
 				fwrite8(songhandle, ((sidAddr3 >> 0) & 0x0ff0) >> 4);	// SID 3
 			else
 				fwrite8(songhandle, 0);
 		}
 		// Load address
-		if ((multiplier > 1) || (!multiplier))
+		if ((editorInfo.multiplier > 1) || (!editorInfo.multiplier))
 		{
 			byte = (playeradr - 10) & 0xff;
 			fwrite8(songhandle, byte);
@@ -2058,7 +2058,7 @@ void relocator(GTOBJECT *gt)
 			byte = (playeradr) >> 8;
 			fwrite8(songhandle, byte);
 		}
-		if ((multiplier > 1) || (!multiplier))
+		if ((editorInfo.multiplier > 1) || (!editorInfo.multiplier))
 			fwrite(speedcode, 10, 1, songhandle);
 	}
 

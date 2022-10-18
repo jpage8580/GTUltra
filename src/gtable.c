@@ -523,7 +523,7 @@ void tablecommands(GTOBJECT *gt)
 
 			case WAVECMD + CMD_VIBRATO:
 				table = STBL;
-				mstmode = finevibrato;
+				mstmode = editorInfo.finevibrato;
 				break;
 
 			case WAVECMD + CMD_FUNKTEMPO:

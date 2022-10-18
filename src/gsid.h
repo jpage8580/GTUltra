@@ -26,8 +26,8 @@ typedef struct
 int sid_debug();
 
 void sid_init(int speed, unsigned m, unsigned ntsc, unsigned interpolate, unsigned customclockrate, unsigned usefp);
-int sid_fillbuffer(short *lptr, short *rptr, short* lptr2, short* rptr2, int samples, int bufferHalfSize);
-unsigned char sid_getorder(unsigned char index);
+int sid_fillbuffer(short *lptr, short *rptr, short* lptr2, short* rptr2, int samples, int bufferHalfSize, unsigned int adparam);
+unsigned char sid_getorder(unsigned char index, unsigned int adparam);
 
 #ifndef GSID_C
 extern unsigned char sidreg[NUMSIDREGS];

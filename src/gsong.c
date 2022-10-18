@@ -5,7 +5,14 @@
 #define GSONG_C
 
 #include "goattrk2.h"
+#include "gsong.h"
 
+SNG_INFO songInfo[MAX_SONG_FILES+1];
+
+//----------------------------------------------------------------------------- 
+// V1.4.0 - For multiple .sng files, we need this for each .sng (along with editorInfo)
+// pointer arrays to each element pointer array memcpy((char*)ltable,*ltableArray[n]
+// mallocs for each element buffer
 INSTR instr[MAX_INSTR];
 unsigned char ltable[MAX_TABLES][MAX_TABLELEN];
 unsigned char rtable[MAX_TABLES][MAX_TABLELEN];
@@ -15,14 +22,26 @@ unsigned char songOrderPatterns[MAX_SONGS][MAX_CHN][MAX_SONGLEN_EXPANDED];
 unsigned short songOrderTranspose[MAX_SONGS][MAX_CHN][MAX_SONGLEN_EXPANDED];
 unsigned int songOrderLength[MAX_SONGS][MAX_CHN];
 unsigned int songCompressedSize[MAX_SONGS][MAX_CHN];
-
 unsigned char songOrderPatternsCopyPaste[MAX_CHN][MAX_SONGLEN_EXPANDED];
 unsigned short songOrderTransposeCopyPaste[MAX_CHN][MAX_SONGLEN_EXPANDED];
+
+unsigned char pattern[MAX_PATT][MAX_PATTROWS * 4 + 4];
+char songname[MAX_STR];
+char authorname[MAX_STR];
+char copyrightname[MAX_STR];
+int pattlen[MAX_PATT];
+int songlen[MAX_SONGS][MAX_CHN];
+int highestusedpattern;
+int highestusedinstr;
+
+//----------------------------------------------------------------------------- 
+
 int copyPasteW;
 int copyPasteH;
 int copyExpandedSongValidFlag;	// 1 - we've performed a copy/cut already. 0 - we haven't
 
-
+int lastValidSongFileIndex = 0;
+int currentSongFile = 0;
 
 unsigned int detailedTableLValue[MAX_TABLELEN];
 unsigned char detailedTableMaxLValue[MAX_TABLELEN];
@@ -41,14 +60,9 @@ int detailedTableBaseRValue[MAX_TABLELEN];
 CHN_QUICKPLAY songQuickPlay[MAX_SONGS][MAX_CHN][MAX_SONGLEN + 2];
 
 
-unsigned char pattern[MAX_PATT][MAX_PATTROWS * 4 + 4];
-char songname[MAX_STR];
-char authorname[MAX_STR];
-char copyrightname[MAX_STR];
-int pattlen[MAX_PATT];
-int songlen[MAX_SONGS][MAX_CHN];
-int highestusedpattern;
-int highestusedinstr;
+
+
+
 int determinechannels(FILE* handle);
 
 
@@ -237,14 +251,14 @@ int savesong(void)
 		// JP: New. write GTUltra editor settings
 
 		fwrite8(handle, 0x1f);	// GTULTRA Editor Info ID
-		fwrite8(handle, usefinevib);
-		fwrite8(handle, optimizepulse);
-		fwrite8(handle, optimizerealtime);
-		fwrite8(handle, ntsc);
-		fwrite8(handle, sidmodel);
-		fwritele32(handle, adparam);
-		fwritele32(handle, multiplier);
-		fwritele32(handle, maxSIDChannels);
+		fwrite8(handle, editorInfo.usefinevib);
+		fwrite8(handle, editorInfo.optimizepulse);
+		fwrite8(handle, editorInfo.optimizerealtime);
+		fwrite8(handle, editorInfo.ntsc);
+		fwrite8(handle, editorInfo.sidmodel);
+		fwritele32(handle, editorInfo.adparam);
+		fwritele32(handle, editorInfo.multiplier);
+		fwritele32(handle, editorInfo.maxSIDChannels);
 		fwrite8(handle, stereoMode);
 
 		// JP: New. write instrument pan info
@@ -351,7 +365,7 @@ int loadsong(GTOBJECT *gt)
 		if (chCount == 3 || chCount == 6 || chCount == 9 || chCount == 12)
 		{
 			handleSIDChannelCountChange(&gtObject);
-			maxSIDChannels = chCount;
+			editorInfo.maxSIDChannels = chCount;
 		}
 
 	}
@@ -430,14 +444,14 @@ int loadsong(GTOBJECT *gt)
 				// JP: New. Load GTUltra settings (FV/R0/P0/HR/SIDType & Speed)
 				if (ID == 0x1f)	// ID for info
 				{
-					usefinevib = (unsigned int)fread8(handle);		// FV
-					optimizepulse = (unsigned int)fread8(handle);		// PO
-					optimizerealtime = (unsigned int)fread8(handle);		// RO
-					ntsc = (unsigned int)fread8(handle);		// NTSC / PAL
-					sidmodel = (unsigned int)fread8(handle);	// sidmodel
-					adparam = (unsigned int)freadle32(handle);	// HR
-					multiplier = (unsigned int)freadle32(handle);	// speed multiplier
-					maxSIDChannels = (int)freadle32(handle);		// sid channels
+					editorInfo.usefinevib = (unsigned int)fread8(handle);		// FV
+					editorInfo.optimizepulse = (unsigned int)fread8(handle);		// PO
+					editorInfo.optimizerealtime = (unsigned int)fread8(handle);		// RO
+					editorInfo.ntsc = (unsigned int)fread8(handle);		// editorInfo.ntsc / PAL
+					editorInfo.sidmodel = (unsigned int)fread8(handle);	// editorInfo.sidmodel
+					editorInfo.adparam = (unsigned int)freadle32(handle);	// HR
+					editorInfo.multiplier = (unsigned int)freadle32(handle);	// speed editorInfo.multiplier
+					editorInfo.maxSIDChannels = (int)freadle32(handle);		// sid channels
 					stereoMode = (unsigned int)fread8(handle);
 
 					validateStereoMode();
@@ -500,7 +514,7 @@ int loadsong(GTOBJECT *gt)
 				instr[c].ptr[PTBL] = fread8(handle);
 				instr[c].ptr[FTBL] = fread8(handle);
 				instr[c].vibdelay = fread8(handle);
-				instr[c].ptr[STBL] = makespeedtable(fread8(handle), finevibrato, 0) + 1;
+				instr[c].ptr[STBL] = makespeedtable(fread8(handle), editorInfo.finevibrato, 0) + 1;
 				instr[c].gatetimer = fread8(handle);
 				instr[c].firstwave = fread8(handle);
 				fread(&instr[c].name, MAX_INSTRNAMELEN, 1, handle);
@@ -536,7 +550,7 @@ int loadsong(GTOBJECT *gt)
 						break;
 
 					case CMD_VIBRATO:
-						pattern[c][d * 4 + 3] = makespeedtable(pattern[c][d * 4 + 3], finevibrato, 0) + 1;
+						pattern[c][d * 4 + 3] = makespeedtable(pattern[c][d * 4 + 3], editorInfo.finevibrato, 0) + 1;
 						break;
 					}
 				}
@@ -1110,7 +1124,7 @@ int loadsong(GTOBJECT *gt)
 						songlen[c][d] = 1;
 					}
 				}
-				else if ((evenSong) && evenSongLen > 0 && maxSIDChannels > 6)
+				else if ((evenSong) && evenSongLen > 0 && editorInfo.maxSIDChannels > 6)
 				{
 					for (int d = 0; d < MAX_CHN; d++)
 					{
@@ -1219,7 +1233,7 @@ void loadinstrument(GTOBJECT *gt)
 			optr[1] = fread8(handle);
 			optr[2] = fread8(handle);
 			instr[editorInfo.einum].vibdelay = fread8(handle);
-			instr[editorInfo.einum].ptr[STBL] = makespeedtable(fread8(handle), finevibrato, 0) + 1;
+			instr[editorInfo.einum].ptr[STBL] = makespeedtable(fread8(handle), editorInfo.finevibrato, 0) + 1;
 			instr[editorInfo.einum].gatetimer = fread8(handle);
 			instr[editorInfo.einum].firstwave = fread8(handle);
 			fread(&instr[editorInfo.einum].name, MAX_INSTRNAMELEN, 1, handle);
@@ -1284,8 +1298,8 @@ void loadinstrument(GTOBJECT *gt)
 
 			instr[editorInfo.einum].ad = fread8(handle);
 			instr[editorInfo.einum].sr = fread8(handle);
-			if (multiplier)
-				instr[editorInfo.einum].gatetimer = 2 * multiplier;
+			if (editorInfo.multiplier)
+				instr[editorInfo.einum].gatetimer = 2 * editorInfo.multiplier;
 			else
 				instr[editorInfo.einum].gatetimer = 1;
 			instr[editorInfo.einum].firstwave = 0x9;
@@ -1532,12 +1546,12 @@ void clearsong(int cs, int cp, int ci, int ct, int cn, GTOBJECT *gt)
 	editorInfo.esmarkchnend = -1;
 	followplay = 0;
 
-	for (c = 0; c < maxSIDChannels; c++)
+	for (c = 0; c < editorInfo.maxSIDChannels; c++)
 	{
 
 		gt->chn[c].mute = 0;
-		if (multiplier)
-			gt->chn[c].tempo = multiplier * 6 - 1;
+		if (editorInfo.multiplier)
+			gt->chn[c].tempo = editorInfo.multiplier * 6 - 1;
 		else
 			gt->chn[c].tempo = 6 - 1;
 		gt->chn[c].pattptr = 0;
@@ -1569,7 +1583,7 @@ void clearsong(int cs, int cp, int ci, int ct, int cn, GTOBJECT *gt)
 			}
 
 			int a = 1;
-			if (maxSIDChannels > 6)
+			if (editorInfo.maxSIDChannels > 6)
 				a = 2;
 
 			for (int i = 0;i < a;i++)
@@ -1740,7 +1754,7 @@ int insertpattern(int p, GTOBJECT *gt)
 				{
 					for (e = 0; e < songOrderLength[c][d]; e++)
 					{
-						if ((songOrderPatterns[c][d][e] < REPEAT) &&(songOrderPatterns[c][d][e] > p) && (songOrderPatterns[c][d][e] != MAX_PATT - 1))
+						if ((songOrderPatterns[c][d][e] < REPEAT) && (songOrderPatterns[c][d][e] > p) && (songOrderPatterns[c][d][e] != MAX_PATT - 1))
 							songOrderPatterns[c][d][e]++;
 					}
 				}
@@ -1924,7 +1938,7 @@ void findduplicatepatterns(GTOBJECT *gt)
 								}
 							}
 						}
-						for (f = 0; f < maxSIDChannels; f++)
+						for (f = 0; f < editorInfo.maxSIDChannels; f++)
 						{
 							//				int c2 = getActualChannel(esnum, f);	// 0-12
 							if (gt->editorUndoInfo.editorInfo[f].epnum == d)
@@ -2229,7 +2243,7 @@ void initQuickPlay()
 void setQuickPlay(int song, int channel, int patternOffset, GTOBJECT *gt, int updateCounter)
 {
 	songQuickPlay[song][channel][patternOffset].updateCounter = updateCounter;
-	for (int i = 0;i < maxSIDChannels;i++)
+	for (int i = 0;i < editorInfo.maxSIDChannels;i++)
 	{
 		memcpy((char*)&songQuickPlay[song][channel][patternOffset].chn[i], &gt->chn[i], sizeof(CHN));
 	}
@@ -2239,7 +2253,7 @@ int getQuickPlayChannels(int song, int channel, int patternOffset, GTOBJECT *gt,
 {
 	if (songQuickPlay[song][channel][patternOffset].updateCounter == updateCounter)
 	{
-		for (int i = 0;i < maxSIDChannels;i++)
+		for (int i = 0;i < editorInfo.maxSIDChannels;i++)
 		{
 			memcpy(&gt->chn[i], (char*)&songQuickPlay[song][channel][patternOffset].chn[i], sizeof(CHN));
 		}
@@ -2337,7 +2351,7 @@ void compressChannel(int s, int c, int startIndex, int endIndex, int *p, int *la
 			if (transpose & 0x80)
 			{
 				if (transpose & 0x7f)
-					compressedTrans = TRANSDOWN + ((0x10-transpose) & 0x7f);	// 1.3.7 fix. Negative transpose was compressed back to repeat values instead
+					compressedTrans = TRANSDOWN + ((0x10 - transpose) & 0x7f);	// 1.3.7 fix. Negative transpose was compressed back to repeat values instead
 				else
 					compressedTrans = TRANSUP;
 			}
@@ -2504,6 +2518,183 @@ void clearExpandedSongChannel(int s, int c)
 	songOrderPatterns[s][c][MAX_SONGLEN_EXPANDED - 1] = 0xff;
 }
 
+
+void initSngMemory()
+{
+	for (int i = 0;i < MAX_SONG_FILES + 1;i++)
+	{
+		songInfo[i].authorName = NULL;
+	}
+}
+
+int allocateSngMemory(int sngIndex)
+{
+
+	SNG_INFO *si = &songInfo[sngIndex];
+
+	si->instrumentData = malloc(sizeof(INSTR)*MAX_INSTR);
+	si->editorInfo = malloc(sizeof(EDITOR_INFO));
+	si->ltable = malloc(sizeof(char)*(MAX_TABLES*MAX_TABLELEN));
+	si->rtable = malloc(sizeof(char)*(MAX_TABLES*MAX_TABLELEN));
+	si->songorder = malloc(sizeof(char)*(MAX_SONGS*MAX_CHN*(MAX_SONGLEN + 2)));
+	si->songOrderPatternsExpanded = malloc(sizeof(char)*(MAX_SONGS*MAX_CHN*MAX_SONGLEN_EXPANDED));
+	si->songOrderTransposeExpanded = malloc(sizeof(short)*(MAX_SONGS*MAX_CHN*MAX_SONGLEN_EXPANDED));
+	si->songOrderLengthExpanded = malloc(sizeof(int)*(MAX_SONGS*MAX_CHN));
+	si->songCompressedSizeExpanded = malloc(sizeof(int)*(MAX_SONGS*MAX_CHN));
+//	si->songOrderPatternsCopyPasteExpanded = malloc(sizeof(char)*(MAX_CHN*MAX_SONGLEN_EXPANDED));
+//	si->songOrderTransposeCopyPasteExpanded = malloc(sizeof(short)*(MAX_CHN*MAX_SONGLEN_EXPANDED));
+
+	si->pattern = malloc(sizeof(char)*MAX_PATT*(MAX_PATTROWS * 4 + 4));
+	si->songName = malloc(sizeof(char)* MAX_STR);
+	si->loadedSongFileName = malloc(sizeof(char)*MAX_PATHNAME);
+	si->copyrightName = malloc(sizeof(char)* MAX_STR);
+	si->authorName = malloc(sizeof(char)* MAX_STR);
+	si->patternLen = malloc(sizeof(int)*MAX_PATT);
+	si->songLen = malloc(sizeof(int)*MAX_SONGS*MAX_CHN);
+
+	si->editorUndoInfo = malloc(sizeof(EDITOR_UNDO_INFO));
+
+	/*
+	char *pattern;
+	char *songName;
+	char *authorName;
+	char *copyrightName;
+	char *patternLen;
+	char *songLen;
+	int highestUsedPattern;
+	int highestUsedInstr;
+
+	unsigned char pattern[MAX_PATT][MAX_PATTROWS * 4 + 4];
+	char songname[MAX_STR];
+	char authorname[MAX_STR];
+	char copyrightname[MAX_STR];
+	int pattlen[MAX_PATT];
+	int songlen[MAX_SONGS][MAX_CHN];
+	int highestusedpattern;
+	int highestusedinstr;
+	*/
+	return 1;
+}
+
+int copyCurrentToSngBuffer(GTOBJECT *gt,int sngIndex)
+{
+	SNG_INFO *si = &songInfo[sngIndex];
+	if (si->authorName == NULL)
+		return 0;
+
+	si->highestUsedInstr = highestusedinstr;
+	si->highestUsedPattern = highestusedpattern;
+	editorInfo.currentSongFile = currentSongFile;
+
+	memcpy(si->editorInfo, &editorInfo, sizeof(EDITOR_INFO));
+	memcpy(si->editorUndoInfo, &gt->editorUndoInfo, sizeof(EDITOR_UNDO_INFO));
+
+	memcpy(si->instrumentData, &instr[0], sizeof(INSTR)*MAX_INSTR);
+	memcpy(si->ltable, &ltable[0][0], sizeof(char)*(MAX_TABLES*MAX_TABLELEN));
+	memcpy(si->rtable, &rtable[0][0], sizeof(char)*(MAX_TABLES*MAX_TABLELEN));
+	memcpy(si->songorder, &songorder[0][0][0],sizeof(char)*(MAX_SONGS*MAX_CHN*(MAX_SONGLEN + 2)));
+	memcpy(si->songOrderPatternsExpanded, &songOrderPatterns[0][0][0], sizeof(char)*(MAX_SONGS*MAX_CHN*MAX_SONGLEN_EXPANDED));
+	memcpy(si->songOrderTransposeExpanded, &songOrderTranspose[0][0][0], sizeof(short)*(MAX_SONGS*MAX_CHN*MAX_SONGLEN_EXPANDED));
+	memcpy(si->songOrderLengthExpanded, &songOrderLength[0][0], sizeof(int)*(MAX_SONGS*MAX_CHN));
+	memcpy(si->songCompressedSizeExpanded,&songCompressedSize[0][0], sizeof(int)*(MAX_SONGS*MAX_CHN));
+//	memcpy(si->songOrderPatternsCopyPasteExpanded, &songOrderPatternsCopyPaste[0][0], sizeof(char)*(MAX_CHN*MAX_SONGLEN_EXPANDED));
+//	memcpy(si->songOrderTransposeCopyPasteExpanded, &songOrderTransposeCopyPaste[0][0], sizeof(short)*(MAX_CHN*MAX_SONGLEN_EXPANDED));
+
+	memcpy(si->pattern,&pattern[0][0],sizeof(char)*MAX_PATT*(MAX_PATTROWS * 4 + 4));
+	memcpy(si->songName,&songname[0],sizeof(char)* MAX_STR);
+	memcpy(si->loadedSongFileName, &loadedsongfilename[0], sizeof(char)*MAX_PATHNAME);
+	memcpy(si->copyrightName,&copyrightname[0],sizeof(char)* MAX_STR);
+	memcpy(si->authorName ,&authorname[0],sizeof(char)* MAX_STR);
+	memcpy(si->patternLen, &pattlen[0], sizeof(int)*MAX_PATT);
+	memcpy(si->songLen, &songlen[0][0], sizeof(int)*MAX_SONGS*MAX_CHN);
+
+	/*
+	unsigned char pattern[MAX_PATT][MAX_PATTROWS * 4 + 4];
+	char songname[MAX_STR];
+	char authorname[MAX_STR];
+	char copyrightname[MAX_STR];
+	int pattlen[MAX_PATT];
+	int songlen[MAX_SONGS][MAX_CHN];
+	int highestusedpattern;
+	int highestusedinstr;
+
+	si->pattern = malloc(sizeof(char)*MAX_PATT*(MAX_PATTROWS * 4 + 4));
+	si->songName = malloc(sizeof(char)* MAX_STR);
+	si->copyrightName = malloc(sizeof(char)* MAX_STR);
+	si->authorName = malloc(sizeof(char)* MAX_STR);
+	si->patternLen = malloc(sizeof(int)*MAX_PATT);
+	si->songLen = malloc(sizeof(int)*MAX_SONGS*MAX_CHN);
+	*/
+
+	// Still need to copy song name, author, copyright
+	return 1;
+}
+
+int copySngBufferToCurrent(GTOBJECT *gt, int sngIndex)
+{
+	SNG_INFO *si = &songInfo[sngIndex];
+	if (si->authorName == NULL)
+		return 0;
+
+	highestusedinstr = si->highestUsedInstr;
+	highestusedpattern = si->highestUsedPattern;
+
+	memcpy(&editorInfo, si->editorInfo, sizeof(EDITOR_INFO));
+	memcpy(&gt->editorUndoInfo, si->editorUndoInfo, sizeof(EDITOR_UNDO_INFO));
+
+	memcpy(&instr[0], si->instrumentData, sizeof(INSTR)*MAX_INSTR);
+	memcpy(&ltable[0][0], si->ltable,sizeof(char)*(MAX_TABLES*MAX_TABLELEN));
+	memcpy(&rtable[0][0], si->rtable, sizeof(char)*(MAX_TABLES*MAX_TABLELEN));
+	memcpy(&songorder[0][0][0], si->songorder, sizeof(char)*(MAX_SONGS*MAX_CHN*(MAX_SONGLEN + 2)));
+	memcpy(&songOrderPatterns[0][0][0], si->songOrderPatternsExpanded, sizeof(char)*(MAX_SONGS*MAX_CHN*MAX_SONGLEN_EXPANDED));
+	memcpy(&songOrderTranspose[0][0], si->songOrderTransposeExpanded, sizeof(short)*(MAX_SONGS*MAX_CHN*MAX_SONGLEN_EXPANDED));
+	memcpy(&songOrderLength[0][0], si->songOrderLengthExpanded,  sizeof(int)*(MAX_SONGS*MAX_CHN));
+	memcpy(&songCompressedSize[0][0], si->songCompressedSizeExpanded,  sizeof(int)*(MAX_SONGS*MAX_CHN));
+//	memcpy(&songOrderPatternsCopyPaste[0][0], si->songOrderPatternsCopyPasteExpanded,  sizeof(char)*(MAX_CHN*MAX_SONGLEN_EXPANDED));
+//	memcpy(&songOrderTransposeCopyPaste[0][0], si->songOrderTransposeCopyPasteExpanded, sizeof(short)*(MAX_CHN*MAX_SONGLEN_EXPANDED));
+
+	memcpy(&pattern[0][0], si->pattern, sizeof(char)*MAX_PATT*(MAX_PATTROWS * 4 + 4));
+	memcpy(&songname[0], si->songName,sizeof(char)* MAX_STR);
+	memcpy(&loadedsongfilename[0], si->loadedSongFileName,sizeof(char)*MAX_PATHNAME);
+	memcpy(&copyrightname[0], si->copyrightName, sizeof(char)* MAX_STR);
+	memcpy(&authorname[0], si->authorName,  sizeof(char)* MAX_STR);
+	memcpy(&pattlen[0], si->patternLen,sizeof(int)*MAX_PATT);
+	memcpy(&songlen[0][0], si->songLen, sizeof(int)*MAX_SONGS*MAX_CHN);
+
+	return 1;
+}
+
+
+/*
+
+INSTR instr[MAX_INSTR];
+unsigned char ltable[MAX_TABLES][MAX_TABLELEN];
+unsigned char rtable[MAX_TABLES][MAX_TABLELEN];
+unsigned char songorder[MAX_SONGS][MAX_CHN][MAX_SONGLEN + 2];
+
+unsigned char songOrderPatterns[MAX_SONGS][MAX_CHN][MAX_SONGLEN_EXPANDED];
+unsigned short songOrderTranspose[MAX_SONGS][MAX_CHN][MAX_SONGLEN_EXPANDED];
+unsigned int songOrderLength[MAX_SONGS][MAX_CHN];
+unsigned int songCompressedSize[MAX_SONGS][MAX_CHN];
+
+unsigned char songOrderPatternsCopyPaste[MAX_CHN][MAX_SONGLEN_EXPANDED];
+unsigned short songOrderTransposeCopyPaste[MAX_CHN][MAX_SONGLEN_EXPANDED];
+
+
+	typedef struct {
+	char *instrumentData;
+		EDITOR_INFO *editorInfo;
+		char *ltable;
+		char *rtable;
+		char *songorder;
+		char *songOrderPatternsExpanded;
+		char *songOrderTransposeExpanded;
+		char *songOrderLengthExpanded;
+		char *songCompressedSizeExpanded;
+		char *songOrderPatternsCopyPasteExpanded;
+		char *songOrderTransposeCopyPasteExpanded;
+	}SNG_INFO;
+	*/
 
 
 

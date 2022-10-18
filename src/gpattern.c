@@ -48,7 +48,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);	// 0-12
 
-	if (c2 >= maxSIDChannels)
+	if (c2 >= editorInfo.maxSIDChannels)
 		return;
 
 	int songNum = getActualSongNumber(editorInfo.esnum, c2);
@@ -297,7 +297,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 						}
 						else
 						{
-							int pos = makespeedtable(pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 3], finevibrato, 1);
+							int pos = makespeedtable(pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 3], editorInfo.finevibrato, 1);
 							pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 3] = pos + 1;
 						}
 					}
@@ -1006,6 +1006,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		}
 		else
 		{
+//			playFromCurrentPosition(gt, editorInfo.eppos * 4);
 			handleShiftSpace(gt, c2, editorInfo.eppos * 4, 0, 1);
 		}
 		break;
@@ -1014,7 +1015,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		if (!shiftOrCtrlPressed)
 		{
 			int maxCh = 6;
-			if (maxSIDChannels == 3 || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+			if (editorInfo.maxSIDChannels == 3 || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 				maxCh = 3;
 
 			editorInfo.epcolumn++;
@@ -1044,7 +1045,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 			if (editorInfo.epcolumn < 0)
 			{
 				int maxCh = 6;
-				if (maxSIDChannels == 3 || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+				if (editorInfo.maxSIDChannels == 3 || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 					maxCh = 3;
 
 				editorInfo.epcolumn = 5;
@@ -1172,7 +1173,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		{
 			editorInfo.epchn++;
 			int maxCh = 6;
-			if (maxSIDChannels == 3 || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+			if (editorInfo.maxSIDChannels == 3 || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 				maxCh = 3;
 
 			if (editorInfo.epchn >= maxCh) editorInfo.epchn = 0;
@@ -1182,7 +1183,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		{
 			editorInfo.epchn--;
 			int maxCh = 6;
-			if (maxSIDChannels == 3 || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+			if (editorInfo.maxSIDChannels == 3 || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 				maxCh = 3;
 
 			if (editorInfo.epchn < 0) editorInfo.epchn = maxCh - 1;
@@ -1659,7 +1660,7 @@ void handleShiftSpace(GTOBJECT *gt, int playChannel, int startPatternPos, int fo
 	if (enableLoop)
 	{
 
-		for (int c = 0; c < maxSIDChannels; c++)
+		for (int c = 0; c < editorInfo.maxSIDChannels; c++)
 		{
 			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 			int pat = gt->editorUndoInfo.editorInfo[c2].epnum;	// pattern number displayed along the top of the pattern

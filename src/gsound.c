@@ -96,8 +96,8 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
 	{
 		if (ntsc)
 		{
-			framerate = NTSCFRAMERATE * multiplier;
-			snd_bpmtempo = 150 * multiplier;
+			framerate = NTSCFRAMERATE *multiplier;
+			snd_bpmtempo = 150 *multiplier;
 		}
 		else
 		{
@@ -427,7 +427,7 @@ int sound_thread(void *userdata)
 		// Left side
 		for (c = 0; c < NUMSIDREGS; c++)
 		{
-			unsigned o = sid_getorder(c);
+			unsigned o = sid_getorder(c,editorInfo.adparam);
 
 			// Extra delay before loading the waveform (and mt_chngate,x)
 			if ((o == 4) || (o == 11) || (o == 18))
@@ -445,7 +445,7 @@ int sound_thread(void *userdata)
 		// Right side
 		for (c = 0; c < NUMSIDREGS; c++)
 		{
-			unsigned o = sid_getorder(c);
+			unsigned o = sid_getorder(c, editorInfo.adparam);
 
 			// Extra delay before loading the waveform (and mt_chngate,x)
 			if ((o == 4) || (o == 11) || (o == 18))
@@ -505,14 +505,14 @@ void sound_playrout(void)
 #ifdef __WIN32__
 		for (c = 0; c < NUMSIDREGS; c++)
 		{
-			unsigned o = sid_getorder(c);
+			unsigned o = sid_getorder(c, editorInfo.adparam);
 			WriteToHardSID(lefthardsid, o, sidreg[o]);
 			WriteToHardSID(righthardsid, o, sidreg2[o]);
 		}
 #else
 		for (c = 0; c < NUMSIDREGS; c++)
 		{
-			unsigned o = sid_getorder(c);
+			unsigned o = sid_getorder(c, editorInfo.adparam);
 			Uint32 dataword = (o << 8) | sidreg[o];
 			write(lefthardsidfd, &dataword, 4);
 			dataword = (o << 8) | sidreg2[o];
@@ -528,7 +528,7 @@ void sound_playrout(void)
 
 		for (w = 0; w < NUMSIDREGS; w++)
 		{
-			unsigned o = sid_getorder(w);
+			unsigned o = sid_getorder(w, editorInfo.adparam);
 
 			buf[w * 2] = o;
 			buf[w * 2 + 1] = sidreg[o];
@@ -537,7 +537,7 @@ void sound_playrout(void)
 #else
 		for (c = 0; c < NUMSIDREGS; c++)
 		{
-			unsigned o = sid_getorder(c);
+			unsigned o = sid_getorder(c, editorInfo.adparam);
 
 			lseek(catweaselfd, o, SEEK_SET);
 			write(catweaselfd, &sidreg[o], 1);
@@ -569,9 +569,9 @@ void JPSoundMixer(Sint32 *dest, unsigned samples)
 	if (samples > MIXBUFFERSIZE) return;
 
 	if (dest == NULL)
-		sid_fillbuffer(tempbuffer, tempbuffer, tempbuffer, tempbuffer, samples, MIXBUFFERSIZE);
+		sid_fillbuffer(tempbuffer, tempbuffer, tempbuffer, tempbuffer, samples, MIXBUFFERSIZE, editorInfo.adparam);
 	else
-		sid_fillbuffer(sid0buffer, sid1buffer, sid2buffer, sid3buffer, samples, MIXBUFFERSIZE);
+		sid_fillbuffer(sid0buffer, sid1buffer, sid2buffer, sid3buffer, samples, MIXBUFFERSIZE, editorInfo.adparam);
 
 
 //	sprintf(textbuffer, "sid %d", sid_debug());

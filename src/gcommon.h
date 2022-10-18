@@ -37,6 +37,7 @@
 #define MAX_SONGLEN_EXPANDED 0x800
 #define MAX_SONGS 32
 #define MAX_NOTES 96
+#define MAX_SONG_FILES 16
 
 #define REPEAT 0xd0
 #define TRANSDOWN 0xe0

@@ -40,7 +40,7 @@ int defaultpatternlength = 64;
 int cursorflash = 0;
 int cursorcolortable[] = { 1,2,7,2 };
 int exitprogram = 0;
-int eacolumn = 0;
+//int editorInfo.eacolumn = 0;
 int eamode = 0;
 int paletteChanged = 0;
 int backupTimeSeconds = 30;
@@ -78,17 +78,17 @@ unsigned playerversion = 0;
 int fileformat = FORMAT_PRG;
 int zeropageadr = 0xfc;
 int playeradr = 0x1000;
-unsigned sidmodel = 0;
-unsigned multiplier = 1;
-unsigned adparam = 0x0f00;
-unsigned ntsc = 0;
+
+
+//unsigned editorInfo.adparam = 0x0f00;
+//unsigned editorInfo.ntsc = 0;
 unsigned patterndispmode = 0;
 unsigned sidaddress = 0xd400d420;
-unsigned finevibrato = 1;
-unsigned optimizepulse = 1;
-unsigned optimizerealtime = 1;
+//unsigned finevibrato = 1;
+//unsigned editorInfo.optimizepulse = 1;
+//unsigned editorInfo.optimizerealtime = 1;
 unsigned customclockrate = 0;
-unsigned usefinevib = 0;
+//unsigned editorInfo.usefinevib = 0;
 unsigned b = DEFAULTBUF;
 unsigned mr = DEFAULTMIXRATE;
 unsigned writer = 0;
@@ -136,7 +136,7 @@ char tempSngFilename[MAX_PATHNAME];
 char backupSngFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.3.8";
+char *programname = "$VER: GTUltra V1.4.0";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -178,7 +178,7 @@ unsigned char paletteR[256];
 unsigned char paletteG[256];
 unsigned char paletteB[256];
 
-int maxSIDChannels = 3;	//12;
+//int editorInfo.maxSIDChannels = 3;	//12;
 int gMIDINote = -1;
 
 int loadedSongFlag = 0;
@@ -202,6 +202,10 @@ int main(int argc, char **argv)
 	SDL_setenv("SDL_AUDIODRIVER", "directsound", 1);
 #endif
 
+
+	editorInfo.multiplier = 1;
+	editorInfo.finevibrato = 1;
+	editorInfo.adparam = 0x0f00;
 
 	programname += sizeof "$VER:";
 	// Open datafile
@@ -272,8 +276,8 @@ int main(int argc, char **argv)
 		getparam(configfile, &b);
 		getparam(configfile, &mr);
 		getparam(configfile, &hardsid);
-		getparam(configfile, &sidmodel);
-		getparam(configfile, &ntsc);
+		getparam(configfile, &editorInfo.sidmodel);
+		getparam(configfile, &editorInfo.ntsc);
 		getparam(configfile, (unsigned *)&fileformat);
 		getparam(configfile, (unsigned *)&playeradr);
 		getparam(configfile, (unsigned *)&zeropageadr);
@@ -281,9 +285,9 @@ int main(int argc, char **argv)
 		getparam(configfile, &keypreset);
 		getparam(configfile, (unsigned *)&stepsize);
 
-		getparam(configfile, &multiplier);
+		getparam(configfile, &editorInfo.multiplier);
 		getparam(configfile, &catweasel);
-		getparam(configfile, &adparam);
+		getparam(configfile, &editorInfo.adparam);
 
 		getparam(configfile, &interpolate);
 
@@ -291,9 +295,9 @@ int main(int argc, char **argv)
 
 		getparam(configfile, &sidaddress);
 
-		getparam(configfile, &finevibrato);
-		getparam(configfile, &optimizepulse);
-		getparam(configfile, &optimizerealtime);
+		getparam(configfile, &editorInfo.finevibrato);
+		getparam(configfile, &editorInfo.optimizepulse);
+		getparam(configfile, &editorInfo.optimizerealtime);
 		getparam(configfile, &residdelay);
 		getparam(configfile, &customclockrate);
 		getparam(configfile, &hardsidbufinteractive);
@@ -316,7 +320,7 @@ int main(int argc, char **argv)
 		getfloatparam(configfile, &equaldivisionsperoctave);
 		getstringparam(configfile, specialnotenames);
 		getstringparam(configfile, scalatuningfilepath);
-		getparam(configfile, &maxSIDChannels);
+		getparam(configfile, &editorInfo.maxSIDChannels);
 		getstringparam(configfile, startPaletteName);
 		//		getparam(configfile, &currentPalettePreset);
 		getfloatparam(configfile, &masterVolume);
@@ -364,7 +368,7 @@ int main(int argc, char **argv)
 				printtext(0, y++, getColor(15, 0), "-Cxx Use CatWeasel MK3 PCI SID (0 = off, 1 = on)");
 				printtext(0, y++, getColor(15, 0), "-Dxx Pattern row display (0 = decimal, 1 = hex, 2 = decimal w/dots, 3 = hex w/dots)");
 				printtext(0, y++, getColor(15, 0), "-Exx Set emulated SID model (0 = 6581 1 = 8580) DEFAULT=6581");
-				printtext(0, y++, getColor(15, 0), "-Fxx Set custom SID clock cycles per second (0 = use PAL/NTSC default)");
+				printtext(0, y++, getColor(15, 0), "-Fxx Set custom SID clock cycles per second (0 = use PAL/editorInfo.ntsc default)");
 				printtext(0, y++, getColor(15, 0), "-Gxx Set pitch of A-4 in Hz (0 = use default frequencytable, close to 440Hz)");
 				printtext(0, y++, getColor(15, 0), "-Hxx Use HardSID (0 = off, 1 = HardSID ID0 2 = HardSID ID1 etc.)");
 				printtext(0, y++, getColor(15, 0), "     Use high nybble (it's hexadecimal) to specify right HardSID ID");
@@ -376,7 +380,7 @@ int main(int argc, char **argv)
 				printtext(0, y++, getColor(15, 0), "-Oxx Set pulseoptimization/skipping (0 = off, 1 = on) DEFAULT=on");
 				printtext(0, y++, getColor(15, 0), "-Qxx Set equal divisions per octave (12 = default, 8.2019143 = Bohlen-Pierce)");
 				printtext(0, y++, getColor(15, 0), "-Rxx Set realtime-effect optimization/skipping (0 = off, 1 = on) DEFAULT=on");
-				printtext(0, y++, getColor(15, 0), "-Sxx Set speed multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.)");
+				printtext(0, y++, getColor(15, 0), "-Sxx Set speed editorInfo.multiplier (0 for 25Hz, 1 for 1x, 2 for 2x etc.)");
 				printtext(0, y++, getColor(15, 0), "-Txx Set HardSID interactive mode sound buffer length in milliseconds DEFAULT=20, max.buffering=0");
 				printtext(0, y++, getColor(15, 0), "-Uxx Set HardSID playback mode sound buffer length in milliseconds DEFAULT=400, max.buffering=0");
 				printtext(0, y++, getColor(15, 0), "-Vxx Set finevibrato conversion (0 = off, 1 = on) DEFAULT=on");
@@ -384,7 +388,7 @@ int main(int argc, char **argv)
 				printtext(0, y++, getColor(15, 0), "-Yxx Path to a Scala tuning file .scl");
 				printtext(0, y++, getColor(15, 0), "-Zxx Set random reSID write delay in cycles (0 = off) DEFAULT=off");
 				printtext(0, y++, getColor(15, 0), "-wxx Set window scale factor (1 = no scaling, 2 to 4 = 2 to 4 times bigger window) DEFAULT=1");
-				printtext(0, y++, getColor(15, 0), "-N   Use NTSC timing");
+				printtext(0, y++, getColor(15, 0), "-N   Use editorInfo.ntsc timing");
 				printtext(0, y++, getColor(15, 0), "-P   Use PAL timing (DEFAULT)");
 				printtext(0, y++, getColor(15, 0), "-W   Write sound output to a file SIDAUDIO.RAW");
 				printtext(0, y++, getColor(15, 0), "-cxx SID channel count (3,6,9 or 12) DEFAULT=6");
@@ -405,11 +409,11 @@ int main(int argc, char **argv)
 				break;
 
 			case 'A':
-				sscanf(&argv[c][2], "%x", &adparam);
+				sscanf(&argv[c][2], "%x", &editorInfo.adparam);
 				break;
 
 			case 'S':
-				sscanf(&argv[c][2], "%u", &multiplier);
+				sscanf(&argv[c][2], "%u", &editorInfo.multiplier);
 				break;
 
 			case 'B':
@@ -421,7 +425,7 @@ int main(int argc, char **argv)
 				break;
 
 			case 'E':
-				sscanf(&argv[c][2], "%u", &sidmodel);
+				sscanf(&argv[c][2], "%u", &editorInfo.sidmodel);
 				break;
 
 			case 'I':
@@ -437,12 +441,12 @@ int main(int argc, char **argv)
 				break;
 
 			case 'N':
-				ntsc = 1;
+				editorInfo.ntsc = 1;
 				customclockrate = 0;
 				break;
 
 			case 'P':
-				ntsc = 0;
+				editorInfo.ntsc = 0;
 				customclockrate = 0;
 				break;
 
@@ -455,11 +459,11 @@ int main(int argc, char **argv)
 				break;
 
 			case 'O':
-				sscanf(&argv[c][2], "%u", &optimizepulse);
+				sscanf(&argv[c][2], "%u", &editorInfo.optimizepulse);
 				break;
 
 			case 'R':
-				sscanf(&argv[c][2], "%u", &optimizerealtime);
+				sscanf(&argv[c][2], "%u", &editorInfo.optimizerealtime);
 				break;
 
 			case 'H':
@@ -467,7 +471,7 @@ int main(int argc, char **argv)
 				break;
 
 			case 'V':
-				sscanf(&argv[c][2], "%u", &finevibrato);
+				sscanf(&argv[c][2], "%u", &editorInfo.finevibrato);
 				break;
 
 			case 'T':
@@ -511,7 +515,7 @@ int main(int argc, char **argv)
 				break;
 
 			case 'c':
-				sscanf(&argv[c][2], "%d", &maxSIDChannels);
+				sscanf(&argv[c][2], "%d", &editorInfo.maxSIDChannels);
 
 			case 'p':
 				sscanf(&argv[c][2], "%d", &currentPalettePreset);
@@ -592,20 +596,20 @@ int main(int argc, char **argv)
 	//	if (currentPalettePreset >= MAX_PALETTE_PRESETS)
 	//		currentPalettePreset = 0;
 
-	if (maxSIDChannels != 3 && maxSIDChannels != 6 && maxSIDChannels != 9 && maxSIDChannels != 12)
-		maxSIDChannels = 6;
+	if (editorInfo.maxSIDChannels != 3 && editorInfo.maxSIDChannels != 6 && editorInfo.maxSIDChannels != 9 && editorInfo.maxSIDChannels != 12)
+		editorInfo.maxSIDChannels = 6;
 
-	sidmodel &= 1;
-	adparam &= 0xffff;
+	editorInfo.sidmodel &= 1;
+	editorInfo.adparam &= 0xffff;
 	zeropageadr &= 0xff;
 	playeradr &= 0xff00;
 	if (!stepsize) stepsize = 4;
-	if (multiplier > 16) multiplier = 16;
+	if (editorInfo.multiplier > 16) editorInfo.multiplier = 16;
 	if (keypreset > 2) keypreset = 0;
-	if ((finevibrato == 1) && (multiplier < 2)) usefinevib = 1;
-	if (finevibrato > 1) usefinevib = 1;
-	if (optimizepulse > 1) optimizepulse = 1;
-	if (optimizerealtime > 1) optimizerealtime = 1;
+	if ((editorInfo.finevibrato == 1) && (editorInfo.multiplier < 2)) editorInfo.usefinevib = 1;
+	if (editorInfo.finevibrato > 1) editorInfo.usefinevib = 1;
+	if (editorInfo.optimizepulse > 1) editorInfo.optimizepulse = 1;
+	if (editorInfo.optimizerealtime > 1) editorInfo.optimizerealtime = 1;
 	if (residdelay > 63) residdelay = 63;
 	if (customclockrate < 100) customclockrate = 0;
 
@@ -667,7 +671,7 @@ int main(int argc, char **argv)
 
 
 	// Init sound
-	if (!sound_init(b, mr, writer, hardsid, sidmodel, ntsc, multiplier, catweasel, interpolate, customclockrate))
+	if (!sound_init(b, mr, writer, hardsid, editorInfo.sidmodel, editorInfo.ntsc, editorInfo.multiplier, catweasel, interpolate, customclockrate))
 	{
 		printtextc(MAX_ROWS / 2 - 1, getColor(15, 0), "Sound init failed. Press any key to run without sound (notice that song timer won't start)");
 		waitkeynoupdate();
@@ -696,10 +700,26 @@ int main(int argc, char **argv)
 
 	initSID(&gtObject);
 
+	playUntilEnd();	// Get length of time of loaded or empty song
+
+	initSngMemory();
+	lastValidSongFileIndex = 0;
+	currentSongFile = 0;	// V1.4.0
+	allocateSngMemory(0);	// V1.4.0
+	copyCurrentToSngBuffer(&gtObject, 0);
+	allocateSngMemory(1);	// V1.4.0
+	copyCurrentToSngBuffer(&gtObject, 1);
+
+	allocateSngMemory(MAX_SONG_FILES);		// this is never overwritten. Use to create an empty sng
+	copyCurrentToSngBuffer(&gtObject, MAX_SONG_FILES);
+
+
+
+
 	//-------------------------------------------------------------
 #if 0
 	strcpy(songfilename, "ultestura.sng");
-	maxSIDChannels = 3;
+	editorInfo.maxSIDChannels = 3;
 #endif
 	// Load song if applicable
 	if (strlen(songfilename))
@@ -712,6 +732,9 @@ int main(int argc, char **argv)
 			countInstruments();
 			setTableBackgroundColours(editorInfo.einum);
 		}
+
+		playUntilEnd();	// Get length of time of loaded or empty song
+		copyCurrentToSngBuffer(&gtObject, editorInfo.currentSongFile);
 	}
 
 
@@ -731,11 +754,6 @@ int main(int argc, char **argv)
 	}
 
 #endif
-
-
-
-
-	playUntilEnd();	// Get length of time of loaded or empty song
 
 	// Start editor mainloop
 	printmainscreen(&gtObject);
@@ -804,14 +822,14 @@ int main(int argc, char **argv)
 			";reSID mixing rate (in Hz)\n%d\n\n"
 			";Hardsid device number (0 = off)\n%d\n\n"
 			";reSID model (0 = 6581, 1 = 8580)\n%d\n\n"
-			";Timing mode (0 = PAL, 1 = NTSC)\n%d\n\n"
+			";Timing mode (0 = PAL, 1 = editorInfo.ntsc)\n%d\n\n"
 			";Packer/relocator fileformat (0 = SID, 1 = PRG, 2 = BIN)\n%d\n\n"
 			";Packer/relocator player address\n$%04x\n\n"
 			";Packer/relocator zeropage baseaddress\n$%02x\n\n"
 			";Packer/relocator player type (0 = standard ... 3 = minimal)\n%d\n\n"
 			";Key entry mode (0 = Protracker, 1 = DMC, 2 = Janko)\n%d\n\n"
 			";Pattern highlight step size\n%d\n\n"
-			";Speed multiplier (0 = 25Hz, 1 = 1X, 2 = 2X etc.)\n%d\n\n"
+			";Speed editorInfo. (0 = 25Hz, 1 = 1X, 2 = 2X etc.)\n%d\n\n"
 			";Use CatWeasel SID (0 = off, 1 = on)\n%d\n\n"
 			";Hardrestart ADSR parameter\n$%04x\n\n"
 			";reSID interpolation (0 = off, 1 = on, 2 = distortion, 3 = distortion & on)\n%d\n\n"
@@ -821,7 +839,7 @@ int main(int argc, char **argv)
 			";Pulseskipping (0 = off, 1 = on)\n%d\n\n"
 			";Realtime effect skipping (0 = off, 1 = on)\n%d\n\n"
 			";Random reSID write delay in cycles (0 = off)\n%d\n\n"
-			";Custom SID clock cycles per second (0 = use PAL/NTSC default)\n%d\n\n"
+			";Custom SID clock cycles per second (0 = use PAL/editorInfo.ntsc default)\n%d\n\n"
 			";HardSID interactive mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
 			";HardSID playback mode buffer size (in milliseconds, 0 = maximum/no flush)\n%d\n\n"
 			";reSID-fp distortion rate\n%f\n\n"
@@ -855,23 +873,23 @@ int main(int argc, char **argv)
 			b,
 			mr,
 			hardsid,
-			sidmodel,
-			ntsc,
+			editorInfo.sidmodel,
+			editorInfo.ntsc,
 			fileformat,
 			playeradr,
 			zeropageadr,
 			playerversion,
 			keypreset,
 			stepsize,
-			multiplier,
+			editorInfo.multiplier,
 			catweasel,
-			adparam,
+			editorInfo.adparam,
 			interpolate,
 			patterndispmode,
 			sidaddress,
-			finevibrato,
-			optimizepulse,
-			optimizerealtime,
+			editorInfo.finevibrato,
+			editorInfo.optimizepulse,
+			editorInfo.optimizerealtime,
 			residdelay,
 			customclockrate,
 			hardsidbufinteractive,
@@ -892,7 +910,7 @@ int main(int argc, char **argv)
 			equaldivisionsperoctave,
 			specialnotenames,
 			scalatuningfilepath,
-			maxSIDChannels,
+			editorInfo.maxSIDChannels,
 			paletteNames[currentPalettePreset],
 			masterVolume,
 			detuneCent,
@@ -1298,6 +1316,7 @@ void docommand(void)
 	}
 
 
+
 	if (!editPaletteMode)
 	{
 		if (undoValidateUndoAreas(ed) == 0)
@@ -1397,9 +1416,9 @@ void mousecommands(GTOBJECT *gt)
 	// Pattern editpos & pattern number selection
 	for (c = 0; c < MAX_CHN; c++)
 	{
-		if (maxSIDChannels == 3 && c >= 3)
+		if (editorInfo.maxSIDChannels == 3 && c >= 3)
 			break;
-		if (maxSIDChannels == 9 && c >= 3 && (editorInfo.esnum & 1))
+		if (editorInfo.maxSIDChannels == 9 && c >= 3 && (editorInfo.esnum & 1))
 			break;
 
 		if (mousey == PATTERN_Y)
@@ -1500,7 +1519,7 @@ void mousecommands(GTOBJECT *gt)
 
 
 	int maxCh = 5;
-	if ((maxSIDChannels == 3) || (maxSIDChannels == 9 && (editorInfo.esnum & 1)))
+	if ((editorInfo.maxSIDChannels == 3) || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 		maxCh = 2;
 
 	if ((mousey == 2) && (mousex >= 65 && mousex <= 65 + 8) && !prevmouseb && mouseb)
@@ -1629,6 +1648,38 @@ void mousecommands(GTOBJECT *gt)
 		}
 	}
 
+	if (((!prevmouseb) || (mouseheld > HOLDDELAY)) && (mousey == 1) && (mousex >= PANEL_ORDER_X+5) && (mousex <= PANEL_ORDER_X+5 + 2))
+	{
+		if (mouseb & MOUSEB_LEFT)
+		{
+			if (currentSongFile < lastValidSongFileIndex + 1)
+			{
+				undoCreateEditorInfoBackup();
+				copyCurrentToSngBuffer(gt, currentSongFile);
+				currentSongFile++;
+				copySngBufferToCurrent(gt, currentSongFile);
+				undoInvalidateUndoAreas();
+				editorInfo.currentSongFile = currentSongFile;
+				undoAddEditorSettingsToList();
+			}
+		}
+		if (mouseb & MOUSEB_RIGHT)
+		{
+			if (currentSongFile > 0)
+			{
+				undoCreateEditorInfoBackup();
+				copyCurrentToSngBuffer(gt, currentSongFile);
+				currentSongFile--;
+				copySngBufferToCurrent(gt, currentSongFile);
+				editorInfo.currentSongFile = currentSongFile;
+				undoInvalidateUndoAreas();
+				undoAddEditorSettingsToList();
+			}
+		}
+	}
+
+
+
 	// Table editpos
 	for (c = 0; c < MAX_TABLES - 1; c++)
 	{
@@ -1694,6 +1745,7 @@ void mousecommands(GTOBJECT *gt)
 //	}
 
 
+
 	checkMouseInWaveformInfo();
 
 	// Titlebar actions
@@ -1701,31 +1753,47 @@ void mousecommands(GTOBJECT *gt)
 	{
 		if ((mousey == 0) && (!prevmouseb) && (mouseb == MOUSEB_LEFT))
 		{
-			//			if ((mousex >= 38 + 20) && (mousex <= 39 + 20))
-			//			{
-			//				monomode ^= 1;
-			//			}
 			if ((mousex >= 40 + 20) && (mousex <= 41 + 20))
 			{
-				usefinevib ^= 1;
+				// V1.3.9 change - handle fine vibrato correctly.
+				//	editorInfo.usefinevib ^= 1;
+				undoCreateEditorInfoBackup();
+				editorInfo.finevibrato = 1 - editorInfo.finevibrato;
+
+				// This is the same code as used when loading the .cfg file. Ensures finevib is only used in specific cases
+				editorInfo.usefinevib = 0;
+				if ((editorInfo.finevibrato == 1) && (editorInfo.multiplier < 2)) editorInfo.usefinevib = 1;
+				if (editorInfo.finevibrato > 1) editorInfo.usefinevib = 1;
+
+				undoAddEditorSettingsToList();
 			}
 			if ((mousex >= 43 + 20) && (mousex <= 44 + 20))
 			{
-				optimizepulse ^= 1;
+				undoCreateEditorInfoBackup();
+				editorInfo.optimizepulse ^= 1;
+				undoAddEditorSettingsToList();
 			}
 			if ((mousex >= 46 + 20) && (mousex <= 47 + 20))
 			{
-				optimizerealtime ^= 1;
+
+				undoCreateEditorInfoBackup();
+				editorInfo.optimizerealtime ^= 1;
+				undoAddEditorSettingsToList();
 			}
 			if ((mousex >= 49 + 20) && (mousex <= 52 + 20))
 			{
-				ntsc ^= 1;
-				sound_init(b, mr, writer, hardsid, sidmodel, ntsc, multiplier, catweasel, interpolate, customclockrate);
+				undoCreateEditorInfoBackup();
+				editorInfo.ntsc ^= 1;
+				undoAddEditorSettingsToList();
+
+				sound_init(b, mr, writer, hardsid, editorInfo.sidmodel, editorInfo.ntsc, editorInfo.multiplier, catweasel, interpolate, customclockrate);
 			}
 			if ((mousex >= 54 + 20) && (mousex <= 57 + 20))
 			{
-				sidmodel ^= 1;
-				sound_init(b, mr, writer, hardsid, sidmodel, ntsc, multiplier, catweasel, interpolate, customclockrate);
+				undoCreateEditorInfoBackup();
+				editorInfo.sidmodel ^= 1;
+				undoAddEditorSettingsToList();
+				sound_init(b, mr, writer, hardsid, editorInfo.sidmodel, editorInfo.ntsc, editorInfo.multiplier, catweasel, interpolate, customclockrate);
 			}
 
 			if ((mousex >= 59 + 20) && (mousex <= 60 + 20))
@@ -1733,13 +1801,27 @@ void mousecommands(GTOBJECT *gt)
 			if ((mousex >= 62 + 20) && (mousex <= 65 + 20))
 			{
 				if (!editPan)
+				{
+					//					undoCreateEditorInfoBackup();					
 					editadsr(gt);
+					//				undoAddEditorSettingsToList();
+				}
 				else
 					editSIDPan(gt);
 			}
 
-			if ((mousex >= 67 + 20) && (mousex <= 68 + 20)) prevmultiplier();
-			if ((mousex >= 69 + 20) && (mousex <= 70 + 20)) nextmultiplier();
+			if ((mousex >= 67 + 20) && (mousex <= 68 + 20))
+			{
+				undoCreateEditorInfoBackup();
+				prevmultiplier();
+				undoAddEditorSettingsToList();
+			}
+			if ((mousex >= 69 + 20) && (mousex <= 70 + 20))
+			{
+				undoCreateEditorInfoBackup();
+				nextmultiplier();
+				undoAddEditorSettingsToList();
+			}
 		}
 	}
 	else
@@ -1764,7 +1846,9 @@ void mousecommands(GTOBJECT *gt)
 			if ((mousex >= 28) && (mousex <= 33))
 				stopsong(gt);
 			if ((mousex >= 35) && (mousex <= 40))
-				load(gt);
+			{
+				handleLoad(gt);
+			}
 			if ((mousex >= 42) && (mousex <= 47))
 				save(gt);
 			if ((mousex >= 49) && (mousex <= 57))
@@ -1901,7 +1985,7 @@ void generalcommands(GTOBJECT *gt)
 		if (!ctrlpressed) break;
 
 		if (!editPaletteMode)
-			undoPerform();
+			undoPerform(gt);
 		return;
 
 	case KEY_F12:
@@ -2048,8 +2132,8 @@ void generalcommands(GTOBJECT *gt)
 			editorInfo.editmode = EDIT_TABLES;		// 'Cos JAMMAR SAID SO!
 		else
 		{
-			sidmodel ^= 1;
-			sound_init(b, mr, writer, hardsid, sidmodel, ntsc, multiplier, catweasel, interpolate, customclockrate);
+			editorInfo.sidmodel ^= 1;
+			sound_init(b, mr, writer, hardsid, editorInfo.sidmodel, editorInfo.ntsc, editorInfo.multiplier, catweasel, interpolate, customclockrate);
 		}
 		break;
 
@@ -2078,19 +2162,7 @@ void generalcommands(GTOBJECT *gt)
 
 	case KEY_F10:
 
-		ok = load(gt);
-		if (ok)
-		{
-
-			// Set up song 1 and then 0... This allows editor pattern numbers to be complete, so that F3 works from the very start.
-			// (Bit of a nasty hack..Meh. Never mind)
-			editorInfo.esnum = 1;
-			songchange(gt, 1);
-			editorInfo.esnum = 0;
-			songchange(gt, 1);
-
-			playUntilEnd();
-		}
+		handleLoad(gt);
 		break;
 
 	case KEY_F11:
@@ -2370,13 +2442,13 @@ void convertInsToPans(int sidChips)
 
 void editSIDPan(GTOBJECT *gt)
 {
-	int sidChips = maxSIDChannels / 3;
+	int sidChips = editorInfo.maxSIDChannels / 3;
 
 	//	int	v = SID_StereoPanPositions[sidChips - 1][i];
 
 
 	eamode = 1;
-	eacolumn = 0;
+	editorInfo.eacolumn = 0;
 
 	for (;;)
 	{
@@ -2392,10 +2464,10 @@ void editSIDPan(GTOBJECT *gt)
 
 		if (hexnybble >= 0 && hexnybble < 0xf)
 		{
-			SID_StereoPanPositions[sidChips - 1][eacolumn] = hexnybble;
+			SID_StereoPanPositions[sidChips - 1][editorInfo.eacolumn] = hexnybble;
 			convertPansToInts(sidChips);
 
-			eacolumn++;
+			editorInfo.eacolumn++;
 		}
 
 		switch (rawkey)
@@ -2413,17 +2485,17 @@ void editSIDPan(GTOBJECT *gt)
 			return;
 
 		case KEY_BACKSPACE:
-			if (!eacolumn) break;
+			if (!editorInfo.eacolumn) break;
 		case KEY_LEFT:
-			eacolumn--;
+			editorInfo.eacolumn--;
 			break;
 
 		case KEY_RIGHT:
-			eacolumn++;
+			editorInfo.eacolumn++;
 		}
-		if (eacolumn < 0)
-			eacolumn = sidChips - 1;
-		eacolumn %= sidChips;
+		if (editorInfo.eacolumn < 0)
+			editorInfo.eacolumn = sidChips - 1;
+		editorInfo.eacolumn %= sidChips;
 
 		if ((mouseb) && (!prevmouseb))
 		{
@@ -2439,7 +2511,7 @@ void editSIDPan(GTOBJECT *gt)
 void editadsr(GTOBJECT *gt)
 {
 	eamode = 1;
-	eacolumn = 0;
+	editorInfo.eacolumn = 0;
 
 	for (;;)
 	{
@@ -2455,33 +2527,43 @@ void editadsr(GTOBJECT *gt)
 
 		if (hexnybble >= 0)
 		{
-			switch (eacolumn)
+			undoCreateEditorInfoBackup();
+
+			switch (editorInfo.eacolumn)
 			{
+
 			case 0:
-				adparam &= 0x0fff;
-				adparam |= hexnybble << 12;
+				editorInfo.adparam &= 0x0fff;
+				editorInfo.adparam |= hexnybble << 12;
 				break;
 
 			case 1:
-				adparam &= 0xf0ff;
-				adparam |= hexnybble << 8;
+				editorInfo.adparam &= 0xf0ff;
+				editorInfo.adparam |= hexnybble << 8;
 				break;
 
 			case 2:
-				adparam &= 0xff0f;
-				adparam |= hexnybble << 4;
+				editorInfo.adparam &= 0xff0f;
+				editorInfo.adparam |= hexnybble << 4;
 				break;
 
 			case 3:
-				adparam &= 0xfff0;
-				adparam |= hexnybble;
+				editorInfo.adparam &= 0xfff0;
+				editorInfo.adparam |= hexnybble;
 				break;
 			}
-			eacolumn++;
+			editorInfo.eacolumn++;
+
+			undoAddEditorSettingsToList();
 		}
 
 		switch (rawkey)
 		{
+
+		case KEY_Z:
+			if (!ctrlpressed) break;
+			undoPerform(gt);
+			break;
 
 		case KEY_F7:
 			if (!shiftOrCtrlPressed) break;
@@ -2495,16 +2577,16 @@ void editadsr(GTOBJECT *gt)
 			return;
 
 		case KEY_BACKSPACE:
-			if (!eacolumn) break;
+			if (!editorInfo.eacolumn) break;
 		case KEY_LEFT:
-			eacolumn--;
+			editorInfo.eacolumn--;
 			break;
 
 		case KEY_RIGHT:
-			eacolumn++;
+			editorInfo.eacolumn++;
 		}
 
-		eacolumn &= 3;
+		editorInfo.eacolumn &= 3;
 
 		if ((mouseb) && (!prevmouseb))
 		{
@@ -2615,29 +2697,33 @@ void getstringparam(FILE *handle, char *value)
 	sscanf(configptr, "%s", value);
 }
 
-void prevmultiplier(void)
+int prevmultiplier(void)
 {
-	if (multiplier > 0)
+	if (editorInfo.multiplier > 0)
 	{
-		multiplier--;
+		editorInfo.multiplier--;
 		reInitSID();
 		playUntilEnd();
+		return 1;
 	}
+	return 0;
 }
 
-void nextmultiplier(void)
+int nextmultiplier(void)
 {
-	if (multiplier < 16)
+	if (editorInfo.multiplier < 16)
 	{
-		multiplier++;
+		editorInfo.multiplier++;
 		reInitSID();
 		playUntilEnd();
+		return 1;
 	}
+	return 0;
 }
 
 void reInitSID()
 {
-	sound_init(b, mr, writer, hardsid, sidmodel, ntsc, multiplier, catweasel, interpolate, customclockrate);
+	sound_init(b, mr, writer, hardsid, editorInfo.sidmodel, editorInfo.ntsc, editorInfo.multiplier, catweasel, interpolate, customclockrate);
 }
 
 void calculatefreqtable()
@@ -3066,7 +3152,7 @@ void playUntilEnd()
 		}
 
 		allDone = 1;
-		for (int i = 0;i < maxSIDChannels;i++)
+		for (int i = 0;i < editorInfo.maxSIDChannels;i++)
 		{
 			if (gte->chn[i].loopCount == 0)	// wait until all channels have looped (or song ends)
 			{
@@ -3186,15 +3272,17 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (editPaletteMode)
 			return 1;
 
-		int newCh = maxSIDChannels + change * 3;
+		int newCh = editorInfo.maxSIDChannels + change * 3;
 		if (newCh < 3)
 			newCh = 3;
 		else if (newCh > 12)
 			newCh = 12;
 
-		if (newCh != maxSIDChannels)
+		if (newCh != editorInfo.maxSIDChannels)
 		{
-			maxSIDChannels = newCh;
+			undoCreateEditorInfoBackup();
+			editorInfo.maxSIDChannels = newCh;
+			undoAddEditorSettingsToList();
 			handleSIDChannelCountChange(&gtObject);
 		}
 		return 1;
@@ -3333,7 +3421,7 @@ int mouseTransportBar(GTOBJECT *gt)
 	{
 		stereoMode++;
 		stereoMode %= 3;
-		if (stereoMode == 1 && maxSIDChannels == 3)
+		if (stereoMode == 1 && editorInfo.maxSIDChannels == 3)
 			stereoMode++;
 		if (stereoMode == 0)
 			monomode = 1;
@@ -3378,11 +3466,11 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 	}
 	SDL_Delay(100);	// ensure that GT player has done an update, so that playing channels are now silent prior to setting new channel count
 
-//	if (gt->masterLoopChannel >= maxSIDChannels)
+//	if (gt->masterLoopChannel >= editorInfo.maxSIDChannels)
 //		gt->masterLoopChannel = 0;
 
 
-	if (editorInfo.eschn >= maxSIDChannels)
+	if (editorInfo.eschn >= editorInfo.maxSIDChannels)
 		editorInfo.eschn = 0;
 
 
@@ -3469,7 +3557,7 @@ void backupPatternDisplayInfo(GTOBJECT *gt)
 	oldepViewValue = editorInfo.epview;
 	oldepPosValue = editorInfo.eppos;
 
-	for (int c = 0; c < maxSIDChannels; c++)	// V1.2.2
+	for (int c = 0; c < editorInfo.maxSIDChannels; c++)	// V1.2.2
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 		backupPatternPos[c] = gt->chn[c2].pattptr;
@@ -3481,7 +3569,7 @@ void restorePatternDisplayInfo(GTOBJECT *gt)
 	editorInfo.epview = oldepViewValue;
 	editorInfo.eppos = oldepPosValue;
 
-	for (int c = 0; c < maxSIDChannels; c++)	//V1.2.2 restore pattern play position when selecting another pattern in orderlist
+	for (int c = 0; c < editorInfo.maxSIDChannels; c++)	//V1.2.2 restore pattern play position when selecting another pattern in orderlist
 	{
 		int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
 		gt->chn[c2].pattptr = backupPatternPos[c];
@@ -4399,7 +4487,7 @@ int HzToSIDFreq(float hz)
 {
 	float phi = 985248;	// PAL
 
-//	phi = 1022727;	//NTSC
+//	phi = 1022727;	//editorInfo.ntsc
 
 	float freqCons = (256 * 256 * 256) / phi;
 	float sidFreq = freqCons * hz;
@@ -4523,7 +4611,7 @@ void checkForMouseInOrderList(GTOBJECT *gt, int maxCh)
 
 void validateStereoMode()
 {
-	if (stereoMode == 1 && maxSIDChannels == 3)
+	if (stereoMode == 1 && editorInfo.maxSIDChannels == 3)
 		stereoMode++;
 	if (stereoMode == 0)
 		monomode = 1;
@@ -4755,3 +4843,23 @@ void checkForMouseInExtendedOrderList(GTOBJECT *gt, int maxCh)
 
 }
 
+
+
+void handleLoad(GTOBJECT *gt)
+{
+	int ok = load(gt);
+	if (ok)
+	{
+
+		// Set up song 1 and then 0... This allows editor pattern numbers to be complete, so that F3 works from the very start.
+		// (Bit of a nasty hack..Meh. Never mind)
+		editorInfo.esnum = 1;
+		songchange(gt, 1);
+		editorInfo.esnum = 0;
+		songchange(gt, 1);
+
+		playUntilEnd();
+
+		copyCurrentToSngBuffer(gt, currentSongFile);	// V1.4.0
+	}
+}
