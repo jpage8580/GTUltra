@@ -126,17 +126,14 @@ char instrfilter[MAX_FILENAME];
 char palettefilter[MAX_FILENAME];
 char palettepath[MAX_FILENAME];
 char paletteFileName[MAX_FILENAME] = { "palette_" };
-
-
 char instrpath[MAX_PATHNAME];
 char packedpath[MAX_PATHNAME];
-
 char charsetFilename[MAX_PATHNAME];
 char tempSngFilename[MAX_PATHNAME];
 char backupSngFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.4.0";
+char *programname = "$VER: GTUltra V1.4.1";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -572,7 +569,7 @@ int main(int argc, char **argv)
 
 	// Validate parameters
 
-	if (selectedMIDIPort = 9999)
+	if (selectedMIDIPort == 9999)	// GAHHHH!!! 1.4.1 fix. (just had the single = )
 		midiEnabled = 0;	// No MIDI processing will take place if MIDIPort is set to 9999 within .cfg file or via -m commandline option
 	else
 		midiEnabled = 1;

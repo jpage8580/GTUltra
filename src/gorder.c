@@ -1282,10 +1282,13 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 	if (c2 >= editorInfo.maxSIDChannels)
 		return;
 
+	//printf("play1\n");
 	if (gt->songinit != PLAY_STOPPED)
 	{
 		stopsong(gt);
 	}
+
+	//printf("play2\n");
 	bypassPlayRoutine = 1;	// Stop interrupt from updating play routine. We're going to do it manually
 	SDL_Delay(50);
 

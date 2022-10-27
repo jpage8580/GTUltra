@@ -1410,7 +1410,7 @@ void relocator(GTOBJECT *gt)
 	insertdefine("NUMHRINSTR", numnormal);
 	insertdefine("NUMNOHRINSTR", numnohr);
 	insertdefine("NUMLEGATOINSTR", numlegato);
-	insertdefine("editorInfo.adparam", editorInfo.adparam >> 8);
+	insertdefine("ADPARAM", editorInfo.adparam >> 8);
 	insertdefine("SRPARAM", editorInfo.adparam & 0xff);
 	if ((instr[MAX_INSTR - 1].ad >= 2) && (!(instr[MAX_INSTR - 1].ptr[WTBL])))
 		insertdefine("DEFAULTTEMPO", instr[MAX_INSTR - 1].ad - 1);
