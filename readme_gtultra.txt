@@ -11,8 +11,15 @@ Thanks to Shogoon, Russell Hoy, Jani Väisänen and Egon Sander
 Example songs:
 Thanks to MultiStyle Labs (Jammer, Linus, LMan, Mibri and Shogoon)
 
-Linus help:
-Special thanks to tlr and theK
+Special thanks to Kalle Selin, Jani Vaisanen, tlr and theK and everyone who's helped with bug fixes!
+
+V 1.4.0
+- Multiple .sng file support (load multiple .sng files and copy/paste between them)
+- Linux executable added to the release
+- Linux - fixed automatic backup (crashed GTUltra)
+- Various fixes for Expanded Order List
+- MIDI fixed (hasn’t worked since 1.3.0. Sorry)
+- 4SID export fix (GTUltra quits when exporting, due to 6510 BCS being out of range)
 
 
 V 1.3.0:
