@@ -2311,10 +2311,10 @@ void quit(GTOBJECT *gt)
 	if ((!shiftOrCtrlPressed) || (mouseb))
 	{
 		//78,36
-		printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "Really Quit (y/n)?");
+		printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "Really Quit (y/n)?");
 		waitkey(gt);
 
-		printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "                  ");
+		printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(CINFO_FOREGROUND, CGENERAL_BACKGROUND), "                  ");
 		if ((key == 'y') || (key == 'Y')) exitprogram = 1;
 	}
 	key = 0;
@@ -2329,7 +2329,7 @@ void clear(GTOBJECT *gt)
 	int ct = 0;
 	int cn = 0;
 
-	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Optimize everything (y/n)?");
+	printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Optimize everything (y/n)?");
 	waitkey(gt);
 	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 
@@ -2341,27 +2341,27 @@ void clear(GTOBJECT *gt)
 		return;
 	}
 
-	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear orderlists (y/n)?");
+	printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear orderlists (y/n)?");
 	waitkey(gt);
 	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) cs = 1;
 
-	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear patterns (y/n)?");
+	printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear patterns (y/n)?");
 	waitkey(gt);
 	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) cp = 1;
 
-	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear instruments (y/n)?");
+	printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear instruments (y/n)?");
 	waitkey(gt);
 	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) ci = 1;
 
-	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear tables (y/n)?");
+	printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear tables (y/n)?");
 	waitkey(gt);
 	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) ct = 1;
 
-	printtextcp(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear songname (y/n)?");
+	printtext(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), "Clear songname (y/n)?");
 	waitkey(gt);
 	printbyterow(YES_NO_TEXT_X, YES_NO_TEXT_Y, getColor(15, CGENERAL_BACKGROUND), 32, 39);
 	if ((key == 'y') || (key == 'Y')) cn = 1;

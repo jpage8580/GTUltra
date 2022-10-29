@@ -12,7 +12,7 @@
 #define PANEL_ORDER_Y 2
 #define EXTENDEDVISIBLEORDERLIST 13
 
-#define YES_NO_TEXT_X 10
+#define YES_NO_TEXT_X 2	//10
 #define YES_NO_TEXT_Y 40
 
 #ifndef GDISPLAY_C
