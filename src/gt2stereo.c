@@ -1651,6 +1651,7 @@ void mousecommands(GTOBJECT *gt)
 		{
 			if (currentSongFile < lastValidSongFileIndex + 1)
 			{
+				stopsong(gt);
 				undoCreateEditorInfoBackup();
 				copyCurrentToSngBuffer(gt, currentSongFile);
 				currentSongFile++;
@@ -1664,6 +1665,7 @@ void mousecommands(GTOBJECT *gt)
 		{
 			if (currentSongFile > 0)
 			{
+				stopsong(gt);
 				undoCreateEditorInfoBackup();
 				copyCurrentToSngBuffer(gt, currentSongFile);
 				currentSongFile--;
