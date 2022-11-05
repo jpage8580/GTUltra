@@ -1,0 +1,8 @@
+﻿CFLAGS+=`sdl2-config --cflags'
+CXXFLAGS += -std=c++14 
+PREFIX=../mac/
+SUFFIX=
+#LIBS+=`sdl2-config --libs` -lpthread
+LIBS+=`sdl2-config --libs` -framework CoreMIDI -framework CoreAudio -framework CoreFoundation 
+
+include makefile.common
