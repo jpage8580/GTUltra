@@ -41,6 +41,8 @@
 #define __WINDOWS_MM__ // Include this line for windows building. 
 #elif __linux__
 #define __LINUX_ALSA__	// Include this line for Linux
+#elif __APPLE__
+#define __MACOSX_CORE__	// Include this line for Linux
 #endif
 
 #include "RtMidi.h"
@@ -356,7 +358,7 @@ protected:
 #if defined __WINDOWS_MM__
 	void initialize(const std::string& /*clientName*/) {}
 #else
-unsigned int initialize(const std::string& /*clientName*/) {}
+	void initialize(const std::string& /*clientName*/) {}
 #endif
 };
 

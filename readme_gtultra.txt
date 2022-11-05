@@ -11,7 +11,7 @@ Thanks to Shogoon, Russell Hoy, Jani Väisänen and Egon Sander
 Example songs:
 Thanks to MultiStyle Labs (Jammer, Linus, LMan, Mibri and Shogoon)
 
-Special thanks to Kalle Selin, Jani Vaisanen, tlr and theK and everyone who's helped with bug fixes!
+Special thanks to Muzza / The Codeblasters, Kalle Selin, Jani Vaisanen, tlr and theK and everyone who's helped with bug fixes!
 
 V 1.4.0
 - Multiple .sng file support (load multiple .sng files and copy/paste between them)
