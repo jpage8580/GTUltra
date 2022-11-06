@@ -136,6 +136,8 @@ extern char destBackupFolderName[MAX_FILENAME];
 
 extern int debugTicks;
 
+extern int forceSave3ChannelSng;
+
 //unsigned short paletteUIDisplay[MAX_PALETTE_ENTRIES];
 extern unsigned char paletteLoadRGB[MAX_PALETTE_PRESETS][3][MAX_PALETTE_LOAD_ENTRIES];
 

@@ -46,6 +46,8 @@ int paletteChanged = 0;
 int backupTimeSeconds = 30;
 int debugTicks;	// used to measure CPU use when looking to improve performance
 int midiEnabled = 0;
+int forceSave3ChannelSng = 0;
+
 
 int selectingInOrderList = 0;
 int selectingInOrderListDeltaTime = 0;
@@ -2217,12 +2219,12 @@ int load(GTOBJECT *gt)
 		int ok = 0;
 		if (!shiftOrCtrlPressed)
 		{
-			if (fileselector(songfilename, songpath, songfilter, "LOAD SONG", 0, gt, CEDIT))
+			if (fileselector(songfilename, songpath, songfilter, "LOAD SONG", 0, gt, CEDIT,0))
 				ok = loadsong(gt);
 		}
 		else
 		{
-			if (fileselector(songfilename, songpath, songfilter, "MERGE SONG", 0, gt, CEDIT))
+			if (fileselector(songfilename, songpath, songfilter, "MERGE SONG", 0, gt, CEDIT,0))
 				ok = mergesong(gt);
 		}
 		if (ok)
@@ -2240,7 +2242,7 @@ int load(GTOBJECT *gt)
 	{
 		if (editorInfo.einum)
 		{
-			if (fileselector(instrfilename, instrpath, instrfilter, "LOAD INSTRUMENT", 0, gt, 15))
+			if (fileselector(instrfilename, instrpath, instrfilter, "LOAD INSTRUMENT", 0, gt, 15,0))
 				loadinstrument(gt);
 		}
 	}
@@ -2271,7 +2273,7 @@ void save(GTOBJECT *gt)
 		while (!done)
 		{
 			if (strlen(loadedsongfilename)) strcpy(songfilename, loadedsongfilename);
-			if (fileselector(songfilename, songpath, songfilter, "SAVE SONG", 3, gt, 12))
+			if (fileselector(songfilename, songpath, songfilter, "SAVE SONG", 3, gt, 12,1))
 				done = savesong();
 			else done = 1;
 		}
@@ -2295,7 +2297,7 @@ void save(GTOBJECT *gt)
 					strcpy(tempfilename, instrfilename);
 				}
 
-				if (fileselector(instrfilename, instrpath, instrfilter, "SAVE INSTRUMENT", 3, gt, 12))
+				if (fileselector(instrfilename, instrpath, instrfilter, "SAVE INSTRUMENT", 3, gt, 12,0))
 					done = saveinstrument();
 				else done = 1;
 
@@ -4647,7 +4649,10 @@ void saveBackupSong()
 
 	strcpy(tempSngFilename, songfilename);
 	strcpy(songfilename, backupSngFilename);
+	int tempforce3chan = forceSave3ChannelSng;
+	forceSave3ChannelSng = 0;
 	savesong();
+	forceSave3ChannelSng = tempforce3chan;
 	strcpy(songfilename, tempSngFilename);
 	strcpy(loadedsongfilename, tempSngFilename);
 }
@@ -4858,6 +4863,7 @@ void handleLoad(GTOBJECT *gt)
 	int ok = load(gt);
 	if (ok)
 	{
+		forceSave3ChannelSng = 0;
 
 		// Set up song 1 and then 0... This allows editor pattern numbers to be complete, so that F3 works from the very start.
 		// (Bit of a nasty hack..Meh. Never mind)

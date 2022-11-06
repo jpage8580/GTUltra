@@ -167,6 +167,9 @@ int savesong(void)
 
 	int songChannelCount = checkFor3ChannelSong();
 
+	if (forceSave3ChannelSng)
+		songChannelCount = 3;
+
 	if (strlen(songfilename) < MAX_FILENAME - 4)
 	{
 		int extfound = 0;

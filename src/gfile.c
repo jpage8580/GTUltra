@@ -37,7 +37,7 @@ void initpaths(void)
 
 }
 
-int fileselector(char *name, char *path, char *filter, char *title, int filemode, GTOBJECT *gt, int boxColor)
+int fileselector(char *name, char *path, char *filter, char *title, int filemode, GTOBJECT *gt, int boxColor, int miscFlags)
 {
 	int c, d, scrrep;
 	int color;
@@ -253,8 +253,16 @@ NEWPATH:
 				// Select dir,name,filter
 				if ((mousey >= 3 + VISIBLEFILES + 3) && (mousey <= 3 + VISIBLEFILES + 5) && (mousex >= 14 + 10) && (mousex <= 73 + 10))
 				{
-					filemode = mousey - (3 + VISIBLEFILES + 3) + 1;
-					if ((filemode == 3) && (!prevmouseb) && (lastclick)) goto ENTERFILE;
+					if (mousex >= 65 + 16 && mousey == 7 + VISIBLEFILES && miscFlags == 1)
+					{
+						if (prevmouseb == 0)
+							forceSave3ChannelSng = 1 - forceSave3ChannelSng;
+					}
+					else
+					{
+						filemode = mousey - (3 + VISIBLEFILES + 3) + 1;
+						if ((filemode == 3) && (!prevmouseb) && (lastclick)) goto ENTERFILE;
+					}
 				}
 
 				// Select file from list
@@ -318,7 +326,7 @@ NEWPATH:
 					chdir("..");
 #endif
 					goto NEWPATH;
-			}
+				}
 				break;
 
 			case KEY_HOME:
@@ -453,7 +461,7 @@ NEWPATH:
 					break;
 				}
 				break;
-		}
+			}
 
 			switch (filemode)
 			{
@@ -469,7 +477,7 @@ NEWPATH:
 				editstring(name, MAX_FILENAME);
 				break;
 			}
-	}
+		}
 		else
 		{
 			switch (rawkey)
@@ -543,6 +551,18 @@ NEWPATH:
 		color = CNORMAL;
 		if (filemode == 2) color = CEDIT;
 		printtext(50 - (MAX_FILENAME + 10) / 2 + 9, 7 + VISIBLEFILES, getColor(color, 0), textbuffer);
+
+		if (miscFlags == 1)
+		{
+			printtext(65, 7 + VISIBLEFILES, getColor(15, 0), "FORCE SAVE 3CHN:");
+
+			if (forceSave3ChannelSng)
+				sprintf(textbuffer, "%s", "YES");
+			else
+				sprintf(textbuffer, "%s", "NO ");
+			printtext(65 + 16, 7 + VISIBLEFILES, getColor(CEDIT, 0), textbuffer);	// "YES");
+		}
+
 		if (filemode == 2) printbg(50 - (MAX_FILENAME + 10) / 2 + 9 + strlen(filter), 7 + VISIBLEFILES, cc, 1);
 
 		printtext(50 - (MAX_FILENAME + 10) / 2 + 1, 8 + VISIBLEFILES, getColor(15, 0), "NAME:   ");
@@ -567,7 +587,7 @@ NEWPATH:
 			lastclick = DOUBLECLICKDELAY;
 			lastfile = filepos;
 		}
-}
+	}
 
 	// Deallocate all used names
 	for (c = 0; c < MAX_DIRFILES; c++)
@@ -593,7 +613,7 @@ void editstring(char *buffer, int maxlength)
 		if (len < maxlength - 1)
 		{
 			buffer[len] = key;
-			buffer[len + 1] = 0;			
+			buffer[len + 1] = 0;
 		}
 	}
 	if ((rawkey == KEY_BACKSPACE) && (len > 0))

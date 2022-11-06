@@ -526,7 +526,7 @@ int savePalette(GTOBJECT *gt)
 	int c;
 	char ident[] = { 'G', 'T', 'P', 'A' };
 
-	if (fileselector(paletteFileName, palettepath, palettefilter, "SAVE PALETTE", 3, gt, 12))
+	if (fileselector(paletteFileName, palettepath, palettefilter, "SAVE PALETTE", 3, gt, 12,0))
 	{
 		//		done = saveinstrument();
 

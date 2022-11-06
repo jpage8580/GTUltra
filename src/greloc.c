@@ -1862,7 +1862,7 @@ void relocator(GTOBJECT *gt)
 	while (!songhandle)
 	{
 
-		if (!fileselector(packedsongname, packedpath, packedfilter, "Save Music+Playroutine", 3, gt, 12))
+		if (!fileselector(packedsongname, packedpath, packedfilter, "Save Music+Playroutine", 3, gt, 12,0))
 		{
 			clearscreen(getColor(1, 0));
 			//	sprintf(textbuffer, "QUITTED JP = %d", jp);
