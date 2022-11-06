@@ -87,7 +87,7 @@ void instrumentcommands(GTOBJECT *gt)
 					editorInfo.eicolumn = 0;
 					editorInfo.eipos += 5;
 					if (editorInfo.eipos >= LAST_INST) editorInfo.eipos -= (LAST_INST);	//+1);
-					if (editorInfo.eipos < 0) editorInfo.eipos = LAST_INST-1;
+					if (editorInfo.eipos < 0) editorInfo.eipos = LAST_INST - 1;
 				}
 			}
 		}
@@ -104,7 +104,7 @@ void instrumentcommands(GTOBJECT *gt)
 					editorInfo.eicolumn = 1;
 					editorInfo.eipos -= 5;
 					if (editorInfo.eipos < 0) editorInfo.eipos += (LAST_INST);	//+1);
-					if (editorInfo.eipos >= LAST_INST) editorInfo.eipos = LAST_INST-1;
+					if (editorInfo.eipos >= LAST_INST) editorInfo.eipos = LAST_INST - 1;
 				}
 			}
 		}
@@ -114,7 +114,7 @@ void instrumentcommands(GTOBJECT *gt)
 		if (editorInfo.eipos < LAST_INST)
 		{
 			editorInfo.eipos++;
-			if (editorInfo.eipos > (LAST_INST-1)) editorInfo.eipos = 0;
+			if (editorInfo.eipos > (LAST_INST - 1)) editorInfo.eipos = 0;
 		}
 		break;
 
@@ -122,7 +122,7 @@ void instrumentcommands(GTOBJECT *gt)
 		if (editorInfo.eipos < LAST_INST)
 		{
 			editorInfo.eipos--;
-			if (editorInfo.eipos < 0) editorInfo.eipos = LAST_INST-1;
+			if (editorInfo.eipos < 0) editorInfo.eipos = LAST_INST - 1;
 		}
 		break;
 
@@ -139,6 +139,12 @@ void instrumentcommands(GTOBJECT *gt)
 		{
 			editorInfo.etlock ^= 1;
 			validatetableview();
+
+			if (editorInfo.etlock)
+				sprintf(infoTextBuffer, "Table Lock: Enabled");
+			else
+				sprintf(infoTextBuffer, "Table Lock: Disabled");
+			forceInfoLine = 1;
 		}
 		break;
 
@@ -201,7 +207,7 @@ void instrumentcommands(GTOBJECT *gt)
 		}
 		break;
 	}
-	
+
 	if ((editorInfo.eipos == LAST_INST) && (editorInfo.einum))
 	{
 		editstring(instr[editorInfo.einum].name, MAX_INSTRNAMELEN);

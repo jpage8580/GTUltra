@@ -686,6 +686,7 @@ int main(int argc, char **argv)
 	editorInfo.etmarknum = -1;
 
 	editorInfo.einum = 1;	//jp
+	disableEnterToReturnToLastPos = 1;
 
 	// JP - Init GTObject
 	gtObject.masterfader = 0xf;
@@ -2116,6 +2117,7 @@ void generalcommands(GTOBJECT *gt)
 				editorInfo.editmode = EDIT_TABLES;
 			else
 				editorInfo.editmode = EDIT_INSTRUMENT;
+			disableEnterToReturnToLastPos = 1;
 		}
 		else
 		{
@@ -2128,7 +2130,10 @@ void generalcommands(GTOBJECT *gt)
 
 	case KEY_F8:
 		if (!shiftOrCtrlPressed)
+		{
 			editorInfo.editmode = EDIT_TABLES;		// 'Cos JAMMAR SAID SO!
+			disableEnterToReturnToLastPos = 1;
+		}
 		else
 		{
 			editorInfo.sidmodel ^= 1;
@@ -3890,6 +3895,7 @@ int checkForMouseInTable(int c, int OX, int OY)
 		if (newpos >= MAX_TABLELEN) newpos = MAX_TABLELEN - 1;
 
 		editorInfo.editmode = EDIT_TABLES;
+		disableEnterToReturnToLastPos = 1;
 
 		if ((mouseb & (MOUSEB_RIGHT | MOUSEB_MIDDLE)) && (!prevmouseb))
 		{
@@ -3961,6 +3967,7 @@ int checkForMouseInDetailedFilterTable(int OX, int OY)
 			return 0;
 
 		editorInfo.editmode = EDIT_TABLES;
+		disableEnterToReturnToLastPos = 1;
 
 		if ((mouseb & (MOUSEB_RIGHT | MOUSEB_MIDDLE)) && (!prevmouseb))
 		{
@@ -4028,6 +4035,7 @@ int checkForMouseInDetailedPulseTable(int OX, int OY)
 			return 0;
 
 		editorInfo.editmode = EDIT_TABLES;
+		disableEnterToReturnToLastPos = 1;
 
 		if ((mouseb & (MOUSEB_RIGHT | MOUSEB_MIDDLE)) && (!prevmouseb))
 		{
@@ -4103,6 +4111,7 @@ int checkForMouseInDetailedWaveTable(int OX, int OY)
 
 
 		editorInfo.editmode = EDIT_TABLES;
+		disableEnterToReturnToLastPos = 1;
 
 		if ((mouseb & (MOUSEB_RIGHT | MOUSEB_MIDDLE)) && (!prevmouseb))
 		{

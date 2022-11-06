@@ -326,6 +326,11 @@ void tablecommands(GTOBJECT *gt)
 		{
 			editorInfo.etlock ^= 1;
 			validatetableview();
+			if (editorInfo.etlock)
+				sprintf(infoTextBuffer, "Table Lock: Enabled");
+			else
+				sprintf(infoTextBuffer, "Table Lock: Disabled");
+			forceInfoLine = 1;
 		}
 		break;
 
