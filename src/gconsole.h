@@ -42,6 +42,7 @@ extern int keyDownCount;
 
 extern unsigned char *chardata;
 
+
 #endif
 
 #endif

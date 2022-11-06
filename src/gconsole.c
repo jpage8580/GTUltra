@@ -18,6 +18,7 @@ unsigned int *prevscrbuffer = NULL;
 unsigned int *prevcolorbuffer = NULL;
 
 unsigned char *chardata = NULL;
+
 int key = 0;
 int rawkey = 0;
 int shiftpressed = 0;
@@ -73,7 +74,7 @@ int initscreen(void)
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0)
 		return 0;
-	win_openwindow(xsize, ysize, "GoatTracker Ultra - (Enhanced GoatTracker Stereo V2.76 - Jason Page / MSL)", NULL,enableAntiAlias);
+	win_openwindow(xsize, ysize, "GoatTracker Ultra - (Enhanced GoatTracker Stereo V2.76 - Jason Page / MSL)", NULL, enableAntiAlias);
 	win_setmousemode(MOUSE_ALWAYS_HIDDEN);
 	initicon();
 
@@ -94,7 +95,8 @@ int initscreen(void)
 
 	memset(region, 0, sizeof region);
 
-	chardata = (unsigned char*)malloc(4096*2);
+
+	chardata = (unsigned char*)malloc(4096 * 2);
 	if (!chardata) return 0;
 
 	charset = fopen(charsetFilename, "rb");		//Have we a local copy of the charset? If so, use that. Otherwise, use the one in the wad file..
@@ -102,7 +104,7 @@ int initscreen(void)
 	{
 		handle = io_open("chargen.bin");
 		if (handle == -1) return 0;
-		int s = io_read(handle, &chardata[0], 4096*2);
+		int s = io_read(handle, &chardata[0], 4096 * 2);
 		if (s < (4096 * 2))
 			memcpy(&chardata[4096], &chardata[0], 4096);
 		jdebug[0] = s;
@@ -114,13 +116,34 @@ int initscreen(void)
 		int size = ftell(charset);
 		fseek(charset, 0, SEEK_SET);
 
-		int s=fread(chardata, size, 1, charset);
+		int s = fread(chardata, size, 1, charset);
 		if (size < (4096 * 2))
 			memcpy(&chardata[4096], &chardata[0], 4096);
 		jdebug[0] = size;
 		fclose(charset);
 	}
 
+	/*
+	originalchardata = (unsigned char*)malloc(4096);
+	charset = fopen("origchars.bin", "rb");
+	fseek(charset, 0, SEEK_END);
+	int osize = ftell(charset);
+	fseek(charset, 0, SEEK_SET);
+	fread(originalchardata, osize, 1, charset);
+	fclose(charset);
+
+
+
+	for (int i = 0x195;i <= 0x19d;i++)
+	{
+		copyChar(i, 0x107 + ((i - 0x195)));
+	}
+	for (int i = 0x7f;i <= 0xff;i++)
+	{
+		copyChar(i, 0x100 + i);
+		copyCharFromOrig(i, i);
+	}
+	*/
 
 
 	gfx_loadpalette("palette.bin");
@@ -183,7 +206,7 @@ void loadexternalpalette(void)
 
 void initicon(void)
 {
-	int handle = io_open("goat32.png");	
+	int handle = io_open("goat32.png");
 	if (handle != -1)
 	{
 		SDL_RWops *rw;
@@ -256,9 +279,9 @@ void printtext(int x, int y, int color, const char *text)
 	unsigned *dptr = scrbuffer + (x + y * MAX_COLUMNS);
 	unsigned *cptr = colorbuffer + (x + y * MAX_COLUMNS);
 
-	if ((x + y * MAX_COLUMNS)>=(MAX_COLUMNS* MAX_ROWS))	// JP - proper check for out of bounds
+	if ((x + y * MAX_COLUMNS) >= (MAX_COLUMNS* MAX_ROWS))	// JP - proper check for out of bounds
 		return;
-	if ((x + y * MAX_COLUMNS)<0)
+	if ((x + y * MAX_COLUMNS) < 0)
 		return;
 
 	if (!gfxinitted) return;
@@ -286,7 +309,7 @@ void printbyterow(int x, int y, int color, unsigned int b, int length)
 }
 
 
-void fillArea(int x, int y, int width, int height, int color,int fillchar)
+void fillArea(int x, int y, int width, int height, int color, int fillchar)
 {
 	for (int i = 0;i < height;i++)
 	{
@@ -383,8 +406,8 @@ void drawbox(int x, int y, int color, int sx, int sy)
 	while (counter--)
 	{
 
-		setcharcolor(dptr, cptr, 0xfe, color);
-		setcharcolor(dptr2, cptr2, 0xfd, color);
+		setcharcolor(dptr, cptr, 0x1fe, color);
+		setcharcolor(dptr2, cptr2, 0x1fd, color);
 		dptr += MAX_COLUMNS;
 		dptr2 += MAX_COLUMNS;
 		cptr += MAX_COLUMNS;
@@ -400,8 +423,8 @@ void drawbox(int x, int y, int color, int sx, int sy)
 
 	while (counter--)
 	{
-		setcharcolor(dptr, cptr, 0xfc, color);
-		setcharcolor(dptr2, cptr2, 0xfb, color);
+		setcharcolor(dptr, cptr, 0x1fc, color);
+		setcharcolor(dptr2, cptr2, 0x1fb, color);
 		dptr++;
 		dptr2++;
 		cptr++;
@@ -410,19 +433,19 @@ void drawbox(int x, int y, int color, int sx, int sy)
 
 	dptr = scrbuffer + (x + y * MAX_COLUMNS);
 	cptr = colorbuffer + (x + y * MAX_COLUMNS);
-	setcharcolor(dptr, cptr, 0xfa, color);
+	setcharcolor(dptr, cptr, 0x1fa, color);
 
 	dptr = scrbuffer + ((x + sx - 1) + y * MAX_COLUMNS);
 	cptr = colorbuffer + ((x + sx - 1) + y * MAX_COLUMNS);
-	setcharcolor(dptr, cptr, 0xf9, color);
+	setcharcolor(dptr, cptr, 0x1f9, color);
 
 	dptr = scrbuffer + (x + (y + sy - 1) * MAX_COLUMNS);
 	cptr = colorbuffer + (x + (y + sy - 1) * MAX_COLUMNS);
-	setcharcolor(dptr, cptr, 0xf8, color);
+	setcharcolor(dptr, cptr, 0x1f8, color);
 
 	dptr = scrbuffer + ((x + sx - 1) + (y + sy - 1) * MAX_COLUMNS);
 	cptr = colorbuffer + ((x + sx - 1) + (y + sy - 1) * MAX_COLUMNS);
-	setcharcolor(dptr, cptr, 0xf7, color);
+	setcharcolor(dptr, cptr, 0x1f7, color);
 }
 
 void printbg(int x, int y, int color, int length)
@@ -778,7 +801,7 @@ void getkey(void)
 	mouseb = mou_getbuttons();
 	mousex = mousepixelx / fontwidth;
 
-	
+
 	mousey = mousepixely / fontheight;
 
 	if (mouseb)

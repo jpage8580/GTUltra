@@ -352,8 +352,8 @@ void displayOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 	}
 
 	// orderlist border
-	printbyterow(OX, OY + 7, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
-	printbytecol(OX + 38, OY + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 6);
+	printbyterow(OX, OY + 7, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f6, 38);
+	printbytecol(OX + 38, OY + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f5, 6);
 }
 
 
@@ -435,7 +435,7 @@ void displayPattern(GTOBJECT *gt)
 
 void displayPattern6Chn(GTOBJECT *gt)
 {
-	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, VISIBLEPATTROWS + 2);
+	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f5, VISIBLEPATTROWS + 2);
 
 	printbyterow(PATTERN_X, PATTERN_Y - 1, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_FOREGROUND), 0x20, 59);
 
@@ -559,9 +559,9 @@ void displayPattern6Chn(GTOBJECT *gt)
 			int cl = color & 0xff00;
 			cl |= CPATTERN_DIVIDER_LINE;
 
-			printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y + 1 + d, cl, 0xff);
+			printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y + 1 + d, cl, 0x1ff);
 			if (d == 0)
-				printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y, getColor(CPATTERN_DIVIDER_LINE, CUNUSED_MUTED_BACKGROUND), 0xff);
+				printbyte(PATTERN_X + 4 + (c * 9), PATTERN_Y, getColor(CPATTERN_DIVIDER_LINE, CUNUSED_MUTED_BACKGROUND), 0x1ff);
 		}
 	}
 
@@ -585,7 +585,7 @@ void displayPattern6Chn(GTOBJECT *gt)
 
 		if (getFilterOnOff(gt, c2))
 			headerColor = getColor(CCOLOR_RED, CGENERAL_BACKGROUND);
-		printbyte(PATTERN_X + 9 + c * 9, PATTERN_Y, headerColor, 0xf3);	// Filter on/off marker
+		printbyte(PATTERN_X + 9 + c * 9, PATTERN_Y, headerColor, 0x1f3);	// Filter on/off marker
 
 
 		headerColor = getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND);
@@ -599,9 +599,9 @@ void displayPattern6Chn(GTOBJECT *gt)
 
 			for (int i = 0;i < 2;i++)
 			{
-				printbyte(PATTERN_X + 6 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe0 + i);
-				printbyte(PATTERN_X + 9 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe2 + i);
-				printbyte(PATTERN_X + 12 + i + c * 9, PATTERN_Y - 1, headerColor, 0xe4 + i);
+				printbyte(PATTERN_X + 6 + i + c * 9, PATTERN_Y - 1, headerColor, 0x1e0 + i);
+				printbyte(PATTERN_X + 9 + i + c * 9, PATTERN_Y - 1, headerColor, 0x1e2 + i);
+				printbyte(PATTERN_X + 12 + i + c * 9, PATTERN_Y - 1, headerColor, 0x1e4 + i);
 			}
 
 			UIUnderline = t;
@@ -869,7 +869,7 @@ void displayPattern6Chn(GTOBJECT *gt)
 
 void displayPattern3Chn(GTOBJECT *gt)
 {
-	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, VISIBLEPATTROWS + 2);
+	printbytecol(PATTERN_X + 59, PATTERN_Y - 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f5, VISIBLEPATTROWS + 2);
 
 	printbyterow(PATTERN_X, PATTERN_Y - 1, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_FOREGROUND), 0x20, 59);
 
@@ -994,9 +994,9 @@ void displayPattern3Chn(GTOBJECT *gt)
 			int cl = color & 0xff00;
 			cl |= CPATTERN_DIVIDER_LINE;
 
-			printbyte(PATTERN_X + 4 + (c * chnWidth), PATTERN_Y + 1 + d, cl, 0xff);
+			printbyte(PATTERN_X + 4 + (c * chnWidth), PATTERN_Y + 1 + d, cl, 0x1ff);
 			if (d == 0)
-				printbyte(PATTERN_X + 4 + (c * chnWidth), PATTERN_Y, getColor(CPATTERN_DIVIDER_LINE, CUNUSED_MUTED_BACKGROUND), 0xff);
+				printbyte(PATTERN_X + 4 + (c * chnWidth), PATTERN_Y, getColor(CPATTERN_DIVIDER_LINE, CUNUSED_MUTED_BACKGROUND), 0x1ff);
 		}
 	}
 
@@ -1028,7 +1028,7 @@ void displayPattern3Chn(GTOBJECT *gt)
 
 		if (getFilterOnOff(gt, c2))
 			headerColor = getColor(CCOLOR_RED, CGENERAL_BACKGROUND);
-		printbyte(xpos + filterInfoXOffset, PATTERN_Y, headerColor, 0xf3);	// Filter on/off marker
+		printbyte(xpos + filterInfoXOffset, PATTERN_Y, headerColor, 0x1f3);	// Filter on/off marker
 
 
 		headerColor = getColor(CINFO_FOREGROUND, CTRANSPORT_FOREGROUND);
@@ -1042,9 +1042,9 @@ void displayPattern3Chn(GTOBJECT *gt)
 
 			for (int i = 0;i < 2;i++)
 			{
-				printbyte(PATTERN_X + filterInfoXOffset + 6 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0xe0 + i);
-				printbyte(PATTERN_X + filterInfoXOffset + 9 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0xe2 + i);
-				printbyte(PATTERN_X + filterInfoXOffset + 12 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0xe4 + i);
+				printbyte(PATTERN_X + filterInfoXOffset + 6 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0x1e0 + i);
+				printbyte(PATTERN_X + filterInfoXOffset + 9 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0x1e2 + i);
+				printbyte(PATTERN_X + filterInfoXOffset + 12 + i + c * chnWidth, PATTERN_Y - 1, headerColor, 0x1e4 + i);
 			}
 
 			UIUnderline = t;
@@ -1343,12 +1343,12 @@ void displayTransportBar(GTOBJECT *gt)
 
 	for (int i = 0;i < 59;i++)
 	{
-		printbyte(i, TRANSPORT_BAR_Y, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BETWEEN_BUTTONS), 0xbd);
-		printbyte(i, TRANSPORT_BAR_Y + 1, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BETWEEN_BUTTONS), 0xdd);
+		printbyte(i, TRANSPORT_BAR_Y, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BETWEEN_BUTTONS), 0x1bd);
+		printbyte(i, TRANSPORT_BAR_Y + 1, getColor(CTRANSPORT_FOREGROUND, CTRANSPORT_BETWEEN_BUTTONS), 0x1dd);
 
 	}
 
-	printbyterow(0, TRANSPORT_BAR_Y + 3, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 59);
+	printbyterow(0, TRANSPORT_BAR_Y + 3, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f6, 59);
 
 	displayTransportBarSkinning(0, TRANSPORT_BAR_Y);
 	displayTransportBarSIDCount(4, TRANSPORT_BAR_Y);
@@ -1426,8 +1426,8 @@ void displayTransportBarFastForward(int x, int y)
 
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0xaf + i);
-		printbyte(x + i, y + 1, color, 0xcf + i);
+		printbyte(x + i, y, color, 0x1af + i);
+		printbyte(x + i, y + 1, color, 0x1cf + i);
 	}
 }
 
@@ -1437,8 +1437,8 @@ void displayTransportBarRewind(int x, int y)
 
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0xa6 + i);
-		printbyte(x + i, y + 1, color, 0xc6 + i);
+		printbyte(x + i, y, color, 0x1a6 + i);
+		printbyte(x + i, y + 1, color, 0x1c6 + i);
 	}
 }
 
@@ -1459,7 +1459,7 @@ void displayTransportBarPolyChannels(int x, int y)
 
 		for (int i = 0;i < 02;i++)
 		{
-			printbyte(x + i + xoffset, y + yoffset, color, 0xa0 + (32 * yoffset) + i + imageOffset + xoffset);
+			printbyte(x + i + xoffset, y + yoffset, color, 0x1a0 + (32 * yoffset) + i + imageOffset + xoffset);
 		}
 	}
 }
@@ -1488,8 +1488,8 @@ void displayTransportBarPlaying(GTOBJECT *gt, int x, int y)
 
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0xa0 + i + imageOffset);
-		printbyte(x + i, y + 1, color, 0xc0 + i + imageOffset);
+		printbyte(x + i, y, color, 0x1a0 + i + imageOffset);
+		printbyte(x + i, y + 1, color, 0x1c0 + i + imageOffset);
 	}
 }
 
@@ -1500,7 +1500,7 @@ void displayTransportBarRecord(int x, int y)
 	if (recordmode)
 		color = getColor(CCOLOR_RED, CTRANSPORT_BUTTON_BACKGROUND);
 
-	int firstChar = 0xa9;
+	int firstChar = 0x1a9;
 	if (useOriginalGTFunctionKeys)
 		firstChar = 0x101;
 
@@ -1518,7 +1518,7 @@ void displayTransportBarMasterVolume(int x, int y)
 	for (int i = 0;i < 0x3;i++)
 	{
 		printbyte(x + i, y, color, 21 + i);
-		printbyte(x + i, y + 1, color, 0xe9 + i);
+		printbyte(x + i, y + 1, color, 0x1e9 + i);
 	}
 
 	sprintf(textbuffer, "%.1f", masterVolume);
@@ -1531,8 +1531,8 @@ void displayTransportBarOctave(int x, int y)
 	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0xe6 + i);
-		printbyte(x + i, y + 1, color, 0xe9 + i);
+		printbyte(x + i, y, color, 0x1e6 + i);
+		printbyte(x + i, y + 1, color, 0x1e9 + i);
 	}
 	sprintf(textbuffer, "%1d", editorInfo.epoctave);
 	printtext(x + 1, y + 1, color, textbuffer);
@@ -1544,8 +1544,8 @@ void displayTransportBarDetune(int x, int y)
 	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0x9d + i);
-		printbyte(x + i, y + 1, color, 0xe9 + i);
+		printbyte(x + i, y, color, 0x19d + i);
+		printbyte(x + i, y + 1, color, 0x1e9 + i);
 	}
 	sprintf(textbuffer, "%.1f", detuneCent + 1);
 	printtext(x + 0, y + 1, color, textbuffer);
@@ -1556,27 +1556,27 @@ void displayTransportBarMonoStereo(int x, int y)
 {
 	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
 
-	int b = 0x195;
+	int b = 0x107;	//195;
 	if (monomode || (editorInfo.maxSIDChannels == 3 && stereoMode == 1))	// either in mono mode, or 3 channels and forced stereo
 	{
 		printbyte(x, y + 1, color, 0x20);
-		printbyte(x + 1, y + 1, color, 0x9c);
+		printbyte(x + 1, y + 1, color, 0x19c);
 		printbyte(x + 2, y + 1, color, 0x20);
 
 	}
 	else if (stereoMode == 1)	// SID Stereo (0+2 = left, 1+3 = right)
 	{
-		b = 0x198;
-		printbyte(x, y + 1, color, 0x9b);
+		b = 0x10a;	//198;
+		printbyte(x, y + 1, color, 0x19b);
 		printbyte(x + 1, y + 1, color, 0x20);
-		printbyte(x + 2, y + 1, color, 0x9c);
+		printbyte(x + 2, y + 1, color, 0x19c);
 	}
 	else
 	{
-		b = 0x19b;	// Stereo Panning mode
-		printbyte(x, y + 1, color, 0x9b);
+		b = 0x10d;	//19b;	// Stereo Panning mode
+		printbyte(x, y + 1, color, 0x19b);
 		printbyte(x + 1, y + 1, color, 0x20);
-		printbyte(x + 2, y + 1, color, 0x9c);
+		printbyte(x + 2, y + 1, color, 0x19c);
 	}
 
 
@@ -1595,12 +1595,12 @@ void displayTransportBarMonoStereo(int x, int y)
 void displayTransportBarSIDCount(int x, int y)
 {
 	int color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_BUTTON_BACKGROUND);
-	printbyte(x, y, color, 0xbe);
-	printbyte(x + 1, y, color, 0xbf);
-	printbyte(x + 2, y, color, 0xde);
+	printbyte(x, y, color, 0x1be);
+	printbyte(x + 1, y, color, 0x1bf);
+	printbyte(x + 2, y, color, 0x1de);
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y + 1, color, 0xe9 + i);
+		printbyte(x + i, y + 1, color, 0x1e9 + i);
 	}
 	sprintf(textbuffer, "%1X", editorInfo.maxSIDChannels / 3);
 	printtext(x + 1, y + 1, color, textbuffer);
@@ -1615,8 +1615,8 @@ void displayTransportBarSkinning(int x, int y)
 		color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_ENABLED);
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0xed + i);
-		printbyte(x + i, y + 1, color, 0xf0 + i);
+		printbyte(x + i, y, color, 0x1ed + i);
+		printbyte(x + i, y + 1, color, 0x1f0 + i);
 	}
 
 	sprintf(textbuffer, "%1X", currentPalettePreset);
@@ -1632,8 +1632,8 @@ void displayTransportBarFollow(int x, int y)
 
 	for (int i = 0;i < 0x3;i++)
 	{
-		printbyte(x + i, y, color, 0xa0 + i);
-		printbyte(x + i, y + 1, color, 0xc0 + i);
+		printbyte(x + i, y, color, 0x1a0 + i);
+		printbyte(x + i, y + 1, color, 0x1c0 + i);
 	}
 }
 
@@ -1643,7 +1643,7 @@ void displayTransportBarLoopPattern(int x, int y)
 	if (transportLoopPattern)
 		color = getColor(CTRANSPORT_BUTTON_FOREGROUND, CTRANSPORT_ENABLED);
 
-	int imageOffset = 0xa3;
+	int imageOffset = 0x1a3;
 	if (transportLoopPatternSelectArea)
 		imageOffset = 0x104;
 
@@ -2225,8 +2225,8 @@ void displayInstrument(GTOBJECT *gt, int cc, int OX, int OY)
 	}
 
 	// Instrument border
-	printbyterow(OX, OY + 6, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
-	printbytecol(OX + 38, OY + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 5);
+	printbyterow(OX, OY + 6, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f6, 38);
+	printbytecol(OX + 38, OY + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f5, 5);
 }
 
 
@@ -2318,8 +2318,8 @@ void displayTables(int OX, int OY)
 
 
 	// Table bottom border
-	printbyterow(PANEL_TABLES_X, PANEL_TABLES_Y + 15, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf6, 38);
-	printbytecol(PANEL_TABLES_X + 38, PANEL_TABLES_Y + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0xf5, 0xe);
+	printbyterow(PANEL_TABLES_X, PANEL_TABLES_Y + 15, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f6, 38);
+	printbytecol(PANEL_TABLES_X + 38, PANEL_TABLES_Y + 1, getColor(CGENERAL_HIGHLIGHT, CGENERAL_BACKGROUND), 0x1f5, 0xe);
 }
 
 /*
@@ -2661,7 +2661,7 @@ void displayDetailedFilterTable(int cc, int OX, int OY)
 				int headerColor = getColor(CTABLE_UNUSED_FOREGROUND, 0);
 				if (filterOnOff &(1 << i))
 					headerColor = getColor(CCOLOR_RED, 0);
-				printbyte(xpos + 11 + i, ypos + d, headerColor, 0xf3);	// Filter on/off marker
+				printbyte(xpos + 11 + i, ypos + d, headerColor, 0x1f3);	// Filter on/off marker
 
 				filterEnabledColor[i] = headerColor;
 			}
@@ -2674,7 +2674,7 @@ void displayDetailedFilterTable(int cc, int OX, int OY)
 				for (int i = 0;i < 2;i++)
 				{
 					int x = j * 2 + i;
-					printbyte(xpos + 15 + x, ypos + d, headerColor, 0xe0 + (j * 2) + i);
+					printbyte(xpos + 15 + x, ypos + d, headerColor, 0x1e0 + (j * 2) + i);
 				}
 			}
 
@@ -3101,7 +3101,7 @@ void displayWaveformInfo(int x, int y)
 	for (int xp = 0;xp < 9;xp++)
 	{
 		xs = x + (xp * 5);
-		printbyte(xs, y, cdivider, 0xff);
+		printbyte(xs, y, cdivider, 0x1ff);
 	}
 
 
@@ -3150,9 +3150,9 @@ void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 		int p = editorInfo.esview + d;
 		sprintf(textbuffer, "%03X", p);
 		printtext(OX, OY + 2 + d, color, textbuffer);
-		printbyte(OX + 3, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0xff);
+		printbyte(OX + 3, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0x1ff);
 		printtext(OX, OY + 1, color, "   ");
-		printbyte(OX + 3, OY + 1, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0xff);
+		printbyte(OX + 3, OY + 1, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0x1ff);
 
 		for (int c = 0; c < MAX_CHN; c++)
 		{
@@ -3176,7 +3176,7 @@ void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 				if (compressedSize >= 0xf0)
 					cl = getColor(CCOLOR_RED, CORDER_INST_BACKGROUND);
 				printtext(OX + 4 + 3 + (c * 6), OY + 1, cl, textbuffer);
-				printbyte(OX + 4 + (c * 6) + 5, OY + 1, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0xff);	// Divider
+				printbyte(OX + 4 + (c * 6) + 5, OY + 1, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0x1ff);	// Divider
 
 				if (c2 == gt->masterLoopChannel)
 				{
@@ -3202,7 +3202,7 @@ void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 			if (c > maxCh)
 			{
 				printtext(OX + 4 + (c * 6), OY + 2 + d, color, "     ");
-				printbyte(OX + 4 + (c * 6) + 5, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0xff);
+				printbyte(OX + 4 + (c * 6) + 5, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0x1ff);
 			}
 			else if (pattern != 0xff)
 			{
@@ -3239,7 +3239,7 @@ void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 				}
 				else
 					printtext(OX + 4 + (c * 6) + 3, OY + 2 + d, color, textbuffer);
-				printbyte(OX + 4 + (c * 6) + 5, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0xff);
+				printbyte(OX + 4 + (c * 6) + 5, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0x1ff);
 			}
 			else
 			{
@@ -3247,7 +3247,7 @@ void displayExpandedOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 				printtext(OX + 4 + (c * 6), OY + 2 + d, getColor(CORDER_TRANS_REPEAT, CORDER_INST_BACKGROUND), textbuffer);
 				sprintf(textbuffer, "%03X", transpose);
 				printtext(OX + 4 + (c * 6) + 2, OY + 2 + d, getColor(14, CORDER_INST_BACKGROUND), textbuffer);
-				printbyte(OX + 4 + (c * 6) + 5, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0xff);
+				printbyte(OX + 4 + (c * 6) + 5, OY + 2 + d, getColor(CTABLE_UNUSED_FOREGROUND, CTABLE_UNUSED_BACKGROUND), 0x1ff);
 			}
 
 			int ms = editorInfo.esmarkchn;
