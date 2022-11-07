@@ -422,6 +422,9 @@ mt_tick0_f_setglobaltempo:
 				sta mt_chntempo+42
 				sta mt_chntempo+49
 				sta mt_chntempo+56
+				sta mt_chntempo+63	; JP 1.4.1 fix! forgot to set tempo for 4th SID channels!
+				sta mt_chntempo+70
+				sta mt_chntempo+77
                 rts
               .ENDIF
 mt_tick0_f_setchantempo:
@@ -1579,14 +1582,19 @@ mt_endpatt:
 mt_loadregs:
               .IF (SOUNDSUPPORT != 0)
                 ldy mt_chnsfx,y
-                bne mt_sfxexec
+				beq jpbeq1		; JP 1.4.2 bne fix (SFX enabled)
+                jmp mt_sfxexec
+jpbeq1:
+
               .ENDIF
 			    cpx #63
 				bcc mt_jp2
-				jmp mt_loadregs_sid4
+				jmp mt_loadregs_sid4	
 mt_jp2:
 				cpx #42
-				bcs mt_loadregs_sid3
+				bcc mt_jp3
+				jmp mt_loadregs_sid3
+mt_jp3:
                 cpx #21
                 bcs mt_loadregs_sid2
                 lda mt_chnsr,x
@@ -1617,7 +1625,7 @@ mt_loadregswaveonly:
 mt_nohr_legato:
                 cmp #FIRSTLEGATOINSTR
                 bcc mt_skiphr
-                bcs mt_rest
+                jmp mt_rest	; JP 1.4.2 fix
               .ENDIF
 
 mt_loadregs_sid2:
@@ -1711,9 +1719,13 @@ mt_sfxexec:     lda mt_chnsfxlo,x
                 sta mt_chnwaveptr,x
                 inc mt_chnsfx,x
 				cpx #63
-				bcs mt_sfxexec_sid4
+				bcc mt_jp4	; JP 1.4.2 fix
+				jmp mt_sfxexec_sid4
+mt_jp4:
 				cpx #42
-				bcs mt_sfxexec_sid3
+				bcc mt_jp5	; JP 1.4.2 fix
+				jmp mt_sfxexec_sid3
+mt_jp5:
                 cpx #21
                 bcs mt_sfxexec_sid2
 

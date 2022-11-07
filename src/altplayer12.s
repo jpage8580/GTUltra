@@ -420,6 +420,9 @@ mt_tick0_f_setglobaltempo:
 				sta mt_chntempo+42
 				sta mt_chntempo+49
 				sta mt_chntempo+56
+				sta mt_chntempo+63	; JP 1.4.1 fix! forgot to set tempo for 4th SID channels!
+				sta mt_chntempo+70
+				sta mt_chntempo+77
                 rts
               .ENDIF
 mt_tick0_f_setchantempo:
