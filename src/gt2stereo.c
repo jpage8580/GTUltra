@@ -328,9 +328,9 @@ int main(int argc, char **argv)
 		getparam(configfile, &selectedMIDIPort);
 		getparam(configfile, &enableAntiAlias);
 		getparam(configfile, (unsigned *)&sidPanInts[0]);
-		getparam(configfile, (unsigned *)&sidPanInts[4]);
-		getparam(configfile, (unsigned *)&sidPanInts[8]);
-		getparam(configfile, (unsigned *)&sidPanInts[12]);
+		getparam(configfile, (unsigned *)&sidPanInts[1]);
+		getparam(configfile, (unsigned *)&sidPanInts[2]);
+		getparam(configfile, (unsigned *)&sidPanInts[3]);
 		getparam(configfile, &backupTimeSeconds);
 
 		fclose(configfile);
@@ -4834,7 +4834,7 @@ void checkForMouseInExtendedOrderList(GTOBJECT *gt, int maxCh)
 					{
 						editorInfo.esmarkend = editorInfo.esview + EXTENDEDVISIBLEORDERLIST;
 						if (editorInfo.esmarkend >= 0x7ff)
-							editorInfo.esmarkend - 0x7fe;
+							editorInfo.esmarkend = 0x7fe;
 						editorInfo.eseditpos = editorInfo.esmarkend;
 					}
 				}
