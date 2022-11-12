@@ -973,6 +973,8 @@ void waitkeymouse(GTOBJECT *gt)
 
 	for (;;)
 	{
+		SDL_Delay(10);	// add this
+
 		if (backupTimeSeconds > 0)
 		{
 			msDelta = SDL_GetTicks() - lastMS;
@@ -1266,6 +1268,7 @@ void docommand(void)
 
 		if (mouseTrackModify(EDIT_TABLES))
 		{
+			undoAreaSetCheckForChange(UNDO_AREA_INSTRUMENTS, editorInfo.einum, UNDO_AREA_DIRTY_CHECK);
 			undoAreaSetCheckForChange(UNDO_AREA_TABLES + editorInfo.etnum, 0, UNDO_AREA_DIRTY_CHECK);	// left table
 			undoAreaSetCheckForChange(UNDO_AREA_TABLES + editorInfo.etnum, 1, UNDO_AREA_DIRTY_CHECK);	// right table
 		}
