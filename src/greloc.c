@@ -81,7 +81,7 @@ int nofirstwavecmd;
 int nocalculatedspeed;
 int nonormalspeed;
 int nozerospeed;
-
+int sidPlayAddr;
 
 struct membuf src = STATIC_MEMBUF_INIT;
 struct membuf dest = STATIC_MEMBUF_INIT;
@@ -566,8 +566,9 @@ void relocator(GTOBJECT *gt)
 	memset(tablemap, 0, sizeof tablemap);
 	tableerror = 0;
 
-	membuf_free(&src);
-	membuf_free(&dest);
+	// Moved to handle data in 0xa000 region issue
+//	membuf_free(&src);
+//	membuf_free(&dest);
 
 	fixedparams = 1;
 	simplepulse = 1;
@@ -1345,387 +1346,439 @@ void relocator(GTOBJECT *gt)
 		lastnote = MAX_NOTES - 1;
 	}
 
-	// Insert baseaddresses
-	insertdefine("base", playeradr);
-	insertdefine("zpbase", zeropageadr);
-
-	insertdefine("SIDBASE", sidAddr1);
-	if (editorInfo.maxSIDChannels > 3)
-		insertdefine("SID2BASE", sidAddr2);
-	if (editorInfo.maxSIDChannels > 6)
-		insertdefine("SID3BASE", sidAddr3);
-	if (editorInfo.maxSIDChannels > 9)
-		insertdefine("SID4BASE", sidAddr4);
-
-
-	// Insert conditionals
-	insertdefine("SOUNDSUPPORT", (playerversion & PLAYER_SOUNDEFFECTS) ? 1 : 0);
-	insertdefine("VOLSUPPORT", (playerversion & PLAYER_VOLUME) ? 1 : 0);
-	insertdefine("BUFFEREDWRITES", (playerversion & PLAYER_BUFFERED) ? 1 : 0);
-	insertdefine("ZPGHOSTREGS", (playerversion & PLAYER_ZPGHOSTREGS) ? 1 : 0);
-	if (editorInfo.maxSIDChannels == 3)
-		insertdefine("GHOSTREGS", (playerversion & (PLAYER_ZPGHOSTREGS | PLAYER_FULsidbuffer1ED)) ? 1 : 0);
-	insertdefine("FIXEDPARAMS", fixedparams);
-	insertdefine("SIMPLEPULSE", simplepulse);
-	insertdefine("PULSEOPTIMIZATION", editorInfo.optimizepulse);
-	insertdefine("REALTIMEOPTIMIZATION", editorInfo.optimizerealtime);
-	insertdefine("NOAUTHORINFO", (playerversion & PLAYER_AUTHORINFO) ? 0 : 1);
-	insertdefine("NOEFFECTS", noeffects);
-	insertdefine("NOGATE", nogate);
-	insertdefine("NOFILTER", nofilter);
-	insertdefine("NOFILTERMOD", nofiltermod);
-	insertdefine("NOPULSE", nopulse);
-	insertdefine("NOPULSEMOD", nopulsemod);
-	insertdefine("NOWAVEDELAY", nowavedelay);
-	insertdefine("NOWAVECMD", nowavecmd);
-	insertdefine("NOREPEAT", norepeat);
-	insertdefine("NOTRANS", notrans);
-	insertdefine("NOPORTAMENTO", noportamento);
-	insertdefine("NOTONEPORTA", notoneporta);
-	insertdefine("NOVIB", novib);
-	insertdefine("NOINSTRVIB", noinsvib);
-	insertdefine("NOSETAD", nosetad);
-	insertdefine("NOSETSR", nosetsr);
-	insertdefine("NOSETWAVE", nosetwave);
-	insertdefine("NOSETWAVEPTR", nosetwaveptr);
-	insertdefine("NOSETPULSEPTR", nosetpulseptr);
-	insertdefine("NOSETFILTPTR", nosetfiltptr);
-	insertdefine("NOSETFILTCTRL", nosetfiltctrl);
-	insertdefine("NOSETFILTCUTOFF", nosetfiltcutoff);
-	insertdefine("NOSETMASTERVOL", nosetmastervol);
-	insertdefine("NOFUNKTEMPO", nofunktempo);
-	insertdefine("NOGLOBALTEMPO", noglobaltempo);
-	insertdefine("NOCHANNELTEMPO", nochanneltempo);
-	insertdefine("NOFIRSTWAVECMD", nofirstwavecmd);
-	insertdefine("NOCALCULATEDSPEED", nocalculatedspeed);
-	insertdefine("NONORMALSPEED", nonormalspeed);
-	insertdefine("NOZEROSPEED", nozerospeed);
-
-	// Insert parameters
-	insertdefine("NUMCHANNELS", editorInfo.maxSIDChannels);
-	insertdefine("NUMSONGS", songs);
-	insertdefine("FIRSTNOTE", firstnote);
-	insertdefine("FIRSTNOHRINSTR", numnormal + 1);
-	insertdefine("FIRSTLEGATOINSTR", numnormal + numnohr + 1);
-	insertdefine("NUMHRINSTR", numnormal);
-	insertdefine("NUMNOHRINSTR", numnohr);
-	insertdefine("NUMLEGATOINSTR", numlegato);
-	insertdefine("ADPARAM", editorInfo.adparam >> 8);
-	insertdefine("SRPARAM", editorInfo.adparam & 0xff);
-	if ((instr[MAX_INSTR - 1].ad >= 2) && (!(instr[MAX_INSTR - 1].ptr[WTBL])))
-		insertdefine("DEFAULTTEMPO", instr[MAX_INSTR - 1].ad - 1);
-	else
-		insertdefine("DEFAULTTEMPO", editorInfo.multiplier ? (editorInfo.multiplier * 6 - 1) : 5);
-
-	// Fixed firstwave & gatetimer
-	if (fixedparams)
+	int jpA000Fix = 0;
+	int doAgain = 0;
+	do
 	{
-		insertdefine("FIRSTWAVEPARAM", instr[1].firstwave);
-		insertdefine("GATETIMERPARAM", instr[1].gatetimer & 0x3f);
-	}
+		membuf_free(&src);
+		membuf_free(&dest);
 
-	// Insert source code of player
-	if (editorInfo.adparam >= 0xf000)
-	{
+		// Insert baseaddresses
+		insertdefine("base", playeradr);
+		insertdefine("zpbase", zeropageadr);
+
+		insertdefine("SIDBASE", sidAddr1);
+		if (editorInfo.maxSIDChannels > 3)
+			insertdefine("SID2BASE", sidAddr2);
+		if (editorInfo.maxSIDChannels > 6)
+			insertdefine("SID3BASE", sidAddr3);
+		if (editorInfo.maxSIDChannels > 9)
+			insertdefine("SID4BASE", sidAddr4);
+
+
+		// Insert conditionals
+
+//		insertdefine("JPA000FIXDEF", jpA000Fix);
+		insertdefine("SOUNDSUPPORT", (playerversion & PLAYER_SOUNDEFFECTS) ? 1 : 0);
+		insertdefine("VOLSUPPORT", (playerversion & PLAYER_VOLUME) ? 1 : 0);
+		insertdefine("BUFFEREDWRITES", (playerversion & PLAYER_BUFFERED) ? 1 : 0);
+		insertdefine("ZPGHOSTREGS", (playerversion & PLAYER_ZPGHOSTREGS) ? 1 : 0);
 		if (editorInfo.maxSIDChannels == 3)
-			playername = "altplayer3.s";
-		else if (editorInfo.maxSIDChannels == 9)
-			playername = "altplayer9.s";
-		else if (editorInfo.maxSIDChannels == 12)
-			playername = "altplayer12.s";
-		else
-			playername = "altplayer.s";	// use 6 channel GT 6502
-	}
-	else
-	{
-		if (editorInfo.maxSIDChannels == 3)
-			playername = "player3.s";
-		else if (editorInfo.maxSIDChannels == 9)
-			playername = "player9.s";
-		else if (editorInfo.maxSIDChannels == 12)
-			playername = "player12.s";
-		else
-			playername = "player.s"; // use 6 channel GT 6502
-	}
+			insertdefine("GHOSTREGS", (playerversion & (PLAYER_ZPGHOSTREGS | PLAYER_FULsidbuffer1ED)) ? 1 : 0);
+		insertdefine("FIXEDPARAMS", fixedparams);
+		insertdefine("SIMPLEPULSE", simplepulse);
+		insertdefine("PULSEOPTIMIZATION", editorInfo.optimizepulse);
+		insertdefine("REALTIMEOPTIMIZATION", editorInfo.optimizerealtime);
+		insertdefine("NOAUTHORINFO", (playerversion & PLAYER_AUTHORINFO) ? 0 : 1);
+		insertdefine("NOEFFECTS", noeffects);
+		insertdefine("NOGATE", nogate);
+		insertdefine("NOFILTER", nofilter);
+		insertdefine("NOFILTERMOD", nofiltermod);
+		insertdefine("NOPULSE", nopulse);
+		insertdefine("NOPULSEMOD", nopulsemod);
+		insertdefine("NOWAVEDELAY", nowavedelay);
+		insertdefine("NOWAVECMD", nowavecmd);
+		insertdefine("NOREPEAT", norepeat);
+		insertdefine("NOTRANS", notrans);
+		insertdefine("NOPORTAMENTO", noportamento);
+		insertdefine("NOTONEPORTA", notoneporta);
+		insertdefine("NOVIB", novib);
+		insertdefine("NOINSTRVIB", noinsvib);
+		insertdefine("NOSETAD", nosetad);
+		insertdefine("NOSETSR", nosetsr);
+		insertdefine("NOSETWAVE", nosetwave);
+		insertdefine("NOSETWAVEPTR", nosetwaveptr);
+		insertdefine("NOSETPULSEPTR", nosetpulseptr);
+		insertdefine("NOSETFILTPTR", nosetfiltptr);
+		insertdefine("NOSETFILTCTRL", nosetfiltctrl);
+		insertdefine("NOSETFILTCUTOFF", nosetfiltcutoff);
+		insertdefine("NOSETMASTERVOL", nosetmastervol);
+		insertdefine("NOFUNKTEMPO", nofunktempo);
+		insertdefine("NOGLOBALTEMPO", noglobaltempo);
+		insertdefine("NOCHANNELTEMPO", nochanneltempo);
+		insertdefine("NOFIRSTWAVECMD", nofirstwavecmd);
+		insertdefine("NOCALCULATEDSPEED", nocalculatedspeed);
+		insertdefine("NONORMALSPEED", nonormalspeed);
+		insertdefine("NOZEROSPEED", nozerospeed);
 
-	if (!insertfile(playername))
-	{
-		clearscreen(getColor(1, 0));
-		printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), "COULD NOT OPEN PLAYROUTINE!");
-		fliptoscreen();
-		waitkeynoupdate();
-		goto PRCLEANUP;
-	}
+		// Insert parameters
+		insertdefine("NUMCHANNELS", editorInfo.maxSIDChannels);
+		insertdefine("NUMSONGS", songs);
+		insertdefine("FIRSTNOTE", firstnote);
+		insertdefine("FIRSTNOHRINSTR", numnormal + 1);
+		insertdefine("FIRSTLEGATOINSTR", numnormal + numnohr + 1);
+		insertdefine("NUMHRINSTR", numnormal);
+		insertdefine("NUMNOHRINSTR", numnohr);
+		insertdefine("NUMLEGATOINSTR", numlegato);
+		insertdefine("ADPARAM", editorInfo.adparam >> 8);
+		insertdefine("SRPARAM", editorInfo.adparam & 0xff);
+		if ((instr[MAX_INSTR - 1].ad >= 2) && (!(instr[MAX_INSTR - 1].ptr[WTBL])))
+			insertdefine("DEFAULTTEMPO", instr[MAX_INSTR - 1].ad - 1);
+		else
+			insertdefine("DEFAULTTEMPO", editorInfo.multiplier ? (editorInfo.multiplier * 6 - 1) : 5);
 
-	// JP Added this (copied from 3channel GoatTracker) 31st March 2022
-	// Modify ghostregs to not be zeropage if needed
-	//----
-	if ((playerversion & PLAYER_FULsidbuffer1ED) && (playerversion & PLAYER_ZPGHOSTREGS) == 0)
-	{
-		int bufsize = membuf_get_size(&src);
-		char* bufdata = (char*)membuf_get(&src);
-		int c;
-		for (c = 0; c < bufsize; c++)
+		// Fixed firstwave & gatetimer
+		if (fixedparams)
 		{
-			if (bufdata[c] == '<')
-			{
-				if (memcmp(bufdata + c + 1, "ghost", 5) == 0)
-					bufdata[c] = ' ';
-			}
+			insertdefine("FIRSTWAVEPARAM", instr[1].firstwave);
+			insertdefine("GATETIMERPARAM", instr[1].gatetimer & 0x3f);
 		}
-	}
-	//------
 
-
-	// Insert frequencytable
-	insertlabel("mt_freqtbllo");
-	insertbytes(&freqtbllo[firstnote], lastnote - firstnote + 1);
-	insertlabel("mt_freqtblhi");
-	insertbytes(&freqtblhi[firstnote], lastnote - firstnote + 1);
-
-	// Insert songtable
-	insertlabel("mt_songtbllo");
-
-	int songSize = songs * editorInfo.maxSIDChannels;
-	if (editorInfo.maxSIDChannels >= 9)
-		songSize = ((songs + 1) / 2)*editorInfo.maxSIDChannels;
-
-//	sprintf(textbuffer,";JP: songs %d songsize %d\n", songs, songSize);
-//	insertlabel(textbuffer);
-
-
-	for (c = 0; c < songSize; c++)		// * 6 JP
-	{
-		sprintf(textbuffer, "mt_song%d", c);
-		insertaddrlo(textbuffer);
-	}
-	insertlabel("mt_songtblhi");
-	for (c = 0; c < songSize; c++)
-	{
-		sprintf(textbuffer, "mt_song%d", c);
-		insertaddrhi(textbuffer);
-	}
-
-	// Insert patterntable
-	insertlabel("mt_patttbllo");
-	for (c = 0; c < patterns; c++)
-	{
-		sprintf(textbuffer, "mt_patt%d", c);
-		insertaddrlo(textbuffer);
-	}
-	insertlabel("mt_patttblhi");
-	for (c = 0; c < patterns; c++)
-	{
-		sprintf(textbuffer, "mt_patt%d", c);
-		insertaddrhi(textbuffer);
-	}
-
-	// Insert instruments
-	insertlabel("mt_insad");
-	insertbytes(&instrwork[0], instruments);
-	insertlabel("mt_inssr");
-	insertbytes(&instrwork[instruments], instruments);
-	insertlabel("mt_inswaveptr");
-	insertbytes(&instrwork[instruments * 2], instruments);
-	if (!nopulse)
-	{
-		insertlabel("mt_inspulseptr");
-		insertbytes(&instrwork[instruments * 3], instruments);
-	}
-	if (!nofilter)
-	{
-		insertlabel("mt_insfiltptr");
-		insertbytes(&instrwork[instruments * 4], instruments);
-	}
-	if (!noinsvib)
-	{
-		insertlabel("mt_insvibparam");
-		insertbytes(&instrwork[instruments * 5], instruments);
-		insertlabel("mt_insvibdelay");
-		insertbytes(&instrwork[instruments * 6], instruments);
-	}
-	if (!fixedparams)
-	{
-		insertlabel("mt_insgatetimer");
-		insertbytes(&instrwork[instruments * 7], instruments);
-		insertlabel("mt_insfirstwave");
-		insertbytes(&instrwork[instruments * 8], instruments);
-	}
-
-	// Insert tables
-	for (c = 0; c < MAX_TABLES; c++)
-	{
-		if ((c == PTBL) && (nopulse)) goto SKIPTABLE;
-		if ((c == FTBL) && (nofilter)) goto SKIPTABLE;
-
-		// Write table left side
-		// Extra zero for speedtable
-		if ((c == STBL) && ((!novib) || (!nofunktempo) || (!noportamento) || (!notoneporta))) insertbyte(0);
-		// Table label
-		insertlabel(tableleftname[c]);
-
-		// Table data
-		for (d = 0; d < MAX_TABLELEN; d++)
+		// Insert source code of player
+		if (editorInfo.adparam >= 0xf000)
 		{
-			if (tableused[c][d + 1])
+			if (editorInfo.maxSIDChannels == 3)
+				playername = "altplayer3.s";
+			else if (editorInfo.maxSIDChannels == 9)
+				playername = "altplayer9.s";
+			else if (editorInfo.maxSIDChannels == 12)
+				playername = "altplayer12.s";
+			else
+				playername = "altplayer.s";	// use 6 channel GT 6502
+		}
+		else
+		{
+			if (editorInfo.maxSIDChannels == 3)
+				playername = "player3.s";
+			else if (editorInfo.maxSIDChannels == 9)
+				playername = "player9.s";
+			else if (editorInfo.maxSIDChannels == 12)
+				playername = "player12.s";
+			else
+				playername = "player.s"; // use 6 channel GT 6502
+		}
+
+		if (!insertfile(playername))
+		{
+			clearscreen(getColor(1, 0));
+			printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), "COULD NOT OPEN PLAYROUTINE!");
+			fliptoscreen();
+			waitkeynoupdate();
+			goto PRCLEANUP;
+		}
+
+		// JP Added this (copied from 3channel GoatTracker) 31st March 2022
+		// Modify ghostregs to not be zeropage if needed
+		//----
+		if ((playerversion & PLAYER_FULsidbuffer1ED) && (playerversion & PLAYER_ZPGHOSTREGS) == 0)
+		{
+			int bufsize = membuf_get_size(&src);
+			char* bufdata = (char*)membuf_get(&src);
+			int c;
+			for (c = 0; c < bufsize; c++)
 			{
-				switch (c)
+				if (bufdata[c] == '<')
 				{
-					// In wavetable, convert waveform values for the playroutine
-				case WTBL:
-				{
-					unsigned char wave = ltable[c][d];
-					if ((ltable[c][d] >= WAVESILENT) && (ltable[c][d] <= WAVELASTSILENT)) wave &= 0xf;
-					if ((ltable[c][d] > WAVELASTDELAY) && (ltable[c][d] <= WAVELASTSILENT) && (!nowavedelay)) wave += 0x10;
-					insertbyte(wave);
-				}
-				break;
-
-				case PTBL:
-					if ((simplepulse) && (ltable[c][d] != 0xff) && (ltable[c][d] > 0x80))
-						insertbyte(0x80);
-					else
-						insertbyte(ltable[c][d]);
-					break;
-
-					// In filtertable, modify passband bits
-				case FTBL:
-					if ((ltable[c][d] != 0xff) && (ltable[c][d] > 0x80))
-						insertbyte(((ltable[c][d] & 0x70) >> 1) | 0x80);
-					else
-						insertbyte(ltable[c][d]);
-					break;
-
-				default:
-					insertbyte(ltable[c][d]);
-					break;
+					if (memcmp(bufdata + c + 1, "ghost", 5) == 0)
+						bufdata[c] = ' ';
 				}
 			}
 		}
+		//------
 
-		// Write table right side, remapping jumps as necessary
-		// Extra zero for speedtable
-		if ((c == STBL) && ((!novib) || (!nofunktempo) || (!noportamento) || (!notoneporta))) insertbyte(0);
-		// Table label
-		insertlabel(tablerightname[c]);
 
-		for (d = 0; d < MAX_TABLELEN; d++)
+		// Insert frequencytable
+		insertlabel("mt_freqtbllo");
+		insertbytes(&freqtbllo[firstnote], lastnote - firstnote + 1);
+		insertlabel("mt_freqtblhi");
+		insertbytes(&freqtblhi[firstnote], lastnote - firstnote + 1);
+
+		// Insert songtable
+		insertlabel("mt_songtbllo");
+
+		int songSize = songs * editorInfo.maxSIDChannels;
+		if (editorInfo.maxSIDChannels >= 9)
+			songSize = ((songs + 1) / 2)*editorInfo.maxSIDChannels;
+
+		//	sprintf(textbuffer,";JP: songs %d songsize %d\n", songs, songSize);
+		//	insertlabel(textbuffer);
+
+
+		for (c = 0; c < songSize; c++)		// * 6 JP
 		{
-			if (tableused[c][d + 1])
+			sprintf(textbuffer, "mt_song%d", c);
+			insertaddrlo(textbuffer);
+		}
+		insertlabel("mt_songtblhi");
+		for (c = 0; c < songSize; c++)
+		{
+			sprintf(textbuffer, "mt_song%d", c);
+			insertaddrhi(textbuffer);
+		}
+
+		// Insert patterntable
+		insertlabel("mt_patttbllo");
+		for (c = 0; c < patterns; c++)
+		{
+			sprintf(textbuffer, "mt_patt%d", c);
+			insertaddrlo(textbuffer);
+		}
+		insertlabel("mt_patttblhi");
+		for (c = 0; c < patterns; c++)
+		{
+			sprintf(textbuffer, "mt_patt%d", c);
+			insertaddrhi(textbuffer);
+		}
+
+		// Insert instruments
+		insertlabel("mt_insad");
+		insertbytes(&instrwork[0], instruments);
+		insertlabel("mt_inssr");
+		insertbytes(&instrwork[instruments], instruments);
+		insertlabel("mt_inswaveptr");
+		insertbytes(&instrwork[instruments * 2], instruments);
+		if (!nopulse)
+		{
+			insertlabel("mt_inspulseptr");
+			insertbytes(&instrwork[instruments * 3], instruments);
+		}
+		if (!nofilter)
+		{
+			insertlabel("mt_insfiltptr");
+			insertbytes(&instrwork[instruments * 4], instruments);
+		}
+		if (!noinsvib)
+		{
+			insertlabel("mt_insvibparam");
+			insertbytes(&instrwork[instruments * 5], instruments);
+			insertlabel("mt_insvibdelay");
+			insertbytes(&instrwork[instruments * 6], instruments);
+		}
+		if (!fixedparams)
+		{
+			insertlabel("mt_insgatetimer");
+			insertbytes(&instrwork[instruments * 7], instruments);
+			insertlabel("mt_insfirstwave");
+			insertbytes(&instrwork[instruments * 8], instruments);
+		}
+
+		// Insert tables
+		for (c = 0; c < MAX_TABLES; c++)
+		{
+			if ((c == PTBL) && (nopulse)) goto SKIPTABLE;
+			if ((c == FTBL) && (nofilter)) goto SKIPTABLE;
+
+			// Write table left side
+			// Extra zero for speedtable
+			if ((c == STBL) && ((!novib) || (!nofunktempo) || (!noportamento) || (!notoneporta))) insertbyte(0);
+			// Table label
+			insertlabel(tableleftname[c]);
+
+			// Table data
+			for (d = 0; d < MAX_TABLELEN; d++)
 			{
-				if ((ltable[c][d] != 0xff) || (c == STBL))
+				if (tableused[c][d + 1])
 				{
 					switch (c)
 					{
+						// In wavetable, convert waveform values for the playroutine
 					case WTBL:
-						if ((ltable[c][d] >= WAVECMD) && (ltable[c][d] <= WAVELASTCMD))
-						{
-							// Remap table-referencing commands
-							switch (ltable[c][d] - WAVECMD)
-							{
-							case CMD_PORTAUP:
-							case CMD_PORTADOWN:
-							case CMD_TONEPORTA:
-							case CMD_VIBRATO:
-								insertbyte(tablemap[STBL][rtable[c][d]]);
-								break;
-
-							case CMD_SETPULSEPTR:
-								insertbyte(tablemap[PTBL][rtable[c][d]]);
-								break;
-
-							case CMD_SETFILTERPTR:
-								insertbyte(tablemap[FTBL][rtable[c][d]]);
-								break;
-
-							default:
-								insertbyte(rtable[c][d]);
-								break;
-							}
-						}
-						else
-						{
-							// For normal notes, reverse all right side high bits
-							insertbyte(rtable[c][d] ^ 0x80);
-						}
-						break;
+					{
+						unsigned char wave = ltable[c][d];
+						if ((ltable[c][d] >= WAVESILENT) && (ltable[c][d] <= WAVELASTSILENT)) wave &= 0xf;
+						if ((ltable[c][d] > WAVELASTDELAY) && (ltable[c][d] <= WAVELASTSILENT) && (!nowavedelay)) wave += 0x10;
+						insertbyte(wave);
+					}
+					break;
 
 					case PTBL:
-						if (simplepulse)
-						{
-							if (ltable[c][d] >= 0x80)
-								insertbyte((ltable[c][d] & 0x0f) | (rtable[c][d] & 0xf0));
-							else
-							{
-								int pulsespeed = rtable[c][d] >> 4;
-								if (rtable[c][d] & 0x80)
-								{
-									pulsespeed |= 0xf0;
-									pulsespeed--;
-								}
-								pulsespeed = swapnybbles(pulsespeed);
-								insertbyte(pulsespeed);
-							}
-						}
+						if ((simplepulse) && (ltable[c][d] != 0xff) && (ltable[c][d] > 0x80))
+							insertbyte(0x80);
 						else
-							insertbyte(rtable[c][d]);
+							insertbyte(ltable[c][d]);
+						break;
+
+						// In filtertable, modify passband bits
+					case FTBL:
+						if ((ltable[c][d] != 0xff) && (ltable[c][d] > 0x80))
+							insertbyte(((ltable[c][d] & 0x70) >> 1) | 0x80);
+						else
+							insertbyte(ltable[c][d]);
 						break;
 
 					default:
-						insertbyte(rtable[c][d]);
+						insertbyte(ltable[c][d]);
 						break;
 					}
 				}
-				else
-					insertbyte(tablemap[c][rtable[c][d]]);
+			}
+
+			// Write table right side, remapping jumps as necessary
+			// Extra zero for speedtable
+			if ((c == STBL) && ((!novib) || (!nofunktempo) || (!noportamento) || (!notoneporta))) insertbyte(0);
+			// Table label
+			insertlabel(tablerightname[c]);
+
+			for (d = 0; d < MAX_TABLELEN; d++)
+			{
+				if (tableused[c][d + 1])
+				{
+					if ((ltable[c][d] != 0xff) || (c == STBL))
+					{
+						switch (c)
+						{
+						case WTBL:
+							if ((ltable[c][d] >= WAVECMD) && (ltable[c][d] <= WAVELASTCMD))
+							{
+								// Remap table-referencing commands
+								switch (ltable[c][d] - WAVECMD)
+								{
+								case CMD_PORTAUP:
+								case CMD_PORTADOWN:
+								case CMD_TONEPORTA:
+								case CMD_VIBRATO:
+									insertbyte(tablemap[STBL][rtable[c][d]]);
+									break;
+
+								case CMD_SETPULSEPTR:
+									insertbyte(tablemap[PTBL][rtable[c][d]]);
+									break;
+
+								case CMD_SETFILTERPTR:
+									insertbyte(tablemap[FTBL][rtable[c][d]]);
+									break;
+
+								default:
+									insertbyte(rtable[c][d]);
+									break;
+								}
+							}
+							else
+							{
+								// For normal notes, reverse all right side high bits
+								insertbyte(rtable[c][d] ^ 0x80);
+							}
+							break;
+
+						case PTBL:
+							if (simplepulse)
+							{
+								if (ltable[c][d] >= 0x80)
+									insertbyte((ltable[c][d] & 0x0f) | (rtable[c][d] & 0xf0));
+								else
+								{
+									int pulsespeed = rtable[c][d] >> 4;
+									if (rtable[c][d] & 0x80)
+									{
+										pulsespeed |= 0xf0;
+										pulsespeed--;
+									}
+									pulsespeed = swapnybbles(pulsespeed);
+									insertbyte(pulsespeed);
+								}
+							}
+							else
+								insertbyte(rtable[c][d]);
+							break;
+
+						default:
+							insertbyte(rtable[c][d]);
+							break;
+						}
+					}
+					else
+						insertbyte(tablemap[c][rtable[c][d]]);
+				}
+			}
+
+		SKIPTABLE:;
+		}
+
+
+		int songIndex = 0;
+		// Insert orderlists
+		for (c = 0; c < songs; c++)
+		{
+			int oddEvenSubSong = c & 1;
+
+			for (d = 0; d < MAX_CHN; d++)
+			{
+				if (editorInfo.maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
+					break;
+				if (editorInfo.maxSIDChannels == 3 && d >= 3)
+					break;
+
+				sprintf(textbuffer, "mt_song%d", songIndex++);
+				insertlabel(textbuffer);
+				insertbytes(&songwork[songoffset[c][d]], songsize[c][d]);
 			}
 		}
 
-	SKIPTABLE:;
-	}
-
-
-	int songIndex = 0;
-	// Insert orderlists
-	for (c = 0; c < songs; c++)
-	{
-		int oddEvenSubSong = c & 1;
-
-		for (d = 0; d < MAX_CHN; d++)
+		// Insert patterns
+		for (c = 0; c < patterns; c++)
 		{
-			if (editorInfo.maxSIDChannels == 9 && oddEvenSubSong == 1 && d >= 3)
-				break;
-			if (editorInfo.maxSIDChannels == 3 && d >= 3)
-				break;
-
-			sprintf(textbuffer, "mt_song%d", songIndex++);
+			sprintf(textbuffer, "mt_patt%d", c);
 			insertlabel(textbuffer);
-			insertbytes(&songwork[songoffset[c][d]], songsize[c][d]);
+			insertbytes(&pattwork[pattoffset[c]], pattsize[c]);
 		}
-	}
 
-	// Insert patterns
-	for (c = 0; c < patterns; c++)
-	{
-		sprintf(textbuffer, "mt_patt%d", c);
-		insertlabel(textbuffer);
-		insertbytes(&pattwork[pattoffset[c]], pattsize[c]);
-	}
+		if (jpA000Fix == 1)
+		{
+			sprintf(textbuffer, "jpa000fix");
+			insertlabel(textbuffer);
+			sprintf(textbuffer, "jmp $%04X",playeradr+3);	// play addr
+			inserttext(textbuffer);
+		}
 
-	sprintf(textbuffer, "debug_0.s");
+		sprintf(textbuffer, "debug_0.s");
 
-	FILE *handle = fopen(textbuffer, "wt");
-	fwrite(membuf_get(&src), membuf_memlen(&src), 1, handle);
-	fclose(handle);
+		FILE *handle = fopen(textbuffer, "wt");
+		fwrite(membuf_get(&src), membuf_memlen(&src), 1, handle);
+		fclose(handle);
 
-	// Assemble; on error fail in a rude way (the parser does so too)
-	if (assemble(&src, &dest))
-	{
-		exit(1);
-	}
+		// Assemble; on error fail in a rude way (the parser does so too)
+
+
+
+		if (assemble(&src, &dest))
+		{
+			exit(1);
+		}
+
+		packedsize = membuf_memlen(&dest);
+
+		int endaddr = playeradr + packedsize;
+		sidPlayAddr = playeradr + 3;
+
+		if (playeradr < 0xa000 && endaddr>0xa000)
+		{
+			if (jpA000Fix == 0)
+			{
+				doAgain = 1;
+				jpA000Fix = 1;
+				/*
+				sprintf(textbuffer, "debug_0.s");
+
+				FILE *handle = fopen(textbuffer, "wt");
+				fwrite(membuf_get(&src), membuf_memlen(&src), 1, handle);
+				fclose(handle);
+
+				if (assemble(&src, &dest))
+				{
+					exit(1);
+				}
+				*/
+			}
+			else
+			{
+				doAgain = 0;
+				sidPlayAddr = endaddr - 3;
+			}
+		}
+	}while (doAgain == 1);
 
 	packeddata = membuf_get(&dest);
-	packedsize = membuf_memlen(&dest);
+
 	playersize = packedsize - songtblsize - songdatasize - patttblsize - pattdatasize - instrsize - wavetblsize - pulsetblsize - filttblsize - speedtblsize;
 
 	// Copy author info
@@ -1768,6 +1821,8 @@ void relocator(GTOBJECT *gt)
 	printtext(1, 9, getColor(7, 0), textbuffer);
 	sprintf(textbuffer, "Total size:      %d bytes", packedsize);
 	printtext(1, 11, getColor(7, 0), textbuffer);
+	sprintf(textbuffer, "End address:     $%x ", playeradr+packedsize);
+	printtext(1, 12, getColor(7, 0), textbuffer);
 	fliptoscreen();
 
 
@@ -1958,9 +2013,9 @@ void relocator(GTOBJECT *gt)
 		}
 
 		// Play address
-		byte = (playeradr + 3) >> 8;
+		byte = (sidPlayAddr ) >> 8;	// playeradr+3
 		fwrite8(songhandle, byte);
-		byte = (playeradr + 3) & 0xff;
+		byte = (sidPlayAddr) & 0xff;	// playeradr+3
 		fwrite8(songhandle, byte);
 
 		// Number of subtunes
