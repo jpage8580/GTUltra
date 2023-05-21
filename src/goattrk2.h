@@ -285,5 +285,6 @@ void handleLoad(GTOBJECT *gt, char *dragdropfile);
 void stopScreenDisplay();
 void restartScreenDisplay();
 void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT *gt);
+void playUntilEnd(int songNumber);
 
 #endif

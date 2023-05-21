@@ -413,6 +413,8 @@ void orderlistcommands(GTOBJECT *gt)
 		}
 		else
 			orderListDelete_External();
+
+		playUntilEnd(editorInfo.esnum);
 		break;
 
 	case KEY_INS:
@@ -424,6 +426,7 @@ void orderlistcommands(GTOBJECT *gt)
 		}
 		else
 			orderListInsert_External(gt);
+		playUntilEnd(editorInfo.esnum);
 		break;
 
 	case KEY_HOME:

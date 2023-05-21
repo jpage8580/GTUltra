@@ -3314,6 +3314,9 @@ void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT *gt)
 		stopsong(gt);
 		setMasterLoopChannel(gt, "debug_9");
 	}
+
+	playUntilEnd(songNumber);
+
 	bypassPlayRoutine = 1;	// Stop interrupt from updating play routine. We're going to do it manually
 	SDL_Delay(50);
 
@@ -3330,7 +3333,7 @@ void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT *gt)
 	gt->loopEnabledFlag = 0;
 	followplay = 1;
 
-	int samplesToExport = 882;	// IT APPEARS TO GENERATE 882 SAMPLES FOR 1x speed. 441 for 2x.. 220 for 4x...
+	int samplesToExport = (mr*2)/100;	// For 44100, IT APPEARS TO GENERATE 882 SAMPLES FOR 1x speed. 441 for 2x.. 220 for 4x...
 	if (editorInfo.multiplier == 0)
 		samplesToExport *= 2;	// Handle 1/2 speed
 	else

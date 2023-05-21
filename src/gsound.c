@@ -741,7 +741,7 @@ void convertRAWToWAV(int doNormalize)
 	fwrite32(exportWAVFileHandle, 0x666d7420);
 	fwrite32(exportWAVFileHandle, 0x10000000);
 	fwrite32(exportWAVFileHandle, 0x01000200);
-	fwrite32(exportWAVFileHandle, 0x44ac0000);
+	fwritele32(exportWAVFileHandle, mr);
 	fwritele32(exportWAVFileHandle, rawSize + 4);
 	fwrite32(exportWAVFileHandle, 0x04001000);
 	fwrite32(exportWAVFileHandle, 0x64617461);
