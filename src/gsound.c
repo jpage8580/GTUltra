@@ -96,8 +96,8 @@ int sound_init(unsigned b, unsigned mr, unsigned writer, unsigned hardsid, unsig
 	{
 		if (ntsc)
 		{
-			framerate = NTSCFRAMERATE *multiplier;
-			snd_bpmtempo = 150 *multiplier;
+			framerate = NTSCFRAMERATE * multiplier;
+			snd_bpmtempo = 150 * multiplier;
 		}
 		else
 		{
@@ -364,8 +364,10 @@ void sound_uninit(void)
 void sound_suspend(void)
 {
 #ifdef __WIN32__
+
 	SDL_LockMutex(flushmutex);
 	suspendplayroutine = TRUE;
+
 	SDL_UnlockMutex(flushmutex);
 #endif
 }
@@ -427,7 +429,7 @@ int sound_thread(void *userdata)
 		// Left side
 		for (c = 0; c < NUMSIDREGS; c++)
 		{
-			unsigned o = sid_getorder(c,editorInfo.adparam);
+			unsigned o = sid_getorder(c, editorInfo.adparam);
 
 			// Extra delay before loading the waveform (and mt_chngate,x)
 			if ((o == 4) || (o == 11) || (o == 18))
@@ -549,8 +551,12 @@ void sound_playrout(void)
 
 int bypassMixer = 0;
 
+//882 samples for 1x
+//441 for 2x
+//220 for 4x
 void sound_mixer(Sint32 *dest, unsigned samples)
 {
+	//	printf("samples: %d\n", samples);
 	if (!bypassPlayRoutine)
 		JPSoundMixer(dest, samples);
 }
@@ -574,13 +580,13 @@ void JPSoundMixer(Sint32 *dest, unsigned samples)
 		sid_fillbuffer(sid0buffer, sid1buffer, sid2buffer, sid3buffer, samples, MIXBUFFERSIZE, editorInfo.adparam);
 
 
-//	sprintf(textbuffer, "sid %d", sid_debug());
-//	printtext(70, 14, 0xe, textbuffer);
-	
+	//	sprintf(textbuffer, "sid %d", sid_debug());
+	//	printtext(70, 14, 0xe, textbuffer);
 
-//	int tick = SDL_GetTicks();
 
-	//debugTicks = SDL_GetTicks() - tick;
+	//	int tick = SDL_GetTicks();
+
+		//debugTicks = SDL_GetTicks() - tick;
 
 	if (dest != NULL)
 	{
@@ -598,35 +604,46 @@ void JPSoundMixer(Sint32 *dest, unsigned samples)
 		Sint16 *spR3 = sid3buffer + MIXBUFFERSIZE;
 
 
-		float mvf = masterVolume * 0x8000;
-		int mv = (int)mvf;
+		float mvf = masterVolume * 0.25f;	// * 0x8000;
+	//		int mv = (int)mvf;
 
 		for (c = 0; c < samples; c++)
 		{
 			v = *spL0 + *spL1 + *spL2 + *spL3;
+
+			float f = (float)v;
+
+
 			spL0++;
 			spL1++;
 			spL2++;
 			spL3++;
 
-			v /= 4;
-			v *= mv;
-			v /= 0x8000;
+			f *= mvf;
+			//			v /= 4;
+			//			v *= mv;
+			//			v /= 0x8000;
 
-			*dp = v;
+			*dp = (Sint32)f;
+			//			*dp = v;
 			dp++;
 
 			v = *spR0 + *spR1 + *spR2 + *spR3;
+			f = (float)v;
+
 			spR0++;
 			spR1++;
 			spR2++;
 			spR3++;
 
-			v /= 4;
-			v *= mv;
-			v /= 0x8000;
+			f *= mvf;	// /4 (4 SIDs) / 0x8000 to scale
 
-			*dp = v;
+			//			v /= 4;
+			//			v *= mv;
+			//			v /= 0x8000;
+
+			*dp = f;
+			//			*dp = v;
 			dp++;
 
 		}
@@ -646,9 +663,204 @@ void JPSoundMixer(Sint32 *dest, unsigned samples)
 	}
 
 	debugTicks = SDL_GetTicks() - tick;
-
-	
 }
+
+// 882 samples generated for 1x
+// 441 samples generated for 2x
+// 220 samples generated for 4x
+/*
+Bypass playroute
+Call ExportOpenFileHandle()
+Tight loop to do normal update until end (same as current code for handling length
+call ExportSIDToPCMFile between each update, passing the correct samples size (882/speed)
+call ExportCloseFileHandle()
+Do PCM>WAV conversion?
+*/
+
+FILE *exportFileHandle = NULL;
+FILE *exportWAVFileHandle = NULL;
+
+char rawFileName[1000];
+char wavFileName[1000];
+
+void GenerateExportFileName()
+{
+	rawFileName[0] = 0;
+	strcat(&rawFileName[0], wavfilename);
+	int l = strlen(rawFileName);
+	rawFileName[l - 4] = 0;
+	strcat(&rawFileName[0], "_temp.raw");
+}
+
+void OpenExportFileNameForWriting()
+{
+	if (exportFileHandle != NULL)
+		ExportCloseFileHandle();
+
+	exportFileHandle = fopen(rawFileName, "wb");
+}
+
+void fwrite32(FILE *file, unsigned data)
+{
+	Uint8 bytes[4];
+
+	bytes[0] = data >> 24;
+	bytes[1] = data >> 16;
+	bytes[2] = data >> 8;
+	bytes[3] = data;
+	fwrite(bytes, 4, 1, file);
+}
+
+Sint32 exportPCMBuffer[4096];
+
+Sint16 exportPCMBuffer2[1];
+
+void convertRAWToWAV(int doNormalize)
+{
+	GenerateExportFileName();	// Shouldn't be needed eventually, as it's already set when saving raw PCM
+
+	exportFileHandle = fopen(rawFileName, "rb");
+	fseek(exportFileHandle, 0, SEEK_END);
+	int rawSize = ftell(exportFileHandle);
+	fseek(exportFileHandle, 0, SEEK_SET);
+
+	printf("file size:%x\n", rawSize);
+	if (rawSize == 0)
+	{
+		fclose(exportFileHandle);
+		return;
+	}
+
+	exportWAVFileHandle = fopen(wavfilename, "wb");
+
+	//rawSize = 0x2b10c;	// Use this to test matching a 1 second stereo 44.1 khz wav header
+
+	fwrite32(exportWAVFileHandle, 0x52494646);
+	fwritele32(exportWAVFileHandle, rawSize + 0x28);
+	fwrite32(exportWAVFileHandle, 0x57415645);
+	fwrite32(exportWAVFileHandle, 0x666d7420);
+	fwrite32(exportWAVFileHandle, 0x10000000);
+	fwrite32(exportWAVFileHandle, 0x01000200);
+	fwrite32(exportWAVFileHandle, 0x44ac0000);
+	fwritele32(exportWAVFileHandle, rawSize + 4);
+	fwrite32(exportWAVFileHandle, 0x04001000);
+	fwrite32(exportWAVFileHandle, 0x64617461);
+	fwritele32(exportWAVFileHandle, rawSize + 4);
+	fwrite32(exportWAVFileHandle, 0);
+
+	float normalize = 1;
+	if (doNormalize)
+	{
+		if (largestExportValue > 0)
+			normalize = 0x7fff / largestExportValue;
+	}
+
+	for (int c = 0;c < rawSize / 2;c++)
+	{
+		fread(&exportPCMBuffer2[0], sizeof(Sint16), 1, exportFileHandle);
+		if (doNormalize)
+		{
+			float f = exportPCMBuffer2[0] * normalize;
+			exportPCMBuffer2[0] = f;
+		}
+		fwrite(&exportPCMBuffer2[0], sizeof(Sint16), 1, exportWAVFileHandle);
+	}
+	fclose(exportWAVFileHandle);
+	ExportCloseFileHandle();
+	remove(&rawFileName[0]);	// delete raw file
+
+}
+
+void ExportCloseFileHandle()
+{
+	fclose(exportFileHandle);
+	exportFileHandle = NULL;
+}
+
+
+
+int dataPacket = 0;
+int largestExportValue;
+// Raw Data - Signed - 16 bit - Stereo
+void ExportSIDToPCMFile(int samples,int doNormalize)
+{
+	if (!initted) return;
+	if (samples > MIXBUFFERSIZE) return;
+
+	sid_fillbuffer(sid0buffer, sid1buffer, sid2buffer, sid3buffer, samples, MIXBUFFERSIZE, editorInfo.adparam);
+
+
+	Sint32 *dp = &exportPCMBuffer[0];
+	Sint32 v;
+
+	Sint16 *spL0 = sid0buffer;
+	Sint16 *spL1 = sid1buffer;
+	Sint16 *spL2 = sid2buffer;
+	Sint16 *spL3 = sid3buffer;
+
+	Sint16 *spR0 = sid0buffer + MIXBUFFERSIZE;
+	Sint16 *spR1 = sid1buffer + MIXBUFFERSIZE;
+	Sint16 *spR2 = sid2buffer + MIXBUFFERSIZE;
+	Sint16 *spR3 = sid3buffer + MIXBUFFERSIZE;
+
+
+	float mvf = masterVolume * 0.25f;	// * 0x8000;
+
+	for (int c = 0; c < samples; c++)
+	{
+		v = *spL0 + *spL1 + *spL2 + *spL3;
+		spL0++;
+		spL1++;
+		spL2++;
+		spL3++;
+
+		float f = (float)v;
+		f *= mvf;
+
+		if (doNormalize)
+		{
+			if (f <0x8000 && f > largestExportValue)
+				largestExportValue = f;
+			else if (f >= 0x8000 && ((0x10000 - f) > largestExportValue))
+				largestExportValue = (0x10000 - f);
+		}
+
+		*dp = (Sint32)f;
+		dp++;
+
+		v = *spR0 + *spR1 + *spR2 + *spR3;
+		spR0++;
+		spR1++;
+		spR2++;
+		spR3++;
+
+		f = (float)v;
+		f *= mvf;	// /4 (4 SIDs) / 0x8000 to scale
+
+		if (doNormalize)
+		{
+			if (f <0x8000 && f > largestExportValue)
+				largestExportValue = f;
+			else if (f >= 0x8000 && ((0x10000 - f) > largestExportValue))
+				largestExportValue = (0x10000 - f);
+		}
+
+		*dp = f;
+		dp++;
+	}
+
+
+
+	if (exportFileHandle)
+	{
+		for (int c = 0; c < samples * 2; c++)
+		{
+			fwrite(&exportPCMBuffer[c], sizeof(Sint16), 1, exportFileHandle);
+		}
+	}
+
+}
+
 
 #ifdef __WIN32__
 void InitHardDLL()

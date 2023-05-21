@@ -143,9 +143,14 @@ void stopsong(GTOBJECT *gt)
 	// JP removed this. Allows F4 to stop jamming notes with long release
 //	if (gt->songinit != PLAY_STOPPED)
 //	{
+
 	sound_suspend();
+
 	gt->songinit = PLAY_STOP;
+
+
 	sound_flush();
+
 
 	for (int c = 0; c < MAX_PLAY_CH; c++)
 	{
@@ -434,6 +439,7 @@ void playroutine(GTOBJECT *gt)
 			}
 		}
 
+	//	printf("---Update---\n");
 
 		for (c = 0; c < MAX_PLAY_CH; c++)
 		{
@@ -1176,8 +1182,14 @@ void playroutine(GTOBJECT *gt)
 				if (pattern[cptr->pattnum][cptr->pattptr] == ENDPATT)
 					cptr->pattptr = 0x7fffffff;
 
-				if (newnote == KEYOFF)
+				if (SIDTracker64ForIPadIsAmazing == 0)
+				{
+					if (newnote == KEYOFF)
+						cptr->gate = 0xfe;
+				}
+				else if (newnote == KEYOFF || newnote == REST)	// JP added REST
 					cptr->gate = 0xfe;
+
 				if (newnote == KEYON)
 					cptr->gate = 0xff;
 				if (newnote <= LASTNOTE)

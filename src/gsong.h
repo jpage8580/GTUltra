@@ -16,6 +16,7 @@ typedef struct {
 	char *pattern;
 	char *songName;
 	char *loadedSongFileName;
+	char *wavfilename;
 	char *authorName;
 	char *copyrightName;
 	char *patternLen;
@@ -73,7 +74,7 @@ extern int loadedSongCount;
 extern SNG_INFO songInfo[16];
 #endif
 
-int loadsong(GTOBJECT *gt);
+int loadsong(GTOBJECT *gt,int gt2relocMode);
 int mergesong(GTOBJECT *gt);
 void loadinstrument(GTOBJECT *gt);
 int savesong(void);
@@ -104,7 +105,8 @@ int allocateSngMemory(int sngIndex);
 int copyCurrentToSngBuffer(GTOBJECT *gt, int sngIndex);
 int copySngBufferToCurrent(GTOBJECT *gt, int sngIndex);
 void initSngMemory();
-
+void debugCheck();
+void debugCount(char *d,int c);
 
 typedef struct
 {

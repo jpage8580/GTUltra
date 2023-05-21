@@ -155,6 +155,8 @@ void displayWaveformInfo(int x, int y);
 int getWaveforumColour(int bit, int value);
 void updateDisplayWhenFollowingAndPlaying_Expanded(GTOBJECT *gt);
 void updateDisplayWhenFollowingAndPlaying_Compressed(GTOBJECT *gt);
+void setSIDTracker64KeyOnStyle();
+int doDisplay(void *gt);
 
 int FreeMem(void);
 

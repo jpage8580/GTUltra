@@ -12,6 +12,8 @@ void win_disableKeyRepeat(void);
 extern float xmouseScale;
 extern float ymouseScale;
 
+extern int win_mousewheel;
+extern char *dropFileDir;
 extern int win_windowinitted;
 extern int win_quitted;
 extern int win_fullscreen;

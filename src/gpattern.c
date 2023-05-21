@@ -128,6 +128,11 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		if ((jrawkey == KEY_BACKSPACE) && (!editorInfo.epcolumn))
 		{
 			newnote = REST;
+			if (SIDTracker64ForIPadIsAmazing != 0)
+			{
+				int i2 = editorInfo.eppos * 4;
+				clearKeyOns(gt, c2, i2 + 4);
+			}
 		}
 
 
@@ -140,10 +145,24 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 			switch (editorInfo.epcolumn)
 			{
 			case 0:
-				if (shiftOrCtrlPressed)
-					newnote = KEYON;
+				if (SIDTracker64ForIPadIsAmazing == 0)
+				{
+					if (shiftOrCtrlPressed)
+						newnote = KEYON;
+					else
+						newnote = KEYOFF;
+				}
 				else
-					newnote = KEYOFF;
+				{
+					if (pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4] == REST)
+						newnote = KEYON;
+					else
+					{
+						newnote = REST;
+						int i2 = editorInfo.eppos * 4;
+						clearKeyOns(gt, c2, i2);
+					}
+				}
 				break;
 
 			case 1:
@@ -337,6 +356,34 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 			if ((recordmode) && (editorInfo.eppos < pattlen[gt->editorUndoInfo.editorInfo[c2].epnum]))
 			{
 				pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4] = newnote;
+
+				if (SIDTracker64ForIPadIsAmazing != 0)
+				{
+					// if newnote == KEYON, fill keyon from RESTS until previous note or start of pattern
+					if (newnote == KEYON)
+					{
+						int index = editorInfo.eppos - 1;
+						int forceQuit = 0;
+						while (forceQuit == 0)
+						{
+							if (index >= 0)
+							{
+								int i2 = index * 4;
+								unsigned char jc = pattern[gt->editorUndoInfo.editorInfo[c2].epnum][i2];
+								if (jc == REST)
+									pattern[gt->editorUndoInfo.editorInfo[c2].epnum][i2] = KEYON;
+								else
+									forceQuit = 1;
+								index--;
+							}
+							else
+								forceQuit = 1;
+						};
+					}
+
+				}
+
+
 				if (newnote < REST)
 				{
 					pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 1] = editorInfo.einum;
@@ -363,7 +410,8 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 					}
 				}
 
-				playtestnote(newnote, editorInfo.einum, getActualChannel(editorInfo.esnum, editorInfo.epchn), gt);
+				//Removed from here 15/04/23
+				//playtestnote(newnote, editorInfo.einum, getActualChannel(editorInfo.esnum, editorInfo.epchn), gt);
 			}
 
 
@@ -439,8 +487,16 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 				if (autoadvance > 2) autoadvance = 0;
 				if (keypreset == KEY_TRACKER)
 				{
-					if (autoadvance == 1) autoadvance = 2;
+	//				if (autoadvance == 1) autoadvance = 2;
 				}
+				forceInfoLine++;
+
+				if (autoadvance == 0)
+					sprintf(infoTextBuffer, "AutoAdvance:ALL (NOTES & VALUES)");
+				else if (autoadvance ==1)
+					sprintf(infoTextBuffer, "AutoAdvance:NOTES ONLY");
+				else if (autoadvance == 2)
+					sprintf(infoTextBuffer, "AutoAdvance:OFF");
 			}
 		}
 		break;
@@ -604,7 +660,17 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 		break;
 
 	case KEY_A:
-		if (shiftOrCtrlPressed)
+		if (ctrlpressed)
+		{
+			int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);
+			if ((editorInfo.epmarkchn != gt->masterLoopChannel) || (editorInfo.eppos != editorInfo.epmarkend))
+			{
+				editorInfo.epmarkchn = gt->masterLoopChannel;	//  editorInfo.epchn;
+				editorInfo.epmarkstart = 0;
+				editorInfo.epmarkend = pattlen[gt->editorUndoInfo.editorInfo[c2].epnum];
+			}
+		}
+		else if (shiftpressed)		// was shiftOrCtrlPressed. Changed to SHIFT to free up Ctrl_A for select all.
 		{
 			if (editorInfo.epmarkchn != -1)
 			{
@@ -1087,7 +1153,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 
 	case KEY_UP:
 		ret = patternup(gt);
-		if (ret && lmanMode)
+		if (ret && autoNextPattern && transportLoopPattern==0)
 		{
 			int songPat;
 
@@ -1125,7 +1191,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 	case KEY_DOWN:
 
 		ret = patterndown(gt);
-		if (ret && lmanMode)
+		if (ret && autoNextPattern && transportLoopPattern == 0)
 		{
 			int songPat;
 
@@ -1270,9 +1336,9 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 				break;
 			}
 		}
-		if (autoadvance < 2)
+		if (autoadvance ==0)	// < 2) - JP add mode to allow auto advance for all, just notes, or disable
 		{
-			editorInfo.eppos++;
+			editorInfo.eppos++;	// auto advance if editing values
 			if (editorInfo.eppos > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum])
 			{
 				editorInfo.eppos = 0;
@@ -1685,6 +1751,7 @@ void handleShiftSpace(GTOBJECT *gt, int playChannel, int startPatternPos, int fo
 		}
 	}
 
+
 	int songPos = gt->editorUndoInfo.editorInfo[playChannel].espos;
 
 	//	orderPlayFromPosition(gt, startPatternPos, editorInfo.eseditpos, playChannel, 1);	// editorInfo.eschn
@@ -1753,8 +1820,8 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 	int newnote = -1;
 	int c = 0;
 
-	if (recordmode)
-		return noKeysPressed;
+	//if (recordmode)		// 15/04/23 JP Removed to allow for nicer note off handling 
+		//return noKeysPressed;
 
 	if (shiftOrCtrlPressed)
 		return noKeysPressed;
@@ -2223,6 +2290,24 @@ void getPlayStartPosition(GTOBJECT *gte, int songNum, int c2, int songPos, int p
 }
 
 
+void clearKeyOns(GTOBJECT *gt, int c2, int i2)
+{
+	if ((i2 / 4) > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum])
+		return;
 
+	if (pattern[gt->editorUndoInfo.editorInfo[c2].epnum][i2] == KEYON)
+	{
+		int forceQuit = 0;
+		while (forceQuit == 0)
+		{
+			pattern[gt->editorUndoInfo.editorInfo[c2].epnum][i2] = REST;
+			i2 += 4;
+			if ((i2 / 4) > pattlen[gt->editorUndoInfo.editorInfo[c2].epnum])
+				forceQuit = 1;
+			else if (pattern[gt->editorUndoInfo.editorInfo[c2].epnum][i2] != KEYON)
+				forceQuit = 1;
+		};
+	}
+}
 
 

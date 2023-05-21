@@ -29,7 +29,7 @@ void calculateTotalInstrumentsFromAllPatterns();
 void countInstrumentsInPattern(int pat);
 void resetOrderView(GTOBJECT *gt);
 void orderListHandleHexInputExpandedView(GTOBJECT *gt);
-void orderListHandleHexInputOriginalView();
+void orderListHandleHexInputOriginalView(GTOBJECT *gt);
 void resetSongInfo(GTOBJECT *gt, int jc2);
 int findFirstEndMarkerIndex(int sng, int chn);
 void updateTransposeToPlayingSong(GTOBJECT *gt);

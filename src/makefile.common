@@ -6,6 +6,7 @@ CFLAGS+=-Ibme -Iasm -O3
 CXXFLAGS+=$(CFLAGS) -fpermissive
 
 EXE=	$(PREFIX)gtultra$(SUFFIX) \
+	$(PREFIX)gt2reloc$(SUFFIX) \
 	$(PREFIX)ins2snd2$(SUFFIX) \
 	$(PREFIX)ss2stereo$(SUFFIX) \
 	$(PREFIX)mod2sng2$(SUFFIX)
@@ -13,7 +14,7 @@ EXE=	$(PREFIX)gtultra$(SUFFIX) \
 all: $(EXE)
 
 $(PREFIX)gtultra$(SUFFIX): goatdata.o gt2stereo.o gsong.o gorder.o gpattern.o ginstr.o gtable.o gplay.o gdisplay.o \
-gfile.o greloc.o ghelp.o gsound.o gconsole.o gsid.o ginfo.o gmidi.o gundo.o gchareditor.o RtMidi.o gmidiselect.o gpaletteeditor.o\
+gfile.o greloc.o ghelp.o gsound.o gconsole.o gsid.o ginfo.o gmidi.o gundo.o gchareditor.o RtMidi.o gmidiselect.o gpaletteeditor.o gfkeys.o\
 resid/envelope.o resid/extfilt.o resid/filter.o resid/pot.o resid/sid.o resid/wave.o resid/wave6581__ST.o \
 resid/wave6581_P_T.o resid/wave6581_PS_.o resid/wave6581_PST.o resid/wave8580__ST.o resid/wave8580_P_T.o \
 resid/wave8580_PS_.o resid/wave8580_PST.o resid/voice.o \
@@ -23,6 +24,22 @@ asm/asmtab.o asm/chnkpool.o asm/expr.o asm/lexyy.o asm/log.o asm/membuf.o asm/me
 asm/pc.o asm/vec.o \
 bme/bme_gfx.o bme/bme_snd.o bme/bme_win.o bme/bme_mou.o bme/bme_kbd.o bme/bme_io.o bme/bme_end.o bme/bme.o
 	$(CXX) -o $@ $^ $(LIBS)
+	strip $@
+
+
+# it would be nice not having to link things like resid, however the source is
+# not ready for that
+$(PREFIX)gt2reloc$(SUFFIX): goatdata.o gt2reloc.o gsong.o gorder.o gpattern.o ginstr.o gtable.o gplay.o gdisplay.o \
+gfile.o ghelp.o gsound.o gconsole.o gsid.o ginfo.o gmidi.o gundo.o gchareditor.o RtMidi.o gmidiselect.o gpaletteeditor.o gfkeys.o\
+resid/envelope.o resid/extfilt.o resid/filter.o resid/pot.o resid/sid.o resid/wave.o resid/wave6581__ST.o \
+resid/wave6581_P_T.o resid/wave6581_PS_.o resid/wave6581_PST.o resid/wave8580__ST.o resid/wave8580_P_T.o \
+resid/wave8580_PS_.o resid/wave8580_PST.o resid/voice.o \
+resid-fp/envelopefp.o resid-fp/extfiltfp.o resid-fp/filterfp.o resid-fp/potfp.o resid-fp/sidfp.o \
+resid-fp/wavefp.o resid-fp/voicefp.o \
+asm/asmtab.o asm/chnkpool.o asm/expr.o asm/lexyy.o asm/log.o asm/membuf.o asm/membufio.o asm/namedbuf.o asm/parse.o \
+asm/pc.o asm/vec.o \
+bme/bme_gfx.o bme/bme_snd.o bme/bme_win.o bme/bme_mou.o bme/bme_kbd.o bme/bme_io.o bme/bme_end.o bme/bme.o
+	$(CXX) -DGT2RELOC -o $@ $^ $(LIBS)
 	strip $@
 
 $(PREFIX)mod2sng2$(SUFFIX): mod2sng2.o bme/bme_end.o

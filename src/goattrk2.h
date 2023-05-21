@@ -34,6 +34,7 @@
 #include "gchareditor.h"
 #include "gtabledisplay.h"
 #include "gpaletteeditor.h"
+#include "gfkeys.h"
 
 #define REMOVE_UNDO 0
 
@@ -65,9 +66,11 @@
 #define MAX_PALETTE_LOAD_ENTRIES 64
 #define MAX_PALETTE_PRESETS 16
 
+
 #ifndef GOATTRK2_C
 
-
+extern int SIDTracker64ForIPadIsAmazing;
+extern int autoNextPattern;
 extern char appFileName[MAX_PATHNAME];
 extern int menu;
 //extern int editmode;
@@ -87,6 +90,7 @@ extern unsigned playerversion;
 extern int fileformat;
 extern int zeropageadr;
 extern int playeradr;
+extern int debugEnabled;
 //extern unsigned editorInfo.sidmodel;
 //extern unsigned editorInfo.multiplier;
 //extern unsigned editorInfo.adparam;
@@ -110,8 +114,10 @@ extern unsigned stereoMode;
 extern float basepitch;
 extern char configbuf[MAX_PATHNAME];
 extern char loadedsongfilename[MAX_PATHNAME];
+extern char wavfilename[MAX_PATHNAME];
 extern char songfilename[MAX_PATHNAME];
 extern char songfilter[MAX_FILENAME];
+extern char wavfilter[MAX_FILENAME];
 extern char songpath[MAX_PATHNAME];
 extern char instrfilename[MAX_FILENAME];
 extern char instrfilter[MAX_FILENAME];
@@ -121,6 +127,7 @@ extern char *programname;
 extern char *notename[];
 extern char *notenameTableView[];
 extern char textbuffer[MAX_PATHNAME];
+extern char debugTextbuffer[MAX_PATHNAME];
 extern unsigned char hexkeytbl[16];
 extern unsigned char datafile[];
 extern char charsetFilename[MAX_PATHNAME];
@@ -130,13 +137,20 @@ extern char palettepath[MAX_FILENAME];
 extern char paletteFileName[MAX_FILENAME];
 extern char backupFolderName[MAX_PATHNAME];
 extern char backupSngFilename[MAX_PATHNAME];
+extern char fkeysFilename[MAX_PATHNAME];
+
+extern int patternOrderArray[256];
+extern int patternOrderList[256];
+extern int patternRemapOrderIndex;
 
 extern char sourceBackupFolderName[MAX_FILENAME];
 extern char destBackupFolderName[MAX_FILENAME];
 
 extern int debugTicks;
 
+
 extern int forceSave3ChannelSng;
+extern int normalizeWAV;
 
 //unsigned short paletteUIDisplay[MAX_PALETTE_ENTRIES];
 extern unsigned char paletteLoadRGB[MAX_PALETTE_PRESETS][3][MAX_PALETTE_LOAD_ENTRIES];
@@ -159,6 +173,8 @@ extern int SID_StereoPanPositions[4][4];
 //extern int SID4_StereoPanPositions[];
 extern char editPan;
 
+extern int patternRemapOrderIndex;
+
 extern char transportPolySIDEnabled[4];
 extern char transportLoopPattern;
 extern char transportLoopPatternSelectArea;
@@ -172,13 +188,16 @@ extern unsigned int enablekeyrepeat;
 extern char paletteChanged;
 extern WAVEFORM_INFO waveformDisplayInfo;
 
-
 extern int selectedMIDIPort;
 extern unsigned int enableAntiAlias;
 
 extern int useOriginalGTFunctionKeys;
 
 extern float detuneCent;
+extern int displayingPanel;
+extern int displayStopped;
+
+extern int useRepeatsWhenCompressing;
 
 #endif
 
@@ -194,8 +213,8 @@ void docommand(void);
 void onlinehelp(int standalone, int context, GTOBJECT *gt);
 void mousecommands(GTOBJECT *gt);
 void generalcommands(GTOBJECT *gt);
-int load(GTOBJECT *gt);
-void save(GTOBJECT *gt);
+int load(GTOBJECT *gt, char *dragDropFileName);
+void save(GTOBJECT *gt, int exportWAVFlag);
 void quit(GTOBJECT *gt);
 void clear(GTOBJECT *gt);
 int prevmultiplier(void);
@@ -215,7 +234,10 @@ void setTableColour(int instrumentTablePtr, int t, int startTableOffset, int end
 void setTableBackgroundColours(int currentInstrument);
 void highlightInstrument(int t, int instrumentTablePtr);
 int quickSave();
-void playUntilEnd();
+void playUntilEnd(int songNumber);
+void playUntilEnd2(int songNumber);
+void initRemapArrays();
+
 int mouseTransportBar(GTOBJECT *gt);
 int checkMouseRange(int x, int y, int w, int h);
 void handleSIDChannelCountChange(GTOBJECT *gt);
@@ -259,6 +281,9 @@ void saveBackupSong();
 int createBackupFolder();
 int copyBackupFile(char *sourceName, char *destName);
 int replacechar(char *str, char orig, char rep);
-void handleLoad(GTOBJECT *gt);
+void handleLoad(GTOBJECT *gt, char *dragdropfile);
+void stopScreenDisplay();
+void restartScreenDisplay();
+void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT *gt);
 
 #endif

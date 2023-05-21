@@ -30,7 +30,9 @@
 #include "goattrk2.h"
 #include "bme.h"
 
+int doExportToWAV = 0;
 int menu = 0;
+int autoNextPattern = 0;
 int recordmode = 1;
 int followplay = 0;
 int hexnybble = -1;
@@ -47,7 +49,9 @@ int backupTimeSeconds = 30;
 int debugTicks;	// used to measure CPU use when looking to improve performance
 int midiEnabled = 0;
 int forceSave3ChannelSng = 0;
-
+int normalizeWAV = 0;
+int useRepeatsWhenCompressing = 1;
+int debugEnabled = 0;
 
 int selectingInOrderList = 0;
 int selectingInOrderListDeltaTime = 0;
@@ -113,14 +117,18 @@ unsigned int editPaletteMode = 0;
 unsigned int enablekeyrepeat = 0;
 unsigned int enableAntiAlias = 1;
 int useOriginalGTFunctionKeys = 0;
+int SIDTracker64ForIPadIsAmazing = 1;
 
 float masterVolume = 1.0f;
 float detuneCent = 0;
-
+int displayingPanel = 0;
+int displayStopped = 0;
 
 char configbuf[MAX_PATHNAME];
 char loadedsongfilename[MAX_PATHNAME]; // JP was MAX_FILENAME
+char wavfilename[MAX_PATHNAME];
 char songfilename[MAX_PATHNAME];	// JP was MAX_FILENAME
+char wavfilter[MAX_FILENAME];
 char songfilter[MAX_FILENAME];
 char songpath[MAX_PATHNAME];
 char instrfilename[MAX_FILENAME];
@@ -133,9 +141,10 @@ char packedpath[MAX_PATHNAME];
 char charsetFilename[MAX_PATHNAME];
 char tempSngFilename[MAX_PATHNAME];
 char backupSngFilename[MAX_PATHNAME];
+char fkeysFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.4.2";
+char *programname = "$VER: GTUltra V1.5.0";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -143,7 +152,7 @@ char tuningname[64];
 char startPaletteName[MAX_PATHNAME];
 
 
-
+char debugTextbuffer[MAX_PATHNAME];
 char textbuffer[MAX_PATHNAME];
 char infoTextBuffer[256];
 
@@ -158,6 +167,8 @@ char jdebugPlaying = 0;
 char jpdebug = 0;
 
 int selectedMIDIPort = 0;
+
+
 
 
 unsigned char hexkeytbl[] = { '0', '1', '2', '3', '4', '5', '6', '7',
@@ -225,6 +236,7 @@ int main(int argc, char **argv)
 
 	createFilename(appFileName, charsetFilename, "charset.bin");
 	createFilename(appFileName, backupSngFilename, "gtubackup.sng");
+	createFilename(appFileName, fkeysFilename, "fkeys.cfg");
 
 
 	// First, load the default palette and fill all 16 slots with it
@@ -332,10 +344,16 @@ int main(int argc, char **argv)
 		getparam(configfile, (unsigned *)&sidPanInts[2]);
 		getparam(configfile, (unsigned *)&sidPanInts[3]);
 		getparam(configfile, &backupTimeSeconds);
+		getparam(configfile, &autoNextPattern);
+		getparam(configfile, &useRepeatsWhenCompressing);
+		getparam(configfile, &SIDTracker64ForIPadIsAmazing);
+		getparam(configfile, &debugEnabled);
 
 		fclose(configfile);
 
 	}
+
+	setSIDTracker64KeyOnStyle();
 
 	// Init pathnames
 	initpaths();
@@ -569,6 +587,8 @@ int main(int argc, char **argv)
 		}
 	}
 
+	fkeys_loadCFG();	// Load fkeys.cfg file and process (user defined F1-F4)
+
 	// Validate parameters
 
 	if (selectedMIDIPort == 9999)	// GAHHHH!!! 1.4.1 fix. (just had the single = )
@@ -667,8 +687,6 @@ int main(int argc, char **argv)
 	undoInitAllAreas(&gtObject);	// Must be called after clearSong. Creates undo buffers, containing duplicates of each GT area.
 
 
-
-
 	// Init sound
 	if (!sound_init(b, mr, writer, hardsid, editorInfo.sidmodel, editorInfo.ntsc, editorInfo.multiplier, catweasel, interpolate, customclockrate))
 	{
@@ -700,7 +718,7 @@ int main(int argc, char **argv)
 
 	initSID(&gtObject);
 
-	playUntilEnd();	// Get length of time of loaded or empty song
+	playUntilEnd(editorInfo.esnum);	// Get length of time of loaded or empty song
 
 	initSngMemory();
 	lastValidSongFileIndex = 0;
@@ -724,7 +742,7 @@ int main(int argc, char **argv)
 	// Load song if applicable
 	if (strlen(songfilename))
 	{
-		int ok = loadsong(&gtObject);
+		int ok = loadsong(&gtObject, 0);
 		if (ok)
 		{
 			loadedSongFlag = 1;
@@ -733,7 +751,7 @@ int main(int argc, char **argv)
 			setTableBackgroundColours(editorInfo.einum);
 		}
 
-		playUntilEnd();	// Get length of time of loaded or empty song
+		playUntilEnd(editorInfo.esnum);	// Get length of time of loaded or empty song
 		copyCurrentToSngBuffer(&gtObject, editorInfo.currentSongFile);
 	}
 
@@ -758,9 +776,17 @@ int main(int argc, char **argv)
 	// Start editor mainloop
 	printmainscreen(&gtObject);
 
+	//	SDL_Thread* threadID = SDL_CreateThread(doDisplay, "DisplayThread", (void*)&gtObject);
+
 
 	while (!exitprogram)
 	{
+
+		if (doExportToWAV)
+		{
+			doExportToWAV = 0;
+			ExportAsPCM(editorInfo.esnum, normalizeWAV, &gtObject);
+		}
 		int ch = checkFor3ChannelSong();
 
 		waitkeymouse(&gtObject);
@@ -770,6 +796,8 @@ int main(int argc, char **argv)
 		//	sprintf(textbuffer, "jpdebug %d", jdebug[0]);	//, specialnotenames[0], specialnotenames[1]);
 		//	printtext(70, 36, 0xe, textbuffer);
 	}
+
+	//SDL_WaitThread(threadID, NULL);
 
 	// Shutdown sound output now
 	sound_uninit();
@@ -869,7 +897,11 @@ int main(int argc, char **argv)
 			";SID2 Pan\n$%04x\n\n"
 			";SID3 Pan\n$%04x\n\n"
 			";SID4 Pan\n$%04x\n\n"
-			";Backup sng every n seconds (0=OFF. Default = 30)\n%d\n\n",
+			";Backup sng every n seconds (0=OFF. Default = 30)\n%d\n\n"
+			";AutoNextPattern Automatically move to next or previous pattern in order list when moving cursor in pattern view (0=OFF. 1=ON)\n%d\n\n"
+			";Use repeats when compressing from expanded orderlist view (0=NO. 1=YES)\n%d\n\n"
+			";SIDTracker64 style pattern editing (SIDTracker64 IS Amazing) (0=NO. 1=YES. WARNING. NOT COMPATIBLE WITH STANDARD GOATTRACKER EDITING!!)\n%d\n\n"
+			";Perform MemoryChecks (Debug)\n%d\n\n",
 			b,
 			mr,
 			hardsid,
@@ -921,7 +953,11 @@ int main(int argc, char **argv)
 			sidPanInts[1],
 			sidPanInts[2],
 			sidPanInts[3],
-			backupTimeSeconds
+			backupTimeSeconds,
+			autoNextPattern,
+			useRepeatsWhenCompressing,
+			SIDTracker64ForIPadIsAmazing,
+			debugEnabled
 		);
 
 		fclose(configfile);
@@ -940,7 +976,6 @@ void waitkey(GTOBJECT *gt)
 {
 	for (;;)
 	{
-
 		if (!jdebugPlaying)
 		{
 			displayupdate(gt);
@@ -948,8 +983,6 @@ void waitkey(GTOBJECT *gt)
 		getkey();
 		if ((rawkey) || (key)) break;
 		if (win_quitted) break;
-
-
 	}
 
 	converthex();
@@ -974,6 +1007,12 @@ void waitkeymouse(GTOBJECT *gt)
 	for (;;)
 	{
 		SDL_Delay(10);	// add this
+
+		if (dropFileDir != NULL)
+		{
+			handleLoad(gt, dropFileDir);
+			dropFileDir = NULL;
+		}
 
 		if (backupTimeSeconds > 0)
 		{
@@ -1039,7 +1078,24 @@ void waitkeymouse(GTOBJECT *gt)
 			forceKeys = 0;
 #endif
 
+		if (win_mousewheel)
+		{
+			int keyUp = KEY_UP;
+			int keyDown = KEY_DOWN;
 
+			if (editorInfo.editmode == EDIT_ORDERLIST && editorInfo.expandOrderListView == 0)
+			{
+				keyUp = KEY_LEFT;
+				keyDown = KEY_RIGHT;
+			}
+
+			if (win_mousewheel < 0)
+				rawkey = keyDown;
+			else
+				rawkey = keyUp;
+
+			win_mousewheel = 0;
+		}
 		// Debug end
 
 		if ((rawkey) || (key))
@@ -1070,7 +1126,7 @@ void waitkeymouse(GTOBJECT *gt)
 
 		if (!jdebugPlaying)
 		{
-			if (recordmode && editorInfo.editmode == EDIT_PATTERN)
+			if (recordmode && editorInfo.editmode == EDIT_PATTERN && midiEnabled)
 			{
 				if (midiEnabled)
 				{
@@ -1094,7 +1150,7 @@ void waitkeymouse(GTOBJECT *gt)
 					}
 				}
 			}
-			else if ((!recordmode) || (recordmode && editorInfo.editmode != EDIT_PATTERN))
+			else  if ((!recordmode) || (editorInfo.epcolumn == 0 && editorInfo.editmode == EDIT_PATTERN))	//else if ((!recordmode) || (recordmode && editorInfo.editmode != EDIT_PATTERN))
 			{
 				if (midiEnabled)
 				{
@@ -1651,7 +1707,7 @@ void mousecommands(GTOBJECT *gt)
 		}
 	}
 
-	if (((!prevmouseb) || (mouseheld > HOLDDELAY)) && (mousey == 1) && (mousex >= PANEL_ORDER_X+5) && (mousex <= PANEL_ORDER_X+5 + 2))
+	if (((!prevmouseb) || (mouseheld > HOLDDELAY)) && (mousey == 1) && (mousex >= PANEL_ORDER_X + 5) && (mousex <= PANEL_ORDER_X + 5 + 2))
 	{
 		if (mouseb & MOUSEB_LEFT)
 		{
@@ -1852,14 +1908,22 @@ void mousecommands(GTOBJECT *gt)
 				stopsong(gt);
 			if ((mousex >= 35) && (mousex <= 40))
 			{
-				handleLoad(gt);
+				handleLoad(gt, NULL);
 			}
 			if ((mousex >= 42) && (mousex <= 47))
-				save(gt);
+				save(gt, 0);
 			if ((mousex >= 49) && (mousex <= 57))
-				relocator(gt);
+			{
+				stopScreenDisplay();
+				relocator(gt, 0);
+				restartScreenDisplay();
+			}
 			if ((mousex >= 59) && (mousex <= 64))
+			{
+				stopScreenDisplay();
 				onlinehelp(0, 0, gt);
+				restartScreenDisplay();
+			}
 			if ((mousex >= 66) && (mousex <= 72))
 				clear(gt);
 			if ((mousex >= 74) && (mousex <= 79))
@@ -1875,6 +1939,9 @@ void generalcommands(GTOBJECT *gt)
 	int songNum;
 	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);
 	int ok = 0;
+
+	//if (fkeys_check(gt, rawkey) == 1)
+	//	return;
 
 	switch (key)
 	{
@@ -1982,7 +2049,7 @@ void generalcommands(GTOBJECT *gt)
 			if (s)
 				sprintf(infoTextBuffer, "quick save: %d", s);
 			else
-				save(gt);
+				save(gt, 0);
 		}
 		return;
 
@@ -1994,10 +2061,19 @@ void generalcommands(GTOBJECT *gt)
 		return;
 
 	case KEY_F12:
-
+		if (bothShiftAndCtrlPressed)
+		{
+			SIDTracker64ForIPadIsAmazing = 1 - SIDTracker64ForIPadIsAmazing;
+			setSIDTracker64KeyOnStyle();
+			break;
+		}
 	case SDLK_HELP:
+	{
+		stopScreenDisplay();
 		onlinehelp(0, shiftOrCtrlPressed, gt);
+		restartScreenDisplay();
 		break;
+	}
 
 	case KEY_TAB:
 		if (!shiftOrCtrlPressed) editorInfo.editmode++;
@@ -2013,7 +2089,7 @@ void generalcommands(GTOBJECT *gt)
 			break;
 
 		// JP - Shift_F1  changed to just turn looping on/off
-		playUntilEnd();
+		playUntilEnd(editorInfo.esnum);
 		//		break;	// JP TEST
 
 		if (useOriginalGTFunctionKeys)
@@ -2023,49 +2099,74 @@ void generalcommands(GTOBJECT *gt)
 				followplay = 1;
 			else
 				followplay = 0;
+			orderPlayFromPosition(gt, 0, 0, 0, 1);
+		}
+		else
+		{
+			if (shiftpressed)
+				orderPlayFromPosition(gt, 0, 0, 0, 1);
+			else
+				playFromCurrentPosition(gt, 0);
 		}
 
-		orderPlayFromPosition(gt, 0, 0, 0, 1);
+
+
 
 		break;
 
 		// PLAY FROM START OF SELECTED PATTERN
 	case KEY_F2:
 
-		if (useOriginalGTFunctionKeys)
-		{
-			playFromCurrentPosition(gt, 0);
-			transportLoopPattern = 0;
-			if (shiftOrCtrlPressed)
-				followplay = 1;
-			else
-				followplay = 0;
-		}
-		else
-		{
+		if (editPaletteMode)
+			break;
 
+		// in SIDTracker mode, just use F2 for playing current position
+		if (SIDTracker64ForIPadIsAmazing != 0)
+		{
 			if (shiftOrCtrlPressed)
 				followplay = 1 - followplay;
 			else
+				playFromCurrentPosition(gt, 0);	// editorInfo.eppos);
+		}
+		else
+		{
+			if (useOriginalGTFunctionKeys)
 			{
-				transportLoopPattern = 1 - transportLoopPattern;
-				if (!transportLoopPattern)
+				playFromCurrentPosition(gt, 0);
+				transportLoopPattern = 0;
+				if (shiftOrCtrlPressed)
+					followplay = 1;
+				else
+					followplay = 0;
+			}
+			else
+			{
+
+				if (shiftOrCtrlPressed)
+					followplay = 1 - followplay;
+				else
 				{
-					editorInfo.highlightLoopChannel = 999;			// remove from display
-					editorInfo.highlightLoopPatternNumber = -1;
-					editorInfo.highlightLoopStart = editorInfo.highlightLoopEnd = 0;
+					transportLoopPattern = 1 - transportLoopPattern;
+					if (!transportLoopPattern)
+					{
+						editorInfo.highlightLoopChannel = 999;			// remove from display
+						editorInfo.highlightLoopPatternNumber = -1;
+						editorInfo.highlightLoopStart = editorInfo.highlightLoopEnd = 0;
+					}
 				}
 			}
 		}
 		break;
 
 
-		// LOOP PATTERN, PLAYING FROM SELECTED
+
 	case KEY_F3:
+
 		if (editPaletteMode)
 			break;
 
-		if (useOriginalGTFunctionKeys)
+		// ORIGINAL GT: LOOP PATTERN, PLAYING FROM SELECTED
+		if (useOriginalGTFunctionKeys && SIDTracker64ForIPadIsAmazing == 0)
 		{
 			transportLoopPattern = 1;
 			if (shiftOrCtrlPressed)
@@ -2076,15 +2177,21 @@ void generalcommands(GTOBJECT *gt)
 		}
 		else
 		{
-
-			if (editorInfo.editmode == EDIT_ORDERLIST)	// 1.1.7: Fast select / playback when in OrderList. Just press F3 to play from the cursor pos
+			if (shiftOrCtrlPressed)
 			{
-				orderSelectPatternsFromSelected(gt);
-				orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
+				transportLoopPattern = 1 - transportLoopPattern;
 			}
 			else
 			{
-				playFromCurrentPosition(gt, editorInfo.eppos);
+				if (editorInfo.editmode == EDIT_ORDERLIST)	// 1.1.7: Fast select / playback when in OrderList. Just press F3 to play from the cursor pos
+				{
+					orderSelectPatternsFromSelected(gt);
+					orderPlayFromPosition(gt, 0, editorInfo.eseditpos, editorInfo.eschn, 1);
+				}
+				else
+				{
+					playFromCurrentPosition(gt, editorInfo.eppos);	//  F3 = plays from the current pattern pos
+				}
 			}
 		}
 		break;
@@ -2159,7 +2266,12 @@ void generalcommands(GTOBJECT *gt)
 
 			}
 			if (validSize)
-				relocator(gt);
+			{
+
+				stopScreenDisplay();
+				relocator(gt, 0);
+				restartScreenDisplay();
+			}
 		}
 		else
 		{
@@ -2171,20 +2283,23 @@ void generalcommands(GTOBJECT *gt)
 
 	case KEY_F10:
 
-		handleLoad(gt);
+		handleLoad(gt, NULL);
 		break;
 
 	case KEY_F11:
-		//		saveBackupSong();
-
-		if (editorInfo.expandOrderListView)
+		if (shiftOrCtrlPressed)
+			save(gt, 1);
+		else
 		{
-			int maxSize = validateAllSongs();
-			if (maxSize > 0xff)
-				validSize = 0;
+			if (editorInfo.expandOrderListView)
+			{
+				int maxSize = validateAllSongs();
+				if (maxSize > 0xff)
+					validSize = 0;
+			}
+			if (validSize)
+				save(gt, 0);		// compressAllSongs called from within savesong
 		}
-		if (validSize)
-			save(gt);		// compressAllSongs called from within savesong
 		break;
 
 	case KEY_LEFT:
@@ -2213,23 +2328,36 @@ void generalcommands(GTOBJECT *gt)
 	}
 }
 
-int load(GTOBJECT *gt)
+int load(GTOBJECT *gt, char *dragDropFileName)
 {
 	win_enableKeyRepeat();
-
-	if ((editorInfo.editmode != EDIT_INSTRUMENT) && (editorInfo.editmode != EDIT_TABLES))
+	int ok = 0;
+	if ((editorInfo.editmode != EDIT_INSTRUMENT) && (editorInfo.editmode != EDIT_TABLES) || dragDropFileName != NULL)
 	{
-		int ok = 0;
-		if (!shiftOrCtrlPressed)
+		if (dragDropFileName != NULL)
 		{
-			if (fileselector(songfilename, songpath, songfilter, "LOAD SONG", 0, gt, CEDIT,0))
-				ok = loadsong(gt);
+			for (int i = 0;i < 256;i++)
+			{
+				songfilename[i] = dragDropFileName[i];
+				if (dragDropFileName[i] == 0)
+					break;
+			}
+			ok = loadsong(gt, 0);
+
+			free(dragDropFileName);
+			dragDropFileName = NULL;
+		}
+		else if (!shiftOrCtrlPressed)
+		{
+			if (fileselector(songfilename, songpath, songfilter, "LOAD SONG", 0, gt, CEDIT, 0))
+				ok = loadsong(gt, 0);
 		}
 		else
 		{
-			if (fileselector(songfilename, songpath, songfilter, "MERGE SONG", 0, gt, CEDIT,0))
+			if (fileselector(songfilename, songpath, songfilter, "MERGE SONG", 0, gt, CEDIT, 0))
 				ok = mergesong(gt);
 		}
+
 		if (ok)
 		{
 			loadedSongFlag = 1;
@@ -2239,13 +2367,12 @@ int load(GTOBJECT *gt)
 			expandAllSongs();
 		}
 		return ok;
-
 	}
 	else
 	{
 		if (editorInfo.einum)
 		{
-			if (fileselector(instrfilename, instrpath, instrfilter, "LOAD INSTRUMENT", 0, gt, 15,0))
+			if (fileselector(instrfilename, instrpath, instrfilter, "LOAD INSTRUMENT", 0, gt, 15, 0))
 				loadinstrument(gt);
 		}
 	}
@@ -2264,7 +2391,7 @@ int quickSave()
 	return loadedSongFlag;
 }
 
-void save(GTOBJECT *gt)
+void save(GTOBJECT *gt, int exportWAVFlag)
 {
 	win_enableKeyRepeat();
 
@@ -2275,10 +2402,25 @@ void save(GTOBJECT *gt)
 		// Repeat until quit or save successful
 		while (!done)
 		{
-			if (strlen(loadedsongfilename)) strcpy(songfilename, loadedsongfilename);
-			if (fileselector(songfilename, songpath, songfilter, "SAVE SONG", 3, gt, 12,1))
-				done = savesong();
-			else done = 1;
+			if (strlen(loadedsongfilename))
+				strcpy(songfilename, loadedsongfilename);
+			if (exportWAVFlag == 0)
+			{
+				if (fileselector(songfilename, songpath, songfilter, "SAVE SONG", 3, gt, 12, 1))
+					done = savesong();
+				else done = 1;
+			}
+			else
+			{
+				if (fileselector(wavfilename, songpath, wavfilter, "EXPORT AS WAV", 3, gt, 11, 2))
+				{
+					done = 1;
+					doExportToWAV = 1;
+				}
+				else done = 1;
+			}
+
+
 		}
 	}
 	else
@@ -2300,7 +2442,7 @@ void save(GTOBJECT *gt)
 					strcpy(tempfilename, instrfilename);
 				}
 
-				if (fileselector(instrfilename, instrpath, instrfilter, "SAVE INSTRUMENT", 3, gt, 12,0))
+				if (fileselector(instrfilename, instrpath, instrfilter, "SAVE INSTRUMENT", 3, gt, 12, 0))
 					done = saveinstrument();
 				else done = 1;
 
@@ -2348,6 +2490,7 @@ void clear(GTOBJECT *gt)
 		optimizeeverything(1, 1, &gtObject);
 		key = 0;
 		rawkey = 0;
+		countpatternlengths();
 		return;
 	}
 
@@ -2712,7 +2855,7 @@ int prevmultiplier(void)
 	{
 		editorInfo.multiplier--;
 		reInitSID();
-		playUntilEnd();
+		playUntilEnd(editorInfo.esnum);
 		return 1;
 	}
 	return 0;
@@ -2724,7 +2867,7 @@ int nextmultiplier(void)
 	{
 		editorInfo.multiplier++;
 		reInitSID();
-		playUntilEnd();
+		playUntilEnd(editorInfo.esnum);
 		return 1;
 	}
 	return 0;
@@ -3143,18 +3286,143 @@ void setTableColour(int instrumentTablePtr, int t, int startTableOffset, int end
 
 // Used to get time of overall length of song
 // Either when first channel hits an END SONG or when last channel has looped
-void playUntilEnd()
+
+int patternOrderArray[256];
+int patternOrderList[256];
+int patternRemapOrderIndex;
+
+void initRemapArrays()
 {
-	int sng = getActualSongNumber(editorInfo.esnum, 0);
+	for (int i = 0;i < 256;i++)
+	{
+		patternOrderArray[i] = -1;
+		patternOrderList[i] = -1;
+	}
+}
+
+
+
+// JUST NEED TO TEST THIS NOW..
+
+void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT *gt)
+{
+
+
+	// Stop playback & then stop SID processing
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+		setMasterLoopChannel(gt, "debug_9");
+	}
+	bypassPlayRoutine = 1;	// Stop interrupt from updating play routine. We're going to do it manually
+	SDL_Delay(50);
+
+	GenerateExportFileName();
+	OpenExportFileNameForWriting();
+
+
+	int sng = getActualSongNumber(songNumber, 0);	// editorInfo.esnum
+	int currentLoopEnabledFlag = gt->loopEnabledFlag;
+	int currentFollowFlag = followplay;
+
+
+	initsong(sng, PLAY_BEGINNING, gt);
+	gt->loopEnabledFlag = 0;
+	followplay = 1;
+
+	int samplesToExport = 882;	// IT APPEARS TO GENERATE 882 SAMPLES FOR 1x speed. 441 for 2x.. 220 for 4x...
+	if (editorInfo.multiplier == 0)
+		samplesToExport *= 2;	// Handle 1/2 speed
+	else
+		samplesToExport /= editorInfo.multiplier;
+	largestExportValue = 0;	// Used for normalizing PCM
+	int writeCounter = 0;
+
+	int allDone;
+	do {
+
+		if (writeCounter == 0)
+		{
+			SDL_Delay(10);
+			getkey();
+			displayupdate(gt);
+		}
+		writeCounter++;
+		writeCounter %= 100;
+
+
+		playroutine(gt);
+		ExportSIDToPCMFile(samplesToExport, doNormalize);
+
+		if (gt->songinit == PLAY_STOPPED)	// Error in song data
+		{
+			break;
+		}
+
+		allDone = 1;
+		for (int i = 0;i < editorInfo.maxSIDChannels;i++)
+		{
+			if (gt->chn[i].loopCount == 0)	// wait until all channels have looped (or song ends)
+			{
+				allDone = 0;	// hasn't looped
+				break;
+			}
+		}
+	} while (allDone == 0);
+
+	ExportCloseFileHandle();
+
+	convertRAWToWAV(doNormalize);
+
+
+	gt->loopEnabledFlag = currentLoopEnabledFlag;
+	followplay = currentFollowFlag;
+
+	bypassPlayRoutine = 0;
+
+	if (gt->songinit != PLAY_STOPPED)
+	{
+		stopsong(gt);
+		setMasterLoopChannel(gt, "debug_9");
+	}
+}
+
+
+
+void playUntilEnd(int songNumber)
+{
+	patternRemapOrderIndex = 0;
+	initRemapArrays();
+	playUntilEnd2(songNumber);
+	setSongLengthTime(&gtEditorObject);
+}
+
+void playUntilEnd2(int songNumber)
+{
+	int sng = getActualSongNumber(songNumber, 0);	// editorInfo.esnum
 	GTOBJECT *gte = &gtEditorObject;
 
 	initsong(sng, PLAY_BEGINNING, gte);	// JP FEB
 	gte->loopEnabledFlag = 0;
 
+	//printf("---- SubSong %x ----\n", songNumber);
+
 	int allDone;
 	do {
-
 		playroutine(gte);
+
+		// Create arrays that are used to remap exported SID patterns in playing order
+		for (int i = 0;i < editorInfo.maxSIDChannels;i++)
+		{
+			int pat = gte->chn[i].pattnum;
+			if (patternOrderArray[pat] == -1)
+			{
+				//		printf("Pattern %x\n", pat);
+				patternOrderList[patternRemapOrderIndex] = pat;	// contains list of patterns in order of playing
+				patternOrderArray[pat] = patternRemapOrderIndex;
+				patternRemapOrderIndex++;
+			}
+		}
 		if (gte->songinit == PLAY_STOPPED)	// Error in song data
 		{
 			break;
@@ -3171,7 +3439,7 @@ void playUntilEnd()
 		}
 	} while (allDone == 0);
 
-	setSongLengthTime(gte);
+
 }
 
 int mouseTransportBar(GTOBJECT *gt)
@@ -3245,13 +3513,18 @@ int mouseTransportBar(GTOBJECT *gt)
 				{
 					stopsong(gt);
 				}
+
+				stopScreenDisplay();
 				displayCharWindow();
+				restartScreenDisplay();
 				return 1;
 			}
 			else
 			{
 				//		editPaletteMode = 1 - editPaletteMode;
+				stopScreenDisplay();
 				displayPaletteEditorWindow(gt);
+				restartScreenDisplay();
 				return 1;
 				//		handlePaletteDisplay(gt, currentPalettePreset);
 				//		if (editPaletteMode)
@@ -3313,9 +3586,21 @@ int mouseTransportBar(GTOBJECT *gt)
 		if (editPaletteMode)
 			return 1;
 
-		followplay = 1 - followplay;
-		if (followplay && gt->songinit != PLAY_STOPPED)
-			resetOrderView(&gtObject);
+		if (shiftOrCtrlPressed)
+		{
+			autoNextPattern = 1 - autoNextPattern;
+			if (autoNextPattern)
+				sprintf(infoTextBuffer, "Auto move to previous/next pattern: Enabled");
+			else
+				sprintf(infoTextBuffer, "Auto move to previous/next pattern: Disabled");
+			forceInfoLine = 1;
+		}
+		else
+		{
+			followplay = 1 - followplay;
+			if (followplay && gt->songinit != PLAY_STOPPED)
+				resetOrderView(&gtObject);
+		}
 		return 1;
 	}
 
@@ -3742,17 +4027,19 @@ void setSongToBeginning(GTOBJECT *gt)
 
 void playFromCurrentPosition(GTOBJECT *gt, int currentPos)
 {
+
 	if (editPaletteMode)
 		return;
 
 	int t1 = followplay;
 	int t2 = gt->interPatternLoopEnabledFlag;
+	int t3 = transportLoopPattern;
 	gt->loopEnabledFlag = 0;
 	gt->interPatternLoopEnabledFlag = 0;
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);
 	handleShiftSpace(gt, c2, currentPos * 4, 0, 1);
 
-	gt->loopEnabledFlag = transportLoopPattern;
+	gt->loopEnabledFlag = t3;	//transportLoopPattern;
 	gt->interPatternLoopEnabledFlag = t2;
 	followplay = t1;
 }
@@ -4696,7 +4983,7 @@ int createBackupFolder()
 		mkdir(backupFolderName, 0777);
 #endif
 		return 0;
-	}
+}
 	return 1;
 
 }
@@ -4859,11 +5146,28 @@ void checkForMouseInExtendedOrderList(GTOBJECT *gt, int maxCh)
 
 }
 
-
-
-void handleLoad(GTOBJECT *gt)
+void stopScreenDisplay()
 {
-	int ok = load(gt);
+	displayingPanel = 1;
+	return;
+
+	while (displayStopped == 0)
+	{
+		SDL_Delay(1000 / 60);
+	}
+}
+
+void restartScreenDisplay()
+{
+	displayingPanel = 0;
+}
+
+
+void handleLoad(GTOBJECT *gt, char* dragdropfile)
+{
+	stopScreenDisplay();
+
+	int ok = load(gt, dragdropfile);
 	if (ok)
 	{
 		forceSave3ChannelSng = 0;
@@ -4875,8 +5179,12 @@ void handleLoad(GTOBJECT *gt)
 		editorInfo.esnum = 0;
 		songchange(gt, 1);
 
-		playUntilEnd();
+		playUntilEnd(editorInfo.esnum);
 
 		copyCurrentToSngBuffer(gt, currentSongFile);	// V1.4.0
 	}
+
+	restartScreenDisplay();
+
+
 }

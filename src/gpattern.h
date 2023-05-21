@@ -119,5 +119,6 @@ void keyOff(int note, GTOBJECT *gt);
 int getNoteFromChannel(int c);
 int checkAnyPolyPlaying();
 void initPolyKeyboard();
+void clearKeyOns(GTOBJECT *gt, int c2, int i2);
 
 #endif

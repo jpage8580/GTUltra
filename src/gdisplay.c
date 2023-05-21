@@ -36,9 +36,21 @@ char timechar[] = { ':', ' ' };
 
 int UIUnderline = 0;
 
+int initForST64 = 0;
 
 char debugtext[256];
 
+void setSIDTracker64KeyOnStyle()
+{
+	if (SIDTracker64ForIPadIsAmazing != 0)
+	{
+		notename[(12 * 8) - 1] = " | ";	// Makes it look more like ST64 view instead of +++
+	}
+	else
+	{
+		notename[(12 * 8) - 1] = "+++";
+	}
+}
 
 void printmainscreen(GTOBJECT *gt)
 {
@@ -56,18 +68,33 @@ void displayupdate(GTOBJECT *gt)
 		cursorflash &= 3;
 	}
 
+	doDisplay((void*)gt);
+}
 
-	printstatus(gt);
+int doDisplay(void *gt)
+{
+	GTOBJECT *gto = (GTOBJECT*)gt;
+//	while (!exitprogram)
+	//{
+	//	if (!displayingPanel)
+	//	{
+			printstatus(gto);
 
-	if (transportShowKeyboard)
-	{
-		resetKeyboardDisplay();
-		displayNotes(&gtObject);
-		displayKeyboard();
-	}
+			if (transportShowKeyboard)
+			{
+				resetKeyboardDisplay();
+				displayNotes(&gtObject);
+				displayKeyboard();
+			}
 
-	fliptoscreen();
+			fliptoscreen();
+	//		displayStopped = 0;
+	//	}
+	//	else
+	//		displayStopped = 1;
 
+	//	SDL_Delay(1000 / 100);
+	//}
 }
 
 //int expandOrderListView = 0;
@@ -240,7 +267,7 @@ void displayOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 			printbyte(OX + 3 + 1, OY + 1 + c, getColor(11, CORDER_INST_BACKGROUND), 20);
 		}
 
-
+		int foundLoopMarker = 0;
 		for (int d = 0; d < VISIBLEORDERLIST; d++)
 		{
 			int p = editorInfo.esview + d;
@@ -279,10 +306,11 @@ void displayOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 				{
 					if ((songorder[editorInfo.esnum][c][p] < REPEAT) || (p >= songlen[editorInfo.esnum][c]))
 					{
-						if (songorder[editorInfo.esnum][c][p] >= 0xd0)
+						if (songorder[editorInfo.esnum][c][p] >= 0xd0 && foundLoopMarker == 0)
 						{
-							sprintf(textbuffer, "Error! p=%x songlen=%x c=%x", p, songlen[editorInfo.esnum][c], c);
-							printtext(70, 12, 0xe, textbuffer);
+							sprintf(textbuffer, "Error! p=%x song %x, songlen=%x c=%x, val %x", p, editorInfo.esnum,songlen[editorInfo.esnum][c], c, songorder[editorInfo.esnum][c][p]);
+							printtext(60, 12, 0xe, textbuffer);
+							printf("JP Error\n");
 						}
 						sprintf(textbuffer, "%02X ", songorder[editorInfo.esnum][c][p]);
 						if ((p >= songlen[editorInfo.esnum][c]) && (color == CORDER_INST_FOREGROUND)) color = CORDER_TRANS_REPEAT;
@@ -312,6 +340,7 @@ void displayOrderList(GTOBJECT *gt, int cc, int OX, int OY)
 				if (songorder[editorInfo.esnum][c][p] == LOOPSONG)
 				{
 					sprintf(textbuffer, "RST");
+					foundLoopMarker = 1;
 					if (color == CORDER_INST_FOREGROUND) color = CORDER_TRANS_REPEAT;
 				}
 			}

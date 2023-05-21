@@ -26,6 +26,7 @@ void initpaths(void)
 	memset(instrpath, 0, sizeof instrpath);
 	memset(packedpath, 0, sizeof packedpath);
 	strcpy(songfilter, "*.sng");
+	strcpy(wavfilter, "*.wav");
 	strcpy(instrfilter, "*.ins");
 	strcpy(palettefilter, "*.gtp");
 
@@ -75,6 +76,9 @@ int fileselector(char *name, char *path, char *filter, char *title, int filemode
 #endif
 
 	int originalFileMode = filemode;
+
+	stopScreenDisplay();
+
 	// Read new directory
 NEWPATH:
 
@@ -257,6 +261,11 @@ NEWPATH:
 					{
 						if (prevmouseb == 0)
 							forceSave3ChannelSng = 1 - forceSave3ChannelSng;
+					}
+					else if (mousex >= 65 + 16 && mousey == 7 + VISIBLEFILES && miscFlags == 2)
+					{
+						if (prevmouseb == 0)
+							normalizeWAV = 1 - normalizeWAV;
 					}
 					else
 					{
@@ -562,6 +571,16 @@ NEWPATH:
 				sprintf(textbuffer, "%s", "NO ");
 			printtext(65 + 16, 7 + VISIBLEFILES, getColor(CEDIT, 0), textbuffer);	// "YES");
 		}
+		else if (miscFlags == 2)
+		{
+			printtext(67, 7 + VISIBLEFILES, getColor(15, 0), "NORMALIZE WAV:");
+
+			if (normalizeWAV)
+				sprintf(textbuffer, "%s", "YES");
+			else
+				sprintf(textbuffer, "%s", "NO ");
+			printtext(65 + 16, 7 + VISIBLEFILES, getColor(CEDIT, 0), textbuffer);	// "YES");
+		}
 
 		if (filemode == 2) printbg(50 - (MAX_FILENAME + 10) / 2 + 9 + strlen(filter), 7 + VISIBLEFILES, cc, 1);
 
@@ -601,6 +620,9 @@ NEWPATH:
 
 	// Restore screen & exit
 	printmainscreen(gt);
+
+	restartScreenDisplay();
+
 	return exitfilesel;
 }
 

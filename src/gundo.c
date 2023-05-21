@@ -73,6 +73,7 @@ void undoInitAllAreas(GTOBJECT *gt)
 	}
 
 	undoInitUndoArea((char*)&songOrderLength, MAX_SONGS*MAX_CHN * sizeof(int), UNDO_AREA_ORDERLIST_LENGTH_EXPANDED, 0);
+
 	for (int s = 0;s < MAX_SONGS;s++)
 	{
 		for (int i = 0;i < MAX_CHN;i++)
@@ -321,10 +322,16 @@ int undoInvalidateBuffer(int areaType)
 	return 1;
 }
 
+int memLeakCount = 0;
+
 int undoValidateUndoAreas(GTUNDO_OBJECT *editorSettings)
 {
 	if (REMOVE_UNDO)
 		return 0;
+
+	if (debugEnabled)
+		debugCheck();
+
 
 	int areaDirty = 0;
 	for (int i = 0;i < UNDO_AREA_SIZE;i++)
@@ -334,7 +341,23 @@ int undoValidateUndoAreas(GTUNDO_OBJECT *editorSettings)
 		if (gArea != NULL)
 		{
 
-			if (gArea->checkForChangeFlag == UNDO_AREA_DIRTY_CHECK)
+			if (gArea->checkForChangeFlag == 0)	// UNDO_AREA_DIRTY_CHECK)
+			{
+				if (debugEnabled)
+				{
+					if (gArea->undoAreaType != UNDO_AREA_CHANNEL_EDITOR_INFO)	// don't show false positives where the editor info differs... for now
+					{
+						int diff = memcmp(gArea->undoObject->dest, gArea->undoObject->data, gArea->undoObject->size);
+						if (diff)
+						{
+							sprintf(textbuffer, "%d memleak: i:%d a:%d s:%d", memLeakCount, i, gArea->undoAreaType, gArea->undoAreaSubIndex);	//Alloc 0x%x", newMaxUndoSize);
+							printtext(75, 17, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+							memLeakCount++;
+						}
+					}
+				}
+			}
+			else
 			{
 				gArea->checkForChangeFlag = 0;
 
@@ -532,8 +555,8 @@ void undoAddEditorSettingsToList()
 {
 	if (memcmp(&editorInfo, undoEditorInfoBackup->data, sizeof(EDITOR_INFO)))
 	{
-//		sprintf(textbuffer, "d%d", dcount++);
-//		printtext(75, 1, 0xe, textbuffer);
+		//		sprintf(textbuffer, "d%d", dcount++);
+		//		printtext(75, 1, 0xe, textbuffer);
 
 		undoCounter++;	// we can use this to know if anything has been modified in the editor
 
@@ -550,8 +573,8 @@ void undoAddEditorSettingsToList()
 	{
 		undoFreeUndoObject(undoEditorInfoBackup);
 
-		sprintf(textbuffer, "same");
-		printtext(75, 1, 0xe, textbuffer);
+		//		sprintf(textbuffer, "same");
+			//	printtext(75, 1, 0xe, textbuffer);
 
 	}
 }
@@ -562,8 +585,8 @@ int undoPerform(GTOBJECT *gt)
 	if (REMOVE_UNDO)
 		return 0;
 
-	sprintf(textbuffer, "                   ", currentUndoPosition, undoCounter);
-	printtext(80, 1, 0xe, textbuffer);
+	//	sprintf(textbuffer, "                   ", currentUndoPosition, undoCounter);
+		//printtext(80, 1, 0xe, textbuffer);
 
 	GTUNDO_OBJECT *gu;
 
@@ -601,8 +624,9 @@ int undoPerform(GTOBJECT *gt)
 	} while (counter > 0);
 
 
-	sprintf(textbuffer, "undo pos %d (%d undos)", currentUndoPosition, undoCounter);
-	printtext(80, 1, 0xe, textbuffer);
+
+	//sprintf(debugTextbuffer, "undo pos %d (%d undos)", currentUndoPosition, undoCounter);
+	//printtext(80, 1, 0xe, debugTextbuffer);
 
 	// These need to be in their own routine, called on init, load and here.
 
@@ -617,11 +641,14 @@ int undoPerform(GTOBJECT *gt)
 
 // Invalidate all area undo buffers (copy the work buffer over the undo buffer)
 // so that undo buffer doesn't record the massive changes each time we swap between song files
-	
+
 		undoInvalidateUndoAreas();
 	}
 
+
+
 	refreshVariables();
+
 	undoDisplay();
 
 }
@@ -632,6 +659,7 @@ void refreshVariables()
 		return;
 
 	countInstruments();
+
 	validateAllSongs();
 	setTableBackgroundColours(editorInfo.einum);
 }

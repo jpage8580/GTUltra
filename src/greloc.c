@@ -33,7 +33,7 @@ char *tablerightname[] = {
   "mt_filtspdtbl",
   "mt_speedrighttbl" };
 
-//unsigned char chnused[MAX_CHN];
+unsigned char chnused[MAX_CHN];
 unsigned char pattused[MAX_PATT];
 unsigned char pattmap[MAX_PATT];
 unsigned char instrused[MAX_INSTR];
@@ -86,13 +86,30 @@ int sidPlayAddr;
 struct membuf src = STATIC_MEMBUF_INIT;
 struct membuf dest = STATIC_MEMBUF_INIT;
 
-void relocator(GTOBJECT *gt)
+#ifdef GT2RELOC
+#ifdef __WIN32__
+extern FILE *STDOUT, *STDERR;
+#else
+#define STDOUT stdout
+#define STDERR stderr
+#endif
+extern char packedsongname[MAX_PATHNAME];
+#define clearscreen(c)
+#define fliptoscreen()
+#define waitkeynoupdate()
+#define printtextc(x, y, b) fputs(b, STDERR)
+#define printmainscreen(c)
+#endif
+
+void relocator(GTOBJECT *gt, int gt2relocMode)
 {
 	char *tempFirstSIDBuffer;		// Used for 9 channel SID creation
 	int tempSecondSIDOffset;
 
+#ifndef GT2RELOC
 	char packedsongname[MAX_FILENAME];
 	char packedfilter[MAX_FILENAME];
+#endif
 	unsigned char *packeddata = NULL;
 	char *playername = "player.s";
 
@@ -132,7 +149,7 @@ void relocator(GTOBJECT *gt)
 	unsigned char *pattwork = NULL;
 	unsigned char *instrwork = NULL;
 
-	//	channels = 6;
+	channels = editorInfo.maxSIDChannels;
 	fixedparams = 1;
 	simplepulse = 1;
 	firstnote = MAX_NOTES - 1;
@@ -169,169 +186,6 @@ void relocator(GTOBJECT *gt)
 	nonormalspeed = 1;
 	nozerospeed = 1;
 
-	if (gt->songinit != PLAY_STOPPED)
-	{
-		stopsong(gt);
-	}
-
-
-	// Select playroutine options
-	clearscreen(getColor(1, 0));
-	printblankc(0, 0, getColor(15, 1), MAX_COLUMNS);
-	if (!strlen(loadedsongfilename))
-		sprintf(textbuffer, "%s Packer/Relocator", programname);
-	else
-		sprintf(textbuffer, "%s Packer/Relocator - %s", programname, loadedsongfilename);
-	textbuffer[MAX_COLUMNS] = 0;
-	printtext(0, 0, getColor(15, 1), textbuffer);
-	printtext(1, 2, getColor(CTITLE, 0), "SELECT PLAYROUTINE OPTIONS: (CURSORS=MOVE/CHANGE, ENTER=ACCEPT, ESC=CANCEL)");
-
-	int maxOptions = MAX_OPTIONS;
-	if (editorInfo.maxSIDChannels != 3)
-	{
-		maxOptions--;
-		playerversion &= ~PLAYER_FULsidbuffer1ED;
-	}
-
-	playerversion |= PLAYER_BUFFERED;
-	playerversion &= ~PLAYER_ZPGHOSTREGS;
-
-	selectdone = 0;
-
-
-	int test = 0;
-
-	while (!selectdone)
-	{
-		for (c = 0; c < maxOptions; c++)
-		{
-			int color = CNORMAL;
-			if (opt == c) color = CEDIT;
-
-			printtext(1, 3 + c, getColor(color, 0), playeroptname[c]);
-			if (playerversion & (PLAYER_BUFFERED << c))
-				printtext(24, 3 + c, getColor(color, 0), "Yes");
-			else
-				printtext(24, 3 + c, getColor(color, 0), "No ");
-		}
-
-		fliptoscreen();
-		waitkeynoupdate();
-
-		if (win_quitted)
-		{
-			exitprogram = 1;
-			goto PRCLEANUP;
-		}
-
-		switch (rawkey)
-		{
-		case KEY_LEFT:
-		case KEY_RIGHT:
-		case KEY_SPACE:
-			playerversion ^= (PLAYER_BUFFERED << opt);
-			if (opt)
-			{
-				if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS) || (playerversion & PLAYER_FULsidbuffer1ED))
-				{
-					test++;
-					playerversion |= PLAYER_BUFFERED;
-				}
-			}
-			else
-			{
-				if (!(playerversion & PLAYER_BUFFERED))
-				{
-					playerversion &= ~PLAYER_SOUNDEFFECTS;
-					playerversion &= ~PLAYER_ZPGHOSTREGS;
-					playerversion &= ~PLAYER_FULsidbuffer1ED;	// JP
-				}
-			}
-			break;
-
-		case KEY_UP:
-			opt--;
-			if (opt < 0) opt = maxOptions - 1;
-			break;
-
-		case KEY_DOWN:
-			opt++;
-			if (opt >= maxOptions) opt = 0;
-			break;
-
-		case KEY_ESC:
-			selectdone = -1;
-			break;
-
-		case KEY_ENTER:
-			selectdone = 1;
-			break;
-		}
-
-		if (editorInfo.maxSIDChannels != 3)
-		{
-			playerversion |= PLAYER_BUFFERED;
-			playerversion &= ~PLAYER_ZPGHOSTREGS;
-		}
-	}
-	if (selectdone == -1) goto PRCLEANUP;
-
-	int yPos = 10;
-
-	sprintf(textbuffer, "SELECT START ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
-	printtext(1, yPos++, getColor(15, 0), textbuffer);
-
-	selectdone = 0;
-	while (!selectdone)
-	{
-		sprintf(textbuffer, "$%04X", playeradr);
-		printtext(1, yPos, getColor(10, 0), textbuffer);
-
-		fliptoscreen();
-		waitkeynoupdate();
-
-		if (win_quitted)
-		{
-			exitprogram = 1;
-			goto PRCLEANUP;
-		}
-
-		switch (rawkey)
-		{
-		case KEY_LEFT:
-			playeradr -= 0x0400;
-			playeradr &= 0xff00;
-			break;
-
-		case KEY_UP:
-			playeradr += 0x0100;
-			playeradr &= 0xff00;
-			break;
-
-		case KEY_RIGHT:
-			playeradr += 0x0400;
-			playeradr &= 0xff00;
-			break;
-
-		case KEY_DOWN:
-			playeradr -= 0x0100;
-			playeradr &= 0xff00;
-			break;
-
-		case KEY_ESC:
-			selectdone = -1;
-			break;
-
-		case KEY_ENTER:
-			selectdone = 1;
-			break;
-		}
-	}
-
-	if (selectdone == -1) goto PRCLEANUP;
-
-	yPos++;
-
 	// Set default SID chip addresses. SidAddr2 is read from cfg file. By default, put SIDs 3+4 0x20 and 0x40 after this.
 
 	int sidAddr1 = 0xd400;
@@ -339,15 +193,61 @@ void relocator(GTOBJECT *gt)
 	int sidAddr3 = sidAddr2 + 0x20;
 	int sidAddr4 = sidAddr3 + 0x20;
 
-	if (editorInfo.maxSIDChannels > 3)
+	initRemapArrays();
+	patternRemapOrderIndex = 0;
+	for (int i = 0;i < MAX_SONGS;i++)
 	{
-		sprintf(textbuffer, "SELECT SID ADDRESS 2: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
-		printtext(1, yPos++, getColor(15, 0), textbuffer);
+		playUntilEnd2(i);	// run through all songs to create pattern map in order of playback
+	}
+
+	if (gt2relocMode == 0)
+	{
+		if (gt->songinit != PLAY_STOPPED)
+		{
+			stopsong(gt);
+		}
+
+
+
+		// Select playroutine options
+		clearscreen(getColor(1, 0));
+		printblankc(0, 0, getColor(15, 1), MAX_COLUMNS);
+		if (!strlen(loadedsongfilename))
+			sprintf(textbuffer, "%s Packer/Relocator", programname);
+		else
+			sprintf(textbuffer, "%s Packer/Relocator - %s", programname, loadedsongfilename);
+		textbuffer[MAX_COLUMNS] = 0;
+		printtext(0, 0, getColor(15, 1), textbuffer);
+		printtext(1, 2, getColor(CTITLE, 0), "SELECT PLAYROUTINE OPTIONS: (CURSORS=MOVE/CHANGE, ENTER=ACCEPT, ESC=CANCEL)");
+
+		int maxOptions = MAX_OPTIONS;
+		if (editorInfo.maxSIDChannels != 3)
+		{
+			maxOptions--;
+			playerversion &= ~PLAYER_FULLBUFFERED;
+		}
+
+		playerversion |= PLAYER_BUFFERED;
+		playerversion &= ~PLAYER_ZPGHOSTREGS;
+
 		selectdone = 0;
+
+
+		int test = 0;
+
 		while (!selectdone)
 		{
-			sprintf(textbuffer, "$%04X", sidAddr2);
-			printtext(1, yPos, 10, textbuffer);
+			for (c = 0; c < maxOptions; c++)
+			{
+				int color = CNORMAL;
+				if (opt == c) color = CEDIT;
+
+				printtext(1, 3 + c, getColor(color, 0), playeroptname[c]);
+				if (playerversion & (PLAYER_BUFFERED << c))
+					printtext(24, 3 + c, getColor(color, 0), "Yes");
+				else
+					printtext(24, 3 + c, getColor(color, 0), "No ");
+			}
 
 			fliptoscreen();
 			waitkeynoupdate();
@@ -361,13 +261,36 @@ void relocator(GTOBJECT *gt)
 			switch (rawkey)
 			{
 			case KEY_LEFT:
-				if (sidAddr2 > 0xd400)
-					sidAddr2 -= 0x0020;
+			case KEY_RIGHT:
+			case KEY_SPACE:
+				playerversion ^= (PLAYER_BUFFERED << opt);
+				if (opt)
+				{
+					if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS) || (playerversion & PLAYER_FULLBUFFERED))
+					{
+						test++;
+						playerversion |= PLAYER_BUFFERED;
+					}
+				}
+				else
+				{
+					if (!(playerversion & PLAYER_BUFFERED))
+					{
+						playerversion &= ~PLAYER_SOUNDEFFECTS;
+						playerversion &= ~PLAYER_ZPGHOSTREGS;
+						playerversion &= ~PLAYER_FULLBUFFERED;	// JP
+					}
+				}
 				break;
 
-			case KEY_RIGHT:
-				if (sidAddr2 < 0xe000)
-					sidAddr2 += 0x0020;
+			case KEY_UP:
+				opt--;
+				if (opt < 0) opt = maxOptions - 1;
+				break;
+
+			case KEY_DOWN:
+				opt++;
+				if (opt >= maxOptions) opt = 0;
 				break;
 
 			case KEY_ESC:
@@ -378,25 +301,24 @@ void relocator(GTOBJECT *gt)
 				selectdone = 1;
 				break;
 			}
-		}
 
+			if (editorInfo.maxSIDChannels != 3)
+			{
+				playerversion |= PLAYER_BUFFERED;
+				playerversion &= ~PLAYER_ZPGHOSTREGS;
+			}
+		}
 		if (selectdone == -1) goto PRCLEANUP;
 
-		yPos++;
+		int yPos = 10;
 
-		sidaddress = sidAddr1;
-		sidaddress |= (sidAddr2 << 16);
-	}
-
-	if (editorInfo.maxSIDChannels > 6)
-	{
-
-		sprintf(textbuffer, "SELECT SID ADDRESS 3: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
+		sprintf(textbuffer, "SELECT START ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
 		printtext(1, yPos++, getColor(15, 0), textbuffer);
+
 		selectdone = 0;
 		while (!selectdone)
 		{
-			sprintf(textbuffer, "$%04X", sidAddr3);
+			sprintf(textbuffer, "$%04X", playeradr);
 			printtext(1, yPos, getColor(10, 0), textbuffer);
 
 			fliptoscreen();
@@ -411,14 +333,23 @@ void relocator(GTOBJECT *gt)
 			switch (rawkey)
 			{
 			case KEY_LEFT:
-				if (sidAddr3 > 0xd400)
-					sidAddr3 -= 0x0020;
+				playeradr -= 0x0400;
+				playeradr &= 0xff00;
 				break;
 
+			case KEY_UP:
+				playeradr += 0x0100;
+				playeradr &= 0xff00;
+				break;
 
 			case KEY_RIGHT:
-				if (sidAddr3 < 0xe000)
-					sidAddr3 += 0x0020;
+				playeradr += 0x0400;
+				playeradr &= 0xff00;
+				break;
+
+			case KEY_DOWN:
+				playeradr -= 0x0100;
+				playeradr &= 0xff00;
 				break;
 
 			case KEY_ESC:
@@ -433,18 +364,187 @@ void relocator(GTOBJECT *gt)
 
 		if (selectdone == -1) goto PRCLEANUP;
 
-
 		yPos++;
-	}
 
-	if (editorInfo.maxSIDChannels > 9)
-	{
-		sprintf(textbuffer, "SELECT SID ADDRESS 4: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
+
+
+		if (editorInfo.maxSIDChannels > 3)
+		{
+			sprintf(textbuffer, "SELECT SID ADDRESS 2: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
+			printtext(1, yPos++, getColor(15, 0), textbuffer);
+			selectdone = 0;
+			while (!selectdone)
+			{
+				sprintf(textbuffer, "$%04X", sidAddr2);
+				printtext(1, yPos, 10, textbuffer);
+
+				fliptoscreen();
+				waitkeynoupdate();
+
+				if (win_quitted)
+				{
+					exitprogram = 1;
+					goto PRCLEANUP;
+				}
+
+				switch (rawkey)
+				{
+				case KEY_LEFT:
+					if (sidAddr2 > 0xd400)
+						sidAddr2 -= 0x0020;
+					break;
+
+				case KEY_RIGHT:
+					if (sidAddr2 < 0xe000)
+						sidAddr2 += 0x0020;
+					break;
+
+				case KEY_ESC:
+					selectdone = -1;
+					break;
+
+				case KEY_ENTER:
+					selectdone = 1;
+					break;
+				}
+			}
+
+			if (selectdone == -1) goto PRCLEANUP;
+
+			yPos++;
+
+			sidaddress = sidAddr1;
+			sidaddress |= (sidAddr2 << 16);
+		}
+
+		if (editorInfo.maxSIDChannels > 6)
+		{
+
+			sprintf(textbuffer, "SELECT SID ADDRESS 3: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
+			printtext(1, yPos++, getColor(15, 0), textbuffer);
+			selectdone = 0;
+			while (!selectdone)
+			{
+				sprintf(textbuffer, "$%04X", sidAddr3);
+				printtext(1, yPos, getColor(10, 0), textbuffer);
+
+				fliptoscreen();
+				waitkeynoupdate();
+
+				if (win_quitted)
+				{
+					exitprogram = 1;
+					goto PRCLEANUP;
+				}
+
+				switch (rawkey)
+				{
+				case KEY_LEFT:
+					if (sidAddr3 > 0xd400)
+						sidAddr3 -= 0x0020;
+					break;
+
+
+				case KEY_RIGHT:
+					if (sidAddr3 < 0xe000)
+						sidAddr3 += 0x0020;
+					break;
+
+				case KEY_ESC:
+					selectdone = -1;
+					break;
+
+				case KEY_ENTER:
+					selectdone = 1;
+					break;
+				}
+			}
+
+			if (selectdone == -1) goto PRCLEANUP;
+
+
+			yPos++;
+		}
+
+		if (editorInfo.maxSIDChannels > 9)
+		{
+			sprintf(textbuffer, "SELECT SID ADDRESS 4: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
+			printtext(1, yPos++, getColor(15, 0), textbuffer);
+			selectdone = 0;
+			while (!selectdone)
+			{
+				sprintf(textbuffer, "$%04X", sidAddr4);
+				printtext(1, yPos, getColor(10, 0), textbuffer);
+
+				fliptoscreen();
+				waitkeynoupdate();
+
+				if (win_quitted)
+				{
+					exitprogram = 1;
+					goto PRCLEANUP;
+				}
+
+				switch (rawkey)
+				{
+				case KEY_LEFT:
+					if (sidAddr4 > 0xd400)
+						sidAddr4 -= 0x0020;
+					break;
+
+				case KEY_RIGHT:
+					if (sidAddr4 < 0xe000)
+						sidAddr4 += 0x0020;
+					break;
+
+				case KEY_ESC:
+					selectdone = -1;
+					break;
+
+				case KEY_ENTER:
+					selectdone = 1;
+					break;
+				}
+			}
+
+			if (selectdone == -1) goto PRCLEANUP;
+
+			yPos++;
+		}
+
+		sprintf(textbuffer, "SELECT ZEROPAGE ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
 		printtext(1, yPos++, getColor(15, 0), textbuffer);
+
 		selectdone = 0;
 		while (!selectdone)
 		{
-			sprintf(textbuffer, "$%04X", sidAddr4);
+			if (playerversion & PLAYER_ZPGHOSTREGS)
+			{
+				if (zeropageadr < 0x02) zeropageadr = 0xe5;
+				if (zeropageadr > 0xe5) zeropageadr = 0x02;
+			}
+			else
+			{
+				if (zeropageadr < 0x02) zeropageadr = 0xfe;
+				if (zeropageadr > 0xfe) zeropageadr = 0x02;
+			}
+
+			if (!(playerversion & PLAYER_ZPGHOSTREGS))
+			{
+				if (zeropageadr < 0x90)
+					sprintf(textbuffer, "$%02X-$%02X (Used by BASIC interpreter)    ", zeropageadr, zeropageadr + 1);
+				if ((zeropageadr >= 0x90) && (zeropageadr < 0xfb))
+					sprintf(textbuffer, "$%02X-$%02X (Used by KERNAL routines)      ", zeropageadr, zeropageadr + 1);
+				if ((zeropageadr >= 0xfb) && (zeropageadr < 0xfe))
+					sprintf(textbuffer, "$%02X-$%02X (Unused)                       ", zeropageadr, zeropageadr + 1);
+				if (zeropageadr >= 0xfe)
+					sprintf(textbuffer, "$%02X-$%02X ($FF used by BASIC interpreter)", zeropageadr, zeropageadr + 1);
+			}
+			else
+			{
+				sprintf(textbuffer, "$%02X-$%02X (ghostregs start at %02X)", zeropageadr, zeropageadr + 26, zeropageadr);
+			}
+
 			printtext(1, yPos, getColor(10, 0), textbuffer);
 
 			fliptoscreen();
@@ -459,13 +559,19 @@ void relocator(GTOBJECT *gt)
 			switch (rawkey)
 			{
 			case KEY_LEFT:
-				if (sidAddr4 > 0xd400)
-					sidAddr4 -= 0x0020;
+				zeropageadr -= 0x10;
+				break;
+
+			case KEY_UP:
+				zeropageadr++;
 				break;
 
 			case KEY_RIGHT:
-				if (sidAddr4 < 0xe000)
-					sidAddr4 += 0x0020;
+				zeropageadr += 0x10;
+				break;
+
+			case KEY_DOWN:
+				zeropageadr--;
 				break;
 
 			case KEY_ESC:
@@ -479,89 +585,14 @@ void relocator(GTOBJECT *gt)
 		}
 
 		if (selectdone == -1) goto PRCLEANUP;
-
-		yPos++;
 	}
 
-	sprintf(textbuffer, "SELECT ZEROPAGE ADDRESS: (CURSORS=MOVE, ENTER=ACCEPT, ESC=CANCEL)");
-	printtext(1, yPos++, getColor(15, 0), textbuffer);
-
-	selectdone = 0;
-	while (!selectdone)
-	{
-		if (playerversion & PLAYER_ZPGHOSTREGS)
-		{
-			if (zeropageadr < 0x02) zeropageadr = 0xe5;
-			if (zeropageadr > 0xe5) zeropageadr = 0x02;
-		}
-		else
-		{
-			if (zeropageadr < 0x02) zeropageadr = 0xfe;
-			if (zeropageadr > 0xfe) zeropageadr = 0x02;
-		}
-
-		if (!(playerversion & PLAYER_ZPGHOSTREGS))
-		{
-			if (zeropageadr < 0x90)
-				sprintf(textbuffer, "$%02X-$%02X (Used by BASIC interpreter)    ", zeropageadr, zeropageadr + 1);
-			if ((zeropageadr >= 0x90) && (zeropageadr < 0xfb))
-				sprintf(textbuffer, "$%02X-$%02X (Used by KERNAL routines)      ", zeropageadr, zeropageadr + 1);
-			if ((zeropageadr >= 0xfb) && (zeropageadr < 0xfe))
-				sprintf(textbuffer, "$%02X-$%02X (Unused)                       ", zeropageadr, zeropageadr + 1);
-			if (zeropageadr >= 0xfe)
-				sprintf(textbuffer, "$%02X-$%02X ($FF used by BASIC interpreter)", zeropageadr, zeropageadr + 1);
-		}
-		else
-		{
-			sprintf(textbuffer, "$%02X-$%02X (ghostregs start at %02X)", zeropageadr, zeropageadr + 26, zeropageadr);
-		}
-
-		printtext(1, yPos, getColor(10, 0), textbuffer);
-
-		fliptoscreen();
-		waitkeynoupdate();
-
-		if (win_quitted)
-		{
-			exitprogram = 1;
-			goto PRCLEANUP;
-		}
-
-		switch (rawkey)
-		{
-		case KEY_LEFT:
-			zeropageadr -= 0x10;
-			break;
-
-		case KEY_UP:
-			zeropageadr++;
-			break;
-
-		case KEY_RIGHT:
-			zeropageadr += 0x10;
-			break;
-
-		case KEY_DOWN:
-			zeropageadr--;
-			break;
-
-		case KEY_ESC:
-			selectdone = -1;
-			break;
-
-		case KEY_ENTER:
-			selectdone = 1;
-			break;
-		}
-	}
-
-	if (selectdone == -1) goto PRCLEANUP;
 
 	songhandle = NULL;
 
 	memset(pattused, 0, sizeof pattused);
 	memset(instrused, 0, sizeof instrused);
-//	memset(chnused, 0, sizeof chnused);
+	memset(chnused, 0, sizeof chnused);
 	memset(tableused, 0, sizeof tableused);
 	memset(tablemap, 0, sizeof tablemap);
 	tableerror = 0;
@@ -637,6 +668,11 @@ void relocator(GTOBJECT *gt)
 						int num = songorder[c][d][e];
 
 						pattused[num] = 1;
+						for (f = 0; f < pattlen[num]; f++)
+						{
+							if ((pattern[num][f * 4] != REST) || (pattern[num][f * 4 + 1]) || (pattern[num][f * 4 + 2]))
+								chnused[d] = 1;	// JP - Copied from 3 channel version
+						}
 					}
 					else
 					{
@@ -671,6 +707,17 @@ void relocator(GTOBJECT *gt)
 		}
 	}
 
+	// Optimize amount of used channels
+	if (editorInfo.maxSIDChannels == 3)	// JP - Copied from 3 channel version
+	{
+		if (!chnused[2])
+			channels = 2;
+		if ((!chnused[1]) && (!chnused[2]))
+			channels = 1;
+	}
+
+
+
 	if (!songs)
 	{
 		clearscreen(getColor(1, 0));
@@ -680,6 +727,8 @@ void relocator(GTOBJECT *gt)
 		goto PRCLEANUP;
 	}
 
+
+
 	// Build the pattern-mapping
 	// Instrument 1 is always used
 	instrused[1] = 1;
@@ -687,7 +736,8 @@ void relocator(GTOBJECT *gt)
 	{
 		if (pattused[c])
 		{
-			pattmap[c] = patterns;
+			pattmap[c] = patternOrderArray[c];	//patterns;
+			printf("pattern %x = new pattern %x\n", c, pattmap[c]);
 			patterns++;
 
 
@@ -968,13 +1018,20 @@ void relocator(GTOBJECT *gt)
 	if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS))
 		playerversion |= PLAYER_BUFFERED;
 
+
+	if (editorInfo.maxSIDChannels == 3)
+	{
+		// Sound effect or ghostreg players always use full 3 channels
+		if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_FULLBUFFERED) || (playerversion & PLAYER_ZPGHOSTREGS))
+			channels = 3;
+	}
+
 	// Allocate memory for song-orderlists
 
 	if (editorInfo.maxSIDChannels >= 9)
 		songtblsize = ((songs + 1) / 2) * editorInfo.maxSIDChannels;	// 9 or 12 channels. Half the number of songs
 	else
 		songtblsize = songs * editorInfo.maxSIDChannels;		// 3 or 6 channels
-
 
 
 	//----------------
@@ -1081,9 +1138,13 @@ void relocator(GTOBJECT *gt)
 	// Calculate total size of patterns
 	for (c = 0; c < MAX_PATT; c++)
 	{
-		if (pattused[c])
+		int d = patternOrderList[c];
+//		if (pattused[c])
+		if (d!=-1)
 		{
-			int result = packpattern(patttemp, pattern[c], pattlen[c]);
+			printf("Packing pattern %x\n", d);
+			
+			int result = packpattern(patttemp, pattern[d], pattlen[d]);
 
 			if (result < 0)
 			{
@@ -1125,10 +1186,12 @@ void relocator(GTOBJECT *gt)
 	d = 0;
 	for (c = 0; c < MAX_PATT; c++)
 	{
-		if (pattused[c])
+		int e = patternOrderList[c];
+//		if (pattused[c])
+		if (e!=-1)
 		{
 			pattoffset[d] = pattdatasize;
-			pattsize[d] = packpattern(&pattwork[pattdatasize], pattern[c], pattlen[c]);
+			pattsize[d] = packpattern(&pattwork[pattdatasize], pattern[e], pattlen[e]);
 			pattdatasize += pattsize[d];
 			d++;
 		}
@@ -1374,7 +1437,7 @@ void relocator(GTOBJECT *gt)
 		insertdefine("BUFFEREDWRITES", (playerversion & PLAYER_BUFFERED) ? 1 : 0);
 		insertdefine("ZPGHOSTREGS", (playerversion & PLAYER_ZPGHOSTREGS) ? 1 : 0);
 		if (editorInfo.maxSIDChannels == 3)
-			insertdefine("GHOSTREGS", (playerversion & (PLAYER_ZPGHOSTREGS | PLAYER_FULsidbuffer1ED)) ? 1 : 0);
+			insertdefine("GHOSTREGS", (playerversion & (PLAYER_ZPGHOSTREGS | PLAYER_FULLBUFFERED)) ? 1 : 0);
 		insertdefine("FIXEDPARAMS", fixedparams);
 		insertdefine("SIMPLEPULSE", simplepulse);
 		insertdefine("PULSEOPTIMIZATION", editorInfo.optimizepulse);
@@ -1412,7 +1475,7 @@ void relocator(GTOBJECT *gt)
 		insertdefine("NOZEROSPEED", nozerospeed);
 
 		// Insert parameters
-		insertdefine("NUMCHANNELS", editorInfo.maxSIDChannels);
+		insertdefine("NUMCHANNELS", channels);
 		insertdefine("NUMSONGS", songs);
 		insertdefine("FIRSTNOTE", firstnote);
 		insertdefine("FIRSTNOHRINSTR", numnormal + 1);
@@ -1470,7 +1533,7 @@ void relocator(GTOBJECT *gt)
 		// JP Added this (copied from 3channel GoatTracker) 31st March 2022
 		// Modify ghostregs to not be zeropage if needed
 		//----
-		if ((playerversion & PLAYER_FULsidbuffer1ED) && (playerversion & PLAYER_ZPGHOSTREGS) == 0)
+		if ((playerversion & PLAYER_FULLBUFFERED) && (playerversion & PLAYER_ZPGHOSTREGS) == 0)
 		{
 			int bufsize = membuf_get_size(&src);
 			char* bufdata = (char*)membuf_get(&src);
@@ -1726,7 +1789,7 @@ void relocator(GTOBJECT *gt)
 		{
 			sprintf(textbuffer, "jpa000fix");
 			insertlabel(textbuffer);
-			sprintf(textbuffer, "jmp $%04X",playeradr+3);	// play addr
+			sprintf(textbuffer, "jmp $%04X", playeradr + 3);	// play addr
 			inserttext(textbuffer);
 		}
 
@@ -1737,6 +1800,7 @@ void relocator(GTOBJECT *gt)
 		fclose(handle);
 
 		// Assemble; on error fail in a rude way (the parser does so too)
+
 
 
 
@@ -1775,7 +1839,7 @@ void relocator(GTOBJECT *gt)
 				sidPlayAddr = endaddr - 3;
 			}
 		}
-	}while (doAgain == 1);
+	} while (doAgain == 1);
 
 	packeddata = membuf_get(&dest);
 
@@ -1792,6 +1856,24 @@ void relocator(GTOBJECT *gt)
 		}
 	}
 
+#ifdef GT2RELOC
+	SDL_Log("packing results:\n");
+	SDL_Log("Playroutine:     %d bytes\n", playersize);
+	SDL_Log("Songtable:       %d bytes\n", songtblsize);
+	SDL_Log("Song-orderlists: %d bytes\n", songdatasize);
+	SDL_Log("Patterntable:    %d bytes\n", patttblsize);
+	SDL_Log("Patterns:        %d bytes\n", pattdatasize);
+	SDL_Log("Instruments:     %d bytes\n", instrsize);
+	SDL_Log("Tables:          %d bytes\n", wavetblsize + pulsetblsize + filttblsize + speedtblsize);
+	SDL_Log("Total size:      %d bytes\n", packedsize);
+
+	songhandle = fopen(packedsongname, "wb");
+	if (!songhandle)
+	{
+		fprintf(STDERR, "error: could not open output file '%s'.\n", packedsongname);
+		goto PRCLEANUP;
+	}
+#else
 	// Print results
 	clearscreen(getColor(1, 0));
 	printblankc(0, 0, 15 + 16, MAX_COLUMNS);
@@ -1821,7 +1903,7 @@ void relocator(GTOBJECT *gt)
 	printtext(1, 9, getColor(7, 0), textbuffer);
 	sprintf(textbuffer, "Total size:      %d bytes", packedsize);
 	printtext(1, 11, getColor(7, 0), textbuffer);
-	sprintf(textbuffer, "End address:     $%x ", playeradr+packedsize);
+	sprintf(textbuffer, "End address:     $%x ", playeradr + packedsize);
 	printtext(1, 12, getColor(7, 0), textbuffer);
 	fliptoscreen();
 
@@ -1889,7 +1971,6 @@ void relocator(GTOBJECT *gt)
 	}
 
 
-
 	// By default, copy loaded song name up to the extension
 	memset(packedsongname, 0, sizeof packedsongname);
 	for (c = 0; c < strlen(loadedsongfilename); c++)
@@ -1917,7 +1998,7 @@ void relocator(GTOBJECT *gt)
 	while (!songhandle)
 	{
 
-		if (!fileselector(packedsongname, packedpath, packedfilter, "Save Music+Playroutine", 3, gt, 12,0))
+		if (!fileselector(packedsongname, packedpath, packedfilter, "Save Music+Playroutine", 3, gt, 12, 0))
 		{
 			clearscreen(getColor(1, 0));
 			//	sprintf(textbuffer, "QUITTED JP = %d", jp);
@@ -1956,6 +2037,7 @@ void relocator(GTOBJECT *gt)
 		}
 		songhandle = fopen(packedsongname, "wb");
 	}
+#endif
 
 	if (fileformat == FORMAT_PRG)
 	{
@@ -2013,7 +2095,7 @@ void relocator(GTOBJECT *gt)
 		}
 
 		// Play address
-		byte = (sidPlayAddr ) >> 8;	// playeradr+3
+		byte = (sidPlayAddr) >> 8;	// playeradr+3
 		fwrite8(songhandle, byte);
 		byte = (sidPlayAddr) & 0xff;	// playeradr+3
 		fwrite8(songhandle, byte);
@@ -2127,7 +2209,8 @@ PRCLEANUP:
 	if (pattwork) free(pattwork);
 	if (songwork) free(songwork);
 	if (instrwork) free(instrwork);
-	printmainscreen(gt);
+	if (gt2relocMode == 0)
+		printmainscreen(gt);
 	key = 0;
 	rawkey = 0;
 }
@@ -2280,29 +2363,39 @@ int packpattern(unsigned char *dest, unsigned char *src, int rows)
 		databyte = 0;
 	}
 
+	unsigned char lastNote = REST;
 	// Write in playroutine format
 	for (c = 0; c < rows; c++)
 	{
+		unsigned char newNote = temp1[c * 4];
 		// Instrument change with mapping
 		if (temp1[c * 4 + 1])
 		{
 			temp2[destsizeim++] = instrmap[INSTRCHG + temp1[c * 4 + 1]];
 		}
+		int foundRest = 0;
 		// Rest+FX
 		if (temp1[c * 4] == REST)
 		{
-			if ((temp1[c * 4 + 2] != command) || (temp1[c * 4 + 3] != databyte))
-			{
-				command = temp1[c * 4 + 2];
-				databyte = temp1[c * 4 + 3];
-				temp2[destsizeim++] = FXONLY + command;
-				if (command)
-					temp2[destsizeim++] = databyte;
-			}
+			if (SIDTracker64ForIPadIsAmazing != 0 && (c == 0 || (lastNote != REST && lastNote != KEYOFF)))	// JP - Force a key off
+				temp1[c * 4] = KEYOFF;
 			else
-				temp2[destsizeim++] = REST;
+			{
+				foundRest = 1;
+
+				if ((temp1[c * 4 + 2] != command) || (temp1[c * 4 + 3] != databyte))
+				{
+					command = temp1[c * 4 + 2];
+					databyte = temp1[c * 4 + 3];
+					temp2[destsizeim++] = FXONLY + command;
+					if (command)
+						temp2[destsizeim++] = databyte;
+				}
+				else
+					temp2[destsizeim++] = REST;
+			}
 		}
-		else
+		if (foundRest == 0)
 		{
 			// Normal note
 			if ((temp1[c * 4 + 2] != command) || (temp1[c * 4 + 3] != databyte))
@@ -2315,63 +2408,133 @@ int packpattern(unsigned char *dest, unsigned char *src, int rows)
 			}
 			temp2[destsizeim++] = temp1[c * 4];
 		}
+		lastNote = newNote;
 	}
 
-	// Final step: optimize long singlebyte rests with "packed rest"
-	for (c = 0; c < destsizeim;)
+	if (SIDTracker64ForIPadIsAmazing != 0)
 	{
-		int packok = 1;
 
-		// Never pack first row or sequencer goes crazy
-		if (!c) packok = 0;
+		// SPECIAL VERSION THAT ALSO COMPRESSES KEY_ONS - ALLOWING FOR SIDTRACKER STYLE USE OF KEYON TO SET NOTE LENGTHS
+		// Final step: optimize long singlebyte rests with "packed rest"
+		for (c = 0; c < destsizeim;)
+		{
+			int packok = 1;
 
-		// There must be no instrument or command changes on the row to be packed
-		if (temp2[c] < FX)
-		{
-			dest[destsize++] = temp2[c++];
-			packok = 0;
-		}
-		if ((temp2[c] >= FXONLY) && (temp2[c] < FIRSTNOTE))
-		{
-			int fxnum = temp2[c] - FXONLY;
-			dest[destsize++] = temp2[c++];
-			if (fxnum) dest[destsize++] = temp2[c++];
-			packok = 0;
-			goto NEXTROW;
-		}
-		if (temp2[c] < FXONLY)
-		{
-			int fxnum = temp2[c] - FX;
-			dest[destsize++] = temp2[c++];
-			if (fxnum) dest[destsize++] = temp2[c++];
-			packok = 0;
-		}
+			// Never pack first row or sequencer goes crazy
+			if (!c) packok = 0;
 
-		if (temp2[c] != REST) packok = 0;
-
-		if (!packok)
-			dest[destsize++] = temp2[c++];
-		else
-		{
-			for (d = c; d < destsizeim; )
+			// There must be no instrument or command changes on the row to be packed
+			if (temp2[c] < FX)
 			{
-				if (temp2[d] == REST)
-				{
-					d++;
-					if (d - c == 64) break;
-				}
-				else break;
+				dest[destsize++] = temp2[c++];		// instrument
+				packok = 0;
 			}
-			d -= c;
-			if (d > 1)
+			if ((temp2[c] >= FXONLY) && (temp2[c] < FIRSTNOTE))
 			{
-				dest[destsize++] = -d;
-				c += d;
-			}
-			else
+				int fxnum = temp2[c] - FXONLY;		// REST, FX + Optional COMMAND
 				dest[destsize++] = temp2[c++];
+				if (fxnum) dest[destsize++] = temp2[c++];
+				packok = 0;
+				goto NEXTROW;
+			}
+			if (temp2[c] < FXONLY)
+			{
+				int fxnum = temp2[c] - FX;			// NOTE, FX + Optional COMMAND
+				dest[destsize++] = temp2[c++];
+				if (fxnum) dest[destsize++] = temp2[c++];
+				packok = 0;
+			}
+
+			if (temp2[c] != REST && temp2[c] != KEYON) packok = 0;
+
+			if (!packok)
+				dest[destsize++] = temp2[c++];
+			else
+			{
+				unsigned char toFind = REST;
+				if (temp2[c] == KEYON)
+					toFind = KEYON;
+
+				for (d = c; d < destsizeim; )
+				{
+					if (temp2[d] == toFind)
+					{
+						d++;
+						if (d - c == 64) break;
+					}
+					else break;
+				}
+				d -= c;
+				if (d > 1)
+				{
+					dest[destsize++] = -d;
+					c += d;
+				}
+				else
+					dest[destsize++] = temp2[c++];
+			}
+		NEXTROW: {}
 		}
-	NEXTROW: {}
+
+	}
+	else
+	{
+		// Final step: optimize long singlebyte rests with "packed rest"
+		for (c = 0; c < destsizeim;)
+		{
+			int packok = 1;
+
+			// Never pack first row or sequencer goes crazy
+			if (!c) packok = 0;
+
+			// There must be no instrument or command changes on the row to be packed
+			if (temp2[c] < FX)
+			{
+				dest[destsize++] = temp2[c++];		// instrument
+				packok = 0;
+			}
+			if ((temp2[c] >= FXONLY) && (temp2[c] < FIRSTNOTE))
+			{
+				int fxnum = temp2[c] - FXONLY;		// REST, FX + Optional COMMAND
+				dest[destsize++] = temp2[c++];
+				if (fxnum) dest[destsize++] = temp2[c++];
+				packok = 0;
+				goto NEXTROW2;
+			}
+			if (temp2[c] < FXONLY)
+			{
+				int fxnum = temp2[c] - FX;			// NOTE, FX + Optional COMMAND
+				dest[destsize++] = temp2[c++];
+				if (fxnum) dest[destsize++] = temp2[c++];
+				packok = 0;
+			}
+
+			if (temp2[c] != REST) packok = 0;
+
+			if (!packok)
+				dest[destsize++] = temp2[c++];
+			else
+			{
+				for (d = c; d < destsizeim; )
+				{
+					if (temp2[d] == REST)
+					{
+						d++;
+						if (d - c == 64) break;
+					}
+					else break;
+				}
+				d -= c;
+				if (d > 1)
+				{
+					dest[destsize++] = -d;
+					c += d;
+				}
+				else
+					dest[destsize++] = temp2[c++];
+			}
+		NEXTROW2: {}
+		}
 	}
 	// See if pattern too big
 	if (destsize > 256) return -1;

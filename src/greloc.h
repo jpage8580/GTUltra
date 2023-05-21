@@ -11,7 +11,7 @@
 #define PLAYER_AUTHORINFO 64
 #define PLAYER_ZPGHOSTREGS 128
 #define PLAYER_NOOPTIMIZATION 256
-#define PLAYER_FULsidbuffer1ED 512
+#define PLAYER_FULLBUFFERED 512
 
 #define MAX_OPTIONS 7
 
@@ -36,7 +36,7 @@ extern unsigned char tablemap[MAX_TABLES][MAX_TABLELEN+1];
 extern int tableerror;
 #endif
 
-void relocator(GTOBJECT *gt);
+void relocator(GTOBJECT *gt, int gt2relocMode);
 int testoverlap(int area1start, int area1size, int area2start, int area2size);
 int packpattern(unsigned char *dest, unsigned char *src, int rows);
 unsigned char swapnybbles(unsigned char n);

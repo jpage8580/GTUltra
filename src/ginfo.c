@@ -420,7 +420,7 @@ void displayPatternInfo(GTOBJECT *gt)
 
 	if (forceInfoLine)
 	{
-		forceInfoLine = 0;
+		forceInfoLine--;	// = 0;
 		return;
 	}
 

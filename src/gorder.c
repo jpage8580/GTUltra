@@ -41,7 +41,7 @@ void orderlistcommands(GTOBJECT *gt)
 	if (hexnybble >= 0)
 	{
 		if (editorInfo.expandOrderListView == 0)
-			orderListHandleHexInputOriginalView();
+			orderListHandleHexInputOriginalView(gt);
 		else
 			orderListHandleHexInputExpandedView(gt);
 	}
@@ -909,8 +909,6 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 		displayPatternInfo(gt);
 	}
 
-
-
 	if ((editorInfo.maxSIDChannels == 3) || (editorInfo.maxSIDChannels == 9 && (editorInfo.esnum & 1)))
 	{
 		if (editorInfo.eschn >= 3)
@@ -937,6 +935,9 @@ void songchange(GTOBJECT *gt, int resetEditingPositions)
 				editorInfo.eseditpos = 0;
 		}
 	}
+
+
+
 
 	orderSelectPatternsFromSelected(gt);
 
@@ -1203,8 +1204,13 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 	} while (gtloop->chn[c3].songptr <= startSongPos);
 
 	memcpy((char *)&gtPlayer->loopStartChn[0], (char*)&gtloop->chn[0], sizeof(CHN)*MAX_PLAY_CH);
-	memcpy((char *)&gtPlayer->looptimemin, (char*)&gtloop->timemin, sizeof(int) * 3);
 
+	// Do this manually, in case compiler changes order of data
+	//	memcpy((char *)&gtPlayer->looptimemin, (char*)&gtloop->timemin, sizeof(int) * 3);
+	gtPlayer->looptimemin = gtloop->looptimemin;
+	gtPlayer->looptimesec = gtloop->looptimesec;
+	gtPlayer->looptimeframe = gtloop->looptimeframe;
+	
 	int tempMin = gtloop->timemin;
 	int tempSec = gtloop->timesec;
 	int tempFrame = gtloop->timeframe;
@@ -1272,9 +1278,10 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 	}
 	else
 	{
-		if (startSongPos >= songOrderLength[editorInfo.esnum][focusChannel % 6]-1)	// 1.3.3
+		if (startSongPos >= songOrderLength[editorInfo.esnum][focusChannel % 6] - 1)	// 1.3.3
 			return;
 	}
+
 
 	int c2 = getActualChannel(editorInfo.esnum, focusChannel);
 	int sng = getActualSongNumber(editorInfo.esnum, c2);
@@ -1326,6 +1333,7 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 	int tempSec = gt->timesec;
 	int tempFrame = gt->timeframe;
 
+
 	// Now sync to pattern start position (where cursor was when F3 was pressed)
 	if (startPatternPos > 0)
 	{
@@ -1376,7 +1384,7 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 	}
 	else
 	{
-		if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn]-1)	// 1.3.3
+		if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1)	// 1.3.3
 			return;
 	}
 	// V1.2.2. fix - rather than using eschn or epchn, use masterLoopChannel instead. works if you're editing pattern or song.
@@ -1410,19 +1418,18 @@ void orderSelectPatternsFromSelected(GTOBJECT *gt)
 
 			ep = gte->chn[c2].songptr - 1;	// -1;
 
-			/* JP Removed on 21st Sept 22.
-			do
-			{
-				ep2 = ep;
-				if ((songorder[sng][c2 % 6][ep] >= REPEAT) && (songorder[sng][c2 % 6][ep] < TRANSDOWN))
-					ep++;
-				if ((songorder[sng][c2 % 6][ep] >= TRANSDOWN) && (songorder[sng][c2 % 6][ep] < LOOPSONG))
-					ep++;
-			} while (ep != ep2);
-			*/
-
 			if (editorInfo.expandOrderListView == 0)
+			{
+				do
+				{
+					ep2 = ep;
+					if ((songorder[sng][c2 % 6][ep] >= REPEAT) && (songorder[sng][c2 % 6][ep] < TRANSDOWN))
+						ep++;
+					if ((songorder[sng][c2 % 6][ep] >= TRANSDOWN) && (songorder[sng][c2 % 6][ep] < LOOPSONG))
+						ep++;
+				} while (ep != ep2);
 				gt->editorUndoInfo.editorInfo[c2].epnum = songorder[sng][c2 % 6][ep];
+			}
 			else
 				gt->editorUndoInfo.editorInfo[c2].epnum = songOrderPatterns[sng][c2 % 6][ep];
 			gt->editorUndoInfo.editorInfo[c2].espos = ep;
@@ -1508,14 +1515,20 @@ void countInstruments()
 	{
 		for (int s = 0;s < MAX_SONGS;s++)
 		{
+
 			for (int c = 0;c < MAX_CHN;c++)
 			{
-				for (int l = 0;l < songOrderLength[s][c];l++)
+				//	printf("song %x orderlength %x\n", s, songOrderLength[s][c]);
+
+				for (int l = 0;l < songOrderLength[s][c] - 1;l++)
 				{
 					int pat = songOrderPatterns[s][c][l];
 
+					//	printf("song %x orderlength %x chan %x index %x pat %x\n", s, songOrderLength[s][c],c,l,pat);
+
 					if (!patternChecked[pat])
 					{
+
 						countInstrumentsInPattern(pat);
 						patternChecked[pat]++;
 					}
@@ -1523,6 +1536,7 @@ void countInstruments()
 			}
 		}
 	}
+
 	calculateTotalInstrumentsFromAllPatterns();
 }
 
@@ -1546,6 +1560,12 @@ void calculateTotalInstrumentsFromAllPatterns()
 
 void countInstrumentsInPattern(int pat)
 {
+
+	if (pat >= 208)
+	{
+		printf("ERROR!  pattern %x \n", pat);
+		return;
+	}
 	for (int i = 0;i < MAX_INSTR;i++)
 	{
 		pattInstrumentCount[pat][i] = 0;
@@ -1556,7 +1576,12 @@ void countInstrumentsInPattern(int pat)
 		int instr = pattern[pat][(p * 4) + 1];
 		if (instr != 0)
 		{
-			pattInstrumentCount[pat][instr]++;
+			if (instr >= 64 || pat >= 208)
+			{
+				printf("ERROR! Instrument %x in pattern %x position %x\n", instr, pat, p);
+			}
+			else
+				pattInstrumentCount[pat][instr]++;
 		}
 	}
 
@@ -1606,7 +1631,7 @@ void resetOrderView(GTOBJECT *gt)
 	updateviewtopos(gt);
 }
 
-void orderListHandleHexInputOriginalView()
+void orderListHandleHexInputOriginalView(GTOBJECT *gt)
 {
 	if (editorInfo.eseditpos != songlen[editorInfo.esnum][editorInfo.eschn])
 	{
@@ -1654,6 +1679,14 @@ void orderListHandleHexInputOriginalView()
 					songorder[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] = MAX_SONGLEN - 1;
 			}
 			break;
+		}
+
+		int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12
+
+		if (editorInfo.eseditpos == gt->editorUndoInfo.editorInfo[c2].espos)
+		{
+			if (songorder[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] < MAX_PATT)	// remember pattern number for undo
+				gt->editorUndoInfo.editorInfo[c2].epnum = songorder[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos];
 		}
 
 		editorInfo.escolumn++;
@@ -1788,12 +1821,22 @@ void orderListHandleHexInputExpandedView(GTOBJECT *gt)
 		{
 			songOrderTranspose[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] = 0;
 		}
+		else
+		{
+			int c2 = getActualChannel(editorInfo.esnum, editorInfo.eschn);	// 0-12
+
+			if (editorInfo.eseditpos == gt->editorUndoInfo.editorInfo[c2].espos)
+			{
+				if (songOrderPatterns[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos] < MAX_PATT)	// jpjpjp
+					gt->editorUndoInfo.editorInfo[c2].epnum = songOrderPatterns[editorInfo.esnum][editorInfo.eschn][editorInfo.eseditpos];
+			}
+		}
 	}
 
 	songCompressedSize[editorInfo.esnum][editorInfo.eschn] = generateCompressedSongChannel(editorInfo.esnum, editorInfo.eschn, 1);
 
 	int index = findFirstEndMarkerIndex(editorInfo.esnum, editorInfo.eschn);
-	songOrderLength[editorInfo.esnum][editorInfo.eschn] = index+1;
+	songOrderLength[editorInfo.esnum][editorInfo.eschn] = index + 1;
 
 	//sprintf(textbuffer, "j %x, chn %x, songorderLen %x\n", editorInfo.esnum, editorInfo.eschn, (songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1));
 	//printtext(70, 1, 0xe, textbuffer);
@@ -1828,30 +1871,36 @@ int handleEnterInCompressedView(GTOBJECT *gt)
 	}
 	else
 	{
-		int c, d;
+		backupPatternDisplayInfo(gt);	//V1.2.2 - Preserve pattern edit position
+		orderSelectPatternsFromSelected(gt);
+		restorePatternDisplayInfo(gt);	//V1.2.2
+		return 0;
+		/*
+				int c, d;
 
-		for (c = 0; c < editorInfo.maxSIDChannels; c++)
-		{
-			int start;
-
-			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
-			int songNum = getActualSongNumber(editorInfo.esnum, c2);
-			int c3 = c % 6;
-
-			if (editorInfo.eseditpos != gt->editorUndoInfo.editorInfo[c2].espos)
-				start = editorInfo.eseditpos;
-			else
-				start = gt->editorUndoInfo.editorInfo[c2].espos;
-
-			for (d = start; d < songlen[songNum][c3]; d++)
-			{
-				if (songorder[songNum][c3][d] < MAX_PATT)
+				for (c = 0; c < editorInfo.maxSIDChannels; c++)
 				{
-					gt->editorUndoInfo.editorInfo[c2].epnum = songorder[songNum][c3][d];
-					break;
+					int start;
+
+					int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+					int songNum = getActualSongNumber(editorInfo.esnum, c2);
+					int c3 = c % 6;
+
+					if (editorInfo.eseditpos != gt->editorUndoInfo.editorInfo[c2].espos)
+						start = editorInfo.eseditpos;
+					else
+						start = gt->editorUndoInfo.editorInfo[c2].espos;
+
+					for (d = start; d < songlen[songNum][c3]; d++)
+					{
+						if (songorder[songNum][c3][d] < MAX_PATT)
+						{
+							gt->editorUndoInfo.editorInfo[c2].epnum = songorder[songNum][c3][d];
+							break;
+						}
+					}
 				}
-			}
-		}
+		*/
 	}
 	return 1;
 }
@@ -1860,10 +1909,10 @@ int handleEnterInCompressedView(GTOBJECT *gt)
 int handleEnterInExpandedView(GTOBJECT *gt)
 {
 
-//	sprintf(textbuffer, "snd %x, chn %x, songorderLen %x\n", editorInfo.esnum, editorInfo.eschn,(songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1));
-//	printtext(70,1, 0xe, textbuffer);
+	//	sprintf(textbuffer, "snd %x, chn %x, songorderLen %x\n", editorInfo.esnum, editorInfo.eschn,(songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1));
+	//	printtext(70,1, 0xe, textbuffer);
 
-	if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn]-1)	// 1.3.3
+	if (editorInfo.eseditpos >= songOrderLength[editorInfo.esnum][editorInfo.eschn] - 1)	// 1.3.3
 		return 0;
 
 	if (!shiftOrCtrlPressed)
@@ -1875,30 +1924,36 @@ int handleEnterInExpandedView(GTOBJECT *gt)
 	}
 	else
 	{
-		int c, d;
+		backupPatternDisplayInfo(gt);	//V1.2.2 - Preserve pattern edit position
+		orderSelectPatternsFromSelected(gt);
+		restorePatternDisplayInfo(gt);	//V1.2.2
+		return 0;
+		/*
+				int c, d;
 
-		for (c = 0; c < editorInfo.maxSIDChannels; c++)
-		{
-			int start;
-
-			int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
-			int songNum = getActualSongNumber(editorInfo.esnum, c2);
-			int c3 = c % 6;
-
-			if (editorInfo.eseditpos != gt->editorUndoInfo.editorInfo[c2].espos)
-				start = editorInfo.eseditpos;
-			else
-				start = gt->editorUndoInfo.editorInfo[c2].espos;
-
-			for (d = start; d < songOrderLength[songNum][c3]; d++)
-			{
-				if (songOrderPatterns[songNum][c3][d] < MAX_PATT)
+				for (c = 0; c < editorInfo.maxSIDChannels; c++)
 				{
-					gt->editorUndoInfo.editorInfo[c2].epnum = songOrderPatterns[songNum][c3][d];
-					break;
+					int start;
+
+					int c2 = getActualChannel(editorInfo.esnum, c);	// 0-12
+					int songNum = getActualSongNumber(editorInfo.esnum, c2);
+					int c3 = c % 6;
+
+					if (editorInfo.eseditpos != gt->editorUndoInfo.editorInfo[c2].espos)
+						start = editorInfo.eseditpos;
+					else
+						start = gt->editorUndoInfo.editorInfo[c2].espos;
+
+					for (d = start; d < songOrderLength[songNum][c3]; d++)
+					{
+						if (songOrderPatterns[songNum][c3][d] < MAX_PATT)
+						{
+							gt->editorUndoInfo.editorInfo[c2].epnum = songOrderPatterns[songNum][c3][d];
+							break;
+						}
+					}
 				}
-			}
-		}
+		*/
 	}
 	return 1;
 }
@@ -2073,7 +2128,7 @@ void orderListPasteToCursor_External(GTOBJECT *gt, int insert, int transposeOnly
 			}
 		}
 		int index = findFirstEndMarkerIndex(editorInfo.esnum, xd);
-		songOrderLength[editorInfo.esnum][xd] = index+1;	// 1.3.8
+		songOrderLength[editorInfo.esnum][xd] = index + 1;	// 1.3.8
 
 		songCompressedSize[editorInfo.esnum][xd] = generateCompressedSongChannel(editorInfo.esnum, xd, 1);
 
@@ -2096,8 +2151,8 @@ void orderListInsertRowAtCursor_External(GTOBJECT *gt, int sng, int chn, int row
 	//	int index = findFirstEndMarkerIndex(sng, chn);
 	songOrderLength[sng][chn]++;
 
-//	sprintf(textbuffer, "sng %x, chn %x songorderLen %x\n", sng,chn, (songOrderLength[sng][chn] - 1));
-//	printtext(70, 1, 0xe, textbuffer);
+	//	sprintf(textbuffer, "sng %x, chn %x songorderLen %x\n", sng,chn, (songOrderLength[sng][chn] - 1));
+	//	printtext(70, 1, 0xe, textbuffer);
 
 	int c2 = getActualChannel(sng, chn);	// 0-11
 
@@ -2172,7 +2227,7 @@ void orderListDelete_External()
 	for (int i = x;i < (x + w);i++)
 	{
 		int index = findFirstEndMarkerIndex(editorInfo.esnum, i);
-		songOrderLength[editorInfo.esnum][i] = index+1;
+		songOrderLength[editorInfo.esnum][i] = index + 1;
 	}
 
 	editorInfo.esmarkchn = -1;

@@ -31,6 +31,9 @@ void win_setmousemode(int mode);
 
 // Global variables
 
+char *dropFileDir = NULL;
+
+int win_mousewheel = 0;
 int win_fullscreen = 0; // By default windowed
 int win_windowinitted = 0;
 int win_quitted = 0;
@@ -42,7 +45,6 @@ unsigned win_mouseypos = 0;
 unsigned win_mousexrel = 0;
 unsigned win_mouseyrel = 0;
 unsigned win_mousebuttons = 0;
-int win_mouseWheelY = 0;
 
 int win_mousemode = MOUSE_FULLSCREEN_HIDDEN;
 unsigned char win_keystate[SDL_NUM_SCANCODES] = { 0 };
@@ -61,7 +63,7 @@ float originalWidth;
 float originalHeight;
 
 
-int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon,int enableAntiAlias)
+int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon, int enableAntiAlias)
 {
 	Uint32 flags = win_fullscreen ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN;	// Enable resizable window
 
@@ -84,38 +86,38 @@ int win_openwindow(unsigned xsize, unsigned ysize, char *appname, char *icon,int
 	}
 
 	if (enableAntiAlias)
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");	// enable anti alias.
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");	// enable anti alias.
 
 	win_window = SDL_CreateWindow(appname,
-								SDL_WINDOWPOS_UNDEFINED,
-								SDL_WINDOWPOS_UNDEFINED,
-								xsize, ysize,
-								flags);
+		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED,
+		xsize, ysize,
+		flags);
 	return BME_OK;
 }
 
 int keyRepeat = 0;
 void win_enableKeyRepeat(void)
 {
-//	if (enableKeyRepeat != 1)
-//	{
-	//	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+	//	if (enableKeyRepeat != 1)
+	//	{
+		//	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 	keyRepeat = 1;
-//	}
+	//	}
 }
 
 void win_disableKeyRepeat(void)
 {
-//	if (enableKeyRepeat != 0)
-//	{
-	//	SDL_EnableKeyRepeat(0, SDL_DEFAULT_REPEAT_INTERVAL);
+	//	if (enableKeyRepeat != 0)
+	//	{
+		//	SDL_EnableKeyRepeat(0, SDL_DEFAULT_REPEAT_INTERVAL);
 	keyRepeat = 0;
-//	}
+	//	}
 }
 
 void win_closewindow(void)
 {
-    SDL_DestroyWindow(win_window);
+	SDL_DestroyWindow(win_window);
 }
 
 void win_messagebox(char *string)
@@ -193,6 +195,14 @@ void win_checkmessages(void)
 		switch (event.type)
 		{
 
+		case SDL_DROPFILE:
+			dropFileDir = event.drop.file;
+			break;
+
+		case SDL_MOUSEWHEEL:
+			win_mousewheel = event.wheel.y;
+			break;
+
 		case SDL_WINDOWEVENT:
 
 			if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -201,10 +211,7 @@ void win_checkmessages(void)
 				gfx_resize(xsize, event.window.data2);
 
 				xmouseScale = originalWidth / xsize;
-				ymouseScale = originalHeight/(float)event.window.data2;
-
-		//		logFileStderr("MESSAGE:Resizing window...\n");
-		//		resizeWindow(event.window.data1, event.window.data2);
+				ymouseScale = originalHeight / (float)event.window.data2;
 			}
 
 		case SDL_JOYBUTTONDOWN:
@@ -310,7 +317,7 @@ void win_checkmessages(void)
 			break;
 
 		case SDL_WINDOWEVENT_RESIZED:
-		//case SDL_VIDEOEXPOSE:
+			//case SDL_VIDEOEXPOSE:
 			gfx_redraw = 1;
 			break;
 		}
