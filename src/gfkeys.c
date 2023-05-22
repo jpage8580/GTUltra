@@ -109,7 +109,7 @@ int fkeys_check(GTOBJECT *gt, int rawkey)
 
 void fkeys_processActionList(GTOBJECT *gt, char* actionList)
 {
-	int i = 0;
+//	int i = 0;
 	while (*actionList != FKEY_DONE) {
 		char action = *actionList;
 		actionList++;
@@ -210,6 +210,7 @@ int processFKeyCFGTextLine(char *str)
 		printf("'%s'\n", ptr);
 		ptr = strtok(NULL, delim);
 	}
+	return 0;
 }
 
 FILE *fkeys;

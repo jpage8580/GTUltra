@@ -103,8 +103,8 @@ extern char packedsongname[MAX_PATHNAME];
 
 void relocator(GTOBJECT *gt, int gt2relocMode)
 {
-	char *tempFirstSIDBuffer;		// Used for 9 channel SID creation
-	int tempSecondSIDOffset;
+//	char *tempFirstSIDBuffer;		// Used for 9 channel SID creation
+//	int tempSecondSIDOffset;
 
 #ifndef GT2RELOC
 	char packedsongname[MAX_FILENAME];

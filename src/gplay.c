@@ -1609,10 +1609,10 @@ int getActualChannel(int currentSong, int channel)
 void initSID(GTOBJECT *gt)
 {
 
-	gt->sidreg[0] = &sidreg[0];
-	gt->sidreg[1] = &sidreg2[0];
-	gt->sidreg[2] = &sidreg3[0];
-	gt->sidreg[3] = &sidreg4[0];
+	gt->sidreg[0] = (char*)&sidreg[0];
+	gt->sidreg[1] = (char*)&sidreg2[0];
+	gt->sidreg[2] = (char*)&sidreg3[0];
+	gt->sidreg[3] = (char*)&sidreg4[0];
 
 }
 

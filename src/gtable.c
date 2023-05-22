@@ -1276,7 +1276,7 @@ void modifyWaveTableDetailedLeft(int hexnybble)
 		return;
 
 	unsigned char v = detailedTableLValue[editorInfo.etpos];
-	unsigned char o = v;
+//	unsigned char o = v;
 
 	switch (editorInfo.etcolumn)
 	{
@@ -1318,7 +1318,7 @@ void modifyWaveTableDetailedLeft(int hexnybble)
 void modifyWaveTableDetailedRight(int hexnybble)
 {
 	unsigned char v = detailedTableRValue[editorInfo.etpos];
-	unsigned char o = v;
+//	unsigned char o = v;
 
 
 	if (detailedTableBaseRValue[editorInfo.etpos] == -1)
@@ -1352,7 +1352,7 @@ void modifyWaveTableDetailedRight(int hexnybble)
 		int v2 = -v;
 		v2 &= 0xff;
 
-		int v3 = v2;
+	//	int v3 = v2;
 
 		v2 += 0x20;
 
@@ -1400,7 +1400,7 @@ void modifyPulseTableDetailed(int hexnybble)
 void modifyPulseTableDetailedRight(int hexnybble)
 {
 	unsigned char v = detailedTableRValue[editorInfo.etpos];
-	unsigned char o = v;
+//	unsigned char o = v;
 
 	if (detailedTableBaseRValue[editorInfo.etpos] == -1)
 		return;
@@ -1450,7 +1450,7 @@ void modifyPulseTableDetailedLeft(int hexnybble)
 		return;
 
 	unsigned char v = detailedTableLValue[editorInfo.etpos];
-	unsigned char o = v;
+//	unsigned char o = v;
 
 	switch (editorInfo.etcolumn - 1)
 	{
@@ -1506,7 +1506,7 @@ void modifyFilterTableDetailedLeft(int hexnybble)
 
 
 	unsigned char v = detailedTableLValue[editorInfo.etpos];
-	unsigned char o = v;
+//	unsigned char o = v;
 
 	switch (editorInfo.etcolumn)
 	{
@@ -1554,7 +1554,7 @@ void modifyFilterTableDetailedLeft(int hexnybble)
 void modifyFilterTableDetailedRight(int hexnybble)
 {
 	unsigned char v = detailedTableRValue[editorInfo.etpos];
-	unsigned char o = v;
+//	unsigned char o = v;
 
 	if (detailedTableBaseRValue[editorInfo.etpos] == -1)
 		return;

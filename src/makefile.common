@@ -2,7 +2,7 @@
 
 CC?=gcc
 CXX?=g++
-CFLAGS+=-Ibme -Iasm -O3
+CFLAGS+=-Ibme -Iasm -O3 -Wall
 CXXFLAGS+=$(CFLAGS) -fpermissive
 
 EXE=	$(PREFIX)gtultra$(SUFFIX) \

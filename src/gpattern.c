@@ -51,7 +51,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 	if (c2 >= editorInfo.maxSIDChannels)
 		return;
 
-	int songNum = getActualSongNumber(editorInfo.esnum, c2);
+//	int songNum = getActualSongNumber(editorInfo.esnum, c2);
 	int c3 = c2 % 6;
 
 	switch (jkey)
@@ -1025,9 +1025,11 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 					pattern[gt->editorUndoInfo.editorInfo[c2].epnum][pattlen[gt->editorUndoInfo.editorInfo[c2].epnum] * 4 - 1] = 0x00;
 					countthispattern(gt);
 					editorInfo.eppos = pattlen[gt->editorUndoInfo.editorInfo[c2].epnum];
+					playUntilEnd(editorInfo.esnum);
 				}
 			}
 		}
+		
 		break;
 
 	case KEY_INS:
@@ -1060,9 +1062,12 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 					pattern[gt->editorUndoInfo.editorInfo[c2].epnum][editorInfo.eppos * 4 + 7] = 0x00;
 					countthispattern(gt);
 					editorInfo.eppos = pattlen[gt->editorUndoInfo.editorInfo[c2].epnum];
+
+					playUntilEnd(editorInfo.esnum);
 				}
 			}
 		}
+		
 		break;
 
 	case KEY_SPACE:
@@ -1811,6 +1816,7 @@ int handleMIDIPolykeyboard(GTOBJECT *gt, MIDI_MESSAGE midiData)
 			return 1;
 		}
 	}
+	return 0;
 }
 
 int handlePolyphonicKeyboard(GTOBJECT *gt)
@@ -2165,7 +2171,7 @@ void autoPitchbendToNextNote(GTOBJECT *gt)
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);	// 0-12
 	int songNum = getActualSongNumber(editorInfo.esnum, c2);
 
-	int displayIndex = 0;
+//	int displayIndex = 0;
 
 	int note1 = pattern[gt->editorUndoInfo.editorInfo[c2].epnum][(editorInfo.eppos * 4) + 0];
 
@@ -2176,9 +2182,9 @@ void autoPitchbendToNextNote(GTOBJECT *gt)
 		needToFindNote1 = 1;
 	}
 
-	int found = 0;
+//	int found = 0;
 	int ep = editorInfo.eseditpos;
-	int lastPattPtr = 9234029;
+//	int lastPattPtr = 9234029;
 
 	int firstPatternPos = editorInfo.eppos + 1;
 	if (needToFindNote1)
@@ -2230,7 +2236,7 @@ void autoPitchbendToNextNote(GTOBJECT *gt)
 					portaInstruction = 2;	// pitch bend down
 				}
 
-				int newShortValue2 = freqDiff;
+//				int newShortValue2 = freqDiff;
 
 				freqDiff /= tickDiff;
 

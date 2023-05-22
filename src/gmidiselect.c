@@ -18,7 +18,7 @@ void displayMIDISelectWindow()
 
 	while (exitMIDISelect)
 	{
-		int cc = cursorcolortable[cursorflash];
+//		int cc = cursorcolortable[cursorflash];
 		if (cursorflashdelay >= 6)
 		{
 			cursorflashdelay %= 6;

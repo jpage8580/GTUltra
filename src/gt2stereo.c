@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 
 		getparam(configfile, &sidaddress);
 
-		getparam(configfile, &editorInfo.finevibrato);
+		getparam(configfile, (unsigned int*)&editorInfo.finevibrato);
 		getparam(configfile, &editorInfo.optimizepulse);
 		getparam(configfile, &editorInfo.optimizerealtime);
 		getparam(configfile, &residdelay);
@@ -324,30 +324,30 @@ int main(int argc, char **argv)
 		getfloatparam(configfile, &filterparams.type4k);
 		getfloatparam(configfile, &filterparams.type4b);
 		getfloatparam(configfile, &filterparams.voicenonlinearity);
-		getparam(configfile, (unsigned*)&win_fullscreen);
+		getparam(configfile, (unsigned int*)&win_fullscreen);
 
 		getparam(configfile, &bigwindow);
 		getfloatparam(configfile, &basepitch);
 		getfloatparam(configfile, &equaldivisionsperoctave);
 		getstringparam(configfile, specialnotenames);
 		getstringparam(configfile, scalatuningfilepath);
-		getparam(configfile, &editorInfo.maxSIDChannels);
+		getparam(configfile, (unsigned int*)&editorInfo.maxSIDChannels);
 		getstringparam(configfile, startPaletteName);
 		//		getparam(configfile, &currentPalettePreset);
 		getfloatparam(configfile, &masterVolume);
 		getfloatparam(configfile, &detuneCent);
 		getparam(configfile, &enablekeyrepeat);
-		getparam(configfile, &selectedMIDIPort);
-		getparam(configfile, &enableAntiAlias);
-		getparam(configfile, (unsigned *)&sidPanInts[0]);
-		getparam(configfile, (unsigned *)&sidPanInts[1]);
-		getparam(configfile, (unsigned *)&sidPanInts[2]);
-		getparam(configfile, (unsigned *)&sidPanInts[3]);
-		getparam(configfile, &backupTimeSeconds);
-		getparam(configfile, &autoNextPattern);
-		getparam(configfile, &useRepeatsWhenCompressing);
-		getparam(configfile, &SIDTracker64ForIPadIsAmazing);
-		getparam(configfile, &debugEnabled);
+		getparam(configfile, (unsigned int*)&selectedMIDIPort);
+		getparam(configfile, (unsigned int*)&enableAntiAlias);
+		getparam(configfile, (unsigned int*)&sidPanInts[0]);
+		getparam(configfile, (unsigned int*)&sidPanInts[1]);
+		getparam(configfile, (unsigned int*)&sidPanInts[2]);
+		getparam(configfile, (unsigned int*)&sidPanInts[3]);
+		getparam(configfile, (unsigned int*)&backupTimeSeconds);
+		getparam(configfile, (unsigned int*)&autoNextPattern);
+		getparam(configfile, (unsigned int*)&useRepeatsWhenCompressing);
+		getparam(configfile, (unsigned int*)&SIDTracker64ForIPadIsAmazing);
+		getparam(configfile, (unsigned int*)&debugEnabled);
 
 		fclose(configfile);
 
@@ -787,7 +787,7 @@ int main(int argc, char **argv)
 			doExportToWAV = 0;
 			ExportAsPCM(editorInfo.esnum, normalizeWAV, &gtObject);
 		}
-		int ch = checkFor3ChannelSong();
+	//	int ch = checkFor3ChannelSong();
 
 		waitkeymouse(&gtObject);
 		docommand();
@@ -1001,8 +1001,8 @@ int backupSongTimer = 0;
 
 void waitkeymouse(GTOBJECT *gt)
 {
-	int jc = 0;
-	int rk = 0;
+	//int jc = 0;
+	//int rk = 0;
 
 	for (;;)
 	{
@@ -1111,7 +1111,7 @@ void waitkeymouse(GTOBJECT *gt)
 
 		midiMessage.size = 0;
 
-		int portOpen = 123;
+		//int portOpen = 123;
 
 		/*
 		Allow MIDI Jamming if not editing PATTERN (so also enable if we've got cursor on other areas)
@@ -1130,7 +1130,7 @@ void waitkeymouse(GTOBJECT *gt)
 			{
 				if (midiEnabled)
 				{
-					portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
+					//int portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
 					int i = 0;
 					for (int c = 0;c < midiMessage.size / 3;c++)
 					{
@@ -1156,13 +1156,13 @@ void waitkeymouse(GTOBJECT *gt)
 				{
 					do {
 
-						portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
+					//	int portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
 						handleMIDIPolykeyboard(&gtObject, midiMessage);
 
 					} while (midiMessage.size);
 				}
 
-				int noKeysPressed = handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
+			//	int noKeysPressed = handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
 
 
 	// Need to change this so that it checks actual keyed on channels, rather than keys pressed
@@ -1253,7 +1253,7 @@ void converthex()
 void docommand(void)
 {
 
-	int i = 0;
+	//int i = 0;
 	//	for (int i = 0; i < SDL_GetNumAudioDrivers(); ++i) {
 	//		sprintf(textbuffer, "Audio driver %d: %s\n", i,  SDL_GetAudioDriver(0));
 	//		printtext(70, 36, 0xe, textbuffer);
@@ -1394,8 +1394,8 @@ void mousecommands(GTOBJECT *gt)
 {
 	int c;
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);	// 0-12
-	int songNum = getActualSongNumber(editorInfo.esnum, c2);
-	int c3 = c % 6;
+//	int songNum = getActualSongNumber(editorInfo.esnum, c2);
+//	int c3 = c % 6;
 
 
 	if (!mouseb)
@@ -1462,7 +1462,7 @@ void mousecommands(GTOBJECT *gt)
 	int patternTextWidth = 7;
 	int chTextWidth = 2;
 	int chTextPos = 6;
-	int ok = 0;
+	//int ok = 0;
 	if (displayOriginal3Channel)
 	{
 		patternWidth = 14;
@@ -1935,10 +1935,10 @@ void mousecommands(GTOBJECT *gt)
 void generalcommands(GTOBJECT *gt)
 {
 	int validSize = 1;
-	int c;
-	int songNum;
-	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);
-	int ok = 0;
+//	int c;
+//	int songNum;
+//	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);
+//	int ok = 0;
 
 	//if (fkeys_check(gt, rawkey) == 1)
 	//	return;
@@ -2332,7 +2332,7 @@ int load(GTOBJECT *gt, char *dragDropFileName)
 {
 	win_enableKeyRepeat();
 	int ok = 0;
-	if ((editorInfo.editmode != EDIT_INSTRUMENT) && (editorInfo.editmode != EDIT_TABLES) || dragDropFileName != NULL)
+	if (((editorInfo.editmode != EDIT_INSTRUMENT) && (editorInfo.editmode != EDIT_TABLES)) || dragDropFileName != NULL)
 	{
 		if (dragDropFileName != NULL)
 		{
@@ -2378,6 +2378,7 @@ int load(GTOBJECT *gt, char *dragDropFileName)
 	}
 	key = 0;
 	rawkey = 0;
+	return 0;
 }
 
 int quickSave()
@@ -2748,7 +2749,7 @@ void editadsr(GTOBJECT *gt)
 	}
 }
 
-void getparam(FILE *handle, unsigned *value)
+void getparam(FILE *handle, unsigned int *value)
 {
 	char *configptr;
 
@@ -3205,7 +3206,7 @@ void setTableBackgroundColours(int currentInstrument)
 				needNewTable = 0;
 			}
 
-			int foundEnd = 0;
+	//		int foundEnd = 0;
 			if (t != 3)		// not the speed table?
 			{
 
@@ -4091,14 +4092,14 @@ int mouseTrackModify(int editorWindow)
 
 
 	int xdiff = mousex - editorInfo.mouseTrackX;
-	int ydiff = mousey - editorInfo.mouseTrackY;
+	//int ydiff = mousey - editorInfo.mouseTrackY;
 
 	if (editorWindow == EDIT_TABLES)
 	{
 
-		char *dptr = &ltable[editorInfo.etnum][editorInfo.etpos];
+		char *dptr = (char*)&ltable[editorInfo.etnum][editorInfo.etpos];
 		if (editorInfo.etcolumn > 1)	// columns 0+1 = lefttable value
-			dptr = &rtable[editorInfo.etnum][editorInfo.etpos];
+			dptr = (char*)&rtable[editorInfo.etnum][editorInfo.etpos];
 
 		int v = editorInfo.mouseTrackOriginalValue << 1;
 		v += xdiff;
@@ -4119,9 +4120,9 @@ int mouseTrackModify(int editorWindow)
 		{
 			int v = editorInfo.mouseTrackOriginalValue;
 
-			char *dptr = &instr[editorInfo.einum].ad;
+			char *dptr = (char*)&instr[editorInfo.einum].ad;
 			if (editorInfo.eipos == 1)
-				dptr = &instr[editorInfo.einum].sr;
+				dptr = (char*)&instr[editorInfo.einum].sr;
 
 			if (editorInfo.eicolumn == 0)	// high nybble			
 				v >>= 4;
@@ -4172,7 +4173,7 @@ int mouseTrackModify(int editorWindow)
 
 		}
 	}
-
+	return 0;
 }
 
 int checkForMouseInTable(int c, int OX, int OY)
@@ -4217,6 +4218,7 @@ int checkForMouseInTable(int c, int OX, int OY)
 
 		return 1;
 	}
+	return 0;
 }
 
 
@@ -4287,6 +4289,7 @@ int checkForMouseInDetailedFilterTable(int OX, int OY)
 
 		return 1;
 	}
+	return 0;
 }
 
 
@@ -4354,6 +4357,7 @@ int checkForMouseInDetailedPulseTable(int OX, int OY)
 
 		return 1;
 	}
+	return 0;
 }
 
 
@@ -4430,6 +4434,7 @@ int checkForMouseInDetailedWaveTable(int OX, int OY)
 
 		return 1;
 	}
+	return 0;
 }
 
 
@@ -4878,7 +4883,7 @@ void checkForMouseInOrderList(GTOBJECT *gt, int maxCh)
 			int m = mousebDoubleClick;
 			int s = shiftOrCtrlPressed;
 
-			if (((mouseheld > HOLDDELAY) || (s != 0) && !editPaletteMode))
+			if (((mouseheld > HOLDDELAY) || (s != 0)) && !editPaletteMode)
 			{
 				editorInfo.eschn = newchn;
 				editorInfo.eseditpos = newpos;
@@ -5059,7 +5064,7 @@ void checkForMouseInExtendedOrderList(GTOBJECT *gt, int maxCh)
 			int m = mousebDoubleClick;
 			int s = shiftOrCtrlPressed;
 
-			if (((mouseheld > HOLDDELAY) || (s != 0) && !editPaletteMode))
+			if (((mouseheld > HOLDDELAY) || (s != 0)) && !editPaletteMode)
 			{
 				if (editorInfo.eseditpos == newpos)
 				{

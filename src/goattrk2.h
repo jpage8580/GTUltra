@@ -201,7 +201,7 @@ extern int useRepeatsWhenCompressing;
 
 #endif
 
-void getparam(FILE *handle, unsigned *value);
+void getparam(FILE *handle,  unsigned int *value);
 void getfloatparam(FILE *handle, float *value);
 void getstringparam(FILE *handle, char *value);
 void waitkey(GTOBJECT *gt);

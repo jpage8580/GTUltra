@@ -560,7 +560,7 @@ void undoAddEditorSettingsToList()
 
 		undoCounter++;	// we can use this to know if anything has been modified in the editor
 
-		GTUNDO_OBJECT *undoEditorInfoBackup2;
+	//	GTUNDO_OBJECT *undoEditorInfoBackup2;
 
 		//		undoEditorInfoBackup2 = malloc(sizeof(GTUNDO_OBJECT));
 		//		memcpy((char*)undoEditorInfoBackup2, (char*)undoEditorInfoBackup, sizeof(GTUNDO_OBJECT));
@@ -650,7 +650,7 @@ int undoPerform(GTOBJECT *gt)
 	refreshVariables();
 
 	undoDisplay();
-
+	return 0;
 }
 
 void refreshVariables()
@@ -662,6 +662,8 @@ void refreshVariables()
 
 	validateAllSongs();
 	setTableBackgroundColours(editorInfo.einum);
+
+	playUntilEnd(editorInfo.esnum);
 }
 
 

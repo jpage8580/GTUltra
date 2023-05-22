@@ -169,7 +169,7 @@ int paletteEdit(int *cx, int *cy, GTOBJECT *gt)
 
 	if (hexnybble >= 0)
 	{
-		int lastEditPos = editorInfo.eseditpos;
+	//	int lastEditPos = editorInfo.eseditpos;
 		switch (jx)
 		{
 		case 0:
@@ -226,7 +226,7 @@ void changePalettePreset(int change, GTOBJECT *gt)
 
 int quickSavePalette()
 {
-	FILE *configfile;
+//	FILE *configfile;
 
 	if (allowPaletteQuickSave)
 	{
@@ -522,9 +522,9 @@ void convert4BitPaletteTo8Bit()
 
 int savePalette(GTOBJECT *gt)
 {
-	int done;
+//	int done;
 	int c;
-	char ident[] = { 'G', 'T', 'P', 'A' };
+//	char ident[] = { 'G', 'T', 'P', 'A' };
 
 	if (fileselector(paletteFileName, palettepath, palettefilter, "SAVE PALETTE", 3, gt, 12,0))
 	{
@@ -602,7 +602,7 @@ int loadPalette(char *palettePath,char *paletteFileName)
 	fseek(handle, 0, SEEK_SET);
 
 	char *paletteMem = malloc(size + 1);
-	int s = fread(paletteMem, size, 1, handle);
+	fread(paletteMem, size, 1, handle);
 	fclose(handle);
 	paletteMem[size] = 0;	// end marker
 

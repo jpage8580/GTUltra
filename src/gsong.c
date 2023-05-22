@@ -2495,7 +2495,7 @@ void compressChannel(int s, int c, int startIndex, int endIndex, int *p, int *la
 	int repeatCount = 0;
 
 	int lastPattern = -1;	//songOrderPatterns[s][c][0];
-	int repeatPattern = 1;
+//	int repeatPattern = 1;
 
 	int writeOffset = *p;
 

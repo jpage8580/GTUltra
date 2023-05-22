@@ -19,7 +19,7 @@
 
 
 bool done;
-static void finish(int ignore) { done = true; }
+//static void finish(int ignore) { done = true; }
 RtMidiIn *midiin;
 
 bool portOpen = false;
@@ -34,7 +34,7 @@ int initMidi(int midiPort)
 	if (nPorts == 0)
 		return 0;
 
-	if (nPorts <= midiPort)
+	if (nPorts <= (unsigned int)midiPort)
 		midiPort = 0;
 
 	midiin->openPort(midiPort);
@@ -60,10 +60,10 @@ int checkForMidiInput(MIDI_MESSAGE *m,int midiPort)
 		{
 
 			std::vector<unsigned char> message;
-			int nBytes, i;
-			double stamp;
+			//int nBytes, i;
+			//double stamp;
 
-			stamp = midiin->getMessage(&message);
+			midiin->getMessage(&message);
 			m->message = (unsigned char*)&msg;
 			m->size = message.size();
 

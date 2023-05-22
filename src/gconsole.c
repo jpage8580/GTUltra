@@ -116,7 +116,7 @@ int initscreen(void)
 		int size = ftell(charset);
 		fseek(charset, 0, SEEK_SET);
 
-		int s = fread(chardata, size, 1, charset);
+		fread(chardata, size, 1, charset);
 		if (size < (4096 * 2))
 			memcpy(&chardata[4096], &chardata[0], 4096);
 		jdebug[0] = size;

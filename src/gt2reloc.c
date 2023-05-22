@@ -95,8 +95,7 @@ char textbuffer[MAX_PATHNAME];
 char debugTextbuffer[MAX_PATHNAME];
 
 int useOriginalGTFunctionKeys = 0;
-extern GTOBJECT gtObject;
-//GTOBJECT gtObject;
+GTOBJECT gtObject;
 int useRepeatsWhenCompressing = 1;
 char infoTextBuffer[256];
 int midiEnabled = 0;
@@ -195,12 +194,12 @@ int main(int argc, char **argv)
 	  some web pages, not work reliably - opening new files on CON using different
 	  handles however does.
 	*/
-	STDOUT = fopen("CON", "w");
-	STDERR = fopen("CON", "w");
+	 STDOUT = fopen("CON", "w");
+	 STDERR = fopen("CON", "w");
 
 #endif
 
-	//SDL_LogSetOutputFunction(&Log, NULL);
+  //SDL_LogSetOutputFunction(&Log, NULL);
 
 
 	programname += sizeof "$VER:";
@@ -220,12 +219,10 @@ int main(int argc, char **argv)
 	}
 	else {
 		usage();
-#ifdef __WIN32__
 		// ENTER key down
 		keybd_event(VK_RETURN, 0x9C, 0, 0);
 		// ENTER key up
 		keybd_event(VK_RETURN, 0x9C, KEYEVENTF_KEYUP, 0);
-#endif
 		exit(-1);
 
 	}
@@ -430,7 +427,7 @@ int main(int argc, char **argv)
 			usage();
 			exit(-1);
 		}
-	}
+}
 
 	// Validate parameters
 	sidmodel &= 1;
@@ -455,12 +452,10 @@ int main(int argc, char **argv)
 	// perform relocation
 	relocator(&gtObject, 1);
 
-#ifdef __WIN32__
 	// ENTER key down
 	keybd_event(VK_RETURN, 0x9C, 0, 0);
 	// ENTER key up
 	keybd_event(VK_RETURN, 0x9C, KEYEVENTF_KEYUP, 0);
-#endif
 	// Exit
 	exit(0);
 	return 0;
@@ -594,7 +589,7 @@ void restorePatternDisplayInfo(GTOBJECT *gt)
 
 int isMatchingRGB(int presetIndex, int color)
 {
-
+	return 0;
 }
 
 void handleSIDChannelCountChange(GTOBJECT *gt)
@@ -618,7 +613,7 @@ void setSkin(int palettePreset)
 
 void stopScreenDisplay()
 {
-
+	
 }
 void restartScreenDisplay()
 {
@@ -627,7 +622,6 @@ void restartScreenDisplay()
 
 void playUntilEnd(int songNumber)
 {
-
 }
 
 
@@ -648,7 +642,7 @@ void playUntilEnd2(int songNumber)
 	initsong(sng, PLAY_BEGINNING, gte);	// JP FEB
 	gte->loopEnabledFlag = 0;
 
-	//	printf("---- SubSong %x ----\n", songNumber);
+//	printf("---- SubSong %x ----\n", songNumber);
 
 	int allDone;
 	do {
@@ -660,7 +654,7 @@ void playUntilEnd2(int songNumber)
 			int pat = gte->chn[i].pattnum;
 			if (patternOrderArray[pat] == -1)
 			{
-				//		printf("Pattern %x\n", pat);
+		//		printf("Pattern %x\n", pat);
 				patternOrderList[patternRemapOrderIndex] = pat;	// contains list of patterns in order of playing
 				patternOrderArray[pat] = patternRemapOrderIndex;
 				patternRemapOrderIndex++;
