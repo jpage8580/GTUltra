@@ -1,5 +1,5 @@
 //
-// GTULTRA V1.00
+// GTULTRA V1.5.3
 // Based on source code of GOATTRACKER v2.76 Stereo
 //
 // This program is free software; you can redistribute it and/or modify
@@ -144,7 +144,7 @@ char backupSngFilename[MAX_PATHNAME];
 char fkeysFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.5.0";
+char *programname = "$VER: GTUltra V1.5.3";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -787,7 +787,7 @@ int main(int argc, char **argv)
 			doExportToWAV = 0;
 			ExportAsPCM(editorInfo.esnum, normalizeWAV, &gtObject);
 		}
-	//	int ch = checkFor3ChannelSong();
+		//	int ch = checkFor3ChannelSong();
 
 		waitkeymouse(&gtObject);
 		docommand();
@@ -1156,16 +1156,16 @@ void waitkeymouse(GTOBJECT *gt)
 				{
 					do {
 
-					//	int portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
+						//	int portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
 						handleMIDIPolykeyboard(&gtObject, midiMessage);
 
 					} while (midiMessage.size);
 				}
 
-			//	int noKeysPressed = handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
+				//	int noKeysPressed = handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
 
 
-	// Need to change this so that it checks actual keyed on channels, rather than keys pressed
+		// Need to change this so that it checks actual keyed on channels, rather than keys pressed
 
 
 				if (!checkAnyPolyPlaying())
@@ -1935,13 +1935,13 @@ void mousecommands(GTOBJECT *gt)
 void generalcommands(GTOBJECT *gt)
 {
 	int validSize = 1;
-//	int c;
-//	int songNum;
-//	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);
-//	int ok = 0;
+	//	int c;
+	//	int songNum;
+	//	int ac = getActualChannel(editorInfo.esnum, editorInfo.epchn);
+	//	int ok = 0;
 
-	//if (fkeys_check(gt, rawkey) == 1)
-	//	return;
+		//if (fkeys_check(gt, rawkey) == 1)
+		//	return;
 
 	switch (key)
 	{
@@ -2061,10 +2061,15 @@ void generalcommands(GTOBJECT *gt)
 		return;
 
 	case KEY_F12:
-		if (bothShiftAndCtrlPressed)
+		if (shiftOrCtrlPressed)
 		{
 			SIDTracker64ForIPadIsAmazing = 1 - SIDTracker64ForIPadIsAmazing;
 			setSIDTracker64KeyOnStyle();
+			if (!SIDTracker64ForIPadIsAmazing)
+				sprintf(infoTextBuffer, "SIDTracker64 Mode: Disabled");
+			else
+				sprintf(infoTextBuffer, "SIDTracker64 Mode: Enabled");
+			forceInfoLine = 1;
 			break;
 		}
 	case SDLK_HELP:
@@ -3206,7 +3211,7 @@ void setTableBackgroundColours(int currentInstrument)
 				needNewTable = 0;
 			}
 
-	//		int foundEnd = 0;
+			//		int foundEnd = 0;
 			if (t != 3)		// not the speed table?
 			{
 
@@ -3334,7 +3339,7 @@ void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT *gt)
 	gt->loopEnabledFlag = 0;
 	followplay = 1;
 
-	int samplesToExport = (mr*2)/100;	// For 44100, IT APPEARS TO GENERATE 882 SAMPLES FOR 1x speed. 441 for 2x.. 220 for 4x...
+	int samplesToExport = (mr * 2) / 100;	// For 44100, IT APPEARS TO GENERATE 882 SAMPLES FOR 1x speed. 441 for 2x.. 220 for 4x...
 	if (editorInfo.multiplier == 0)
 		samplesToExport *= 2;	// Handle 1/2 speed
 	else
@@ -3659,7 +3664,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		getFreeMem = 1;
 #endif
 		return 1;
-	}
+		}
 
 	if (checkMouseRange(TRANSPORT_BAR_X + 20 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
@@ -3731,7 +3736,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 	return 0;
 
-}
+	}
 
 void handlePressRewind(int doubleClick, GTOBJECT *gt)
 {
@@ -4991,7 +4996,7 @@ int createBackupFolder()
 		mkdir(backupFolderName, 0777);
 #endif
 		return 0;
-}
+	}
 	return 1;
 
 }

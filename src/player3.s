@@ -566,6 +566,10 @@ mt_copyregs:    lda ghostregs,x                 ;previous frame's SID values in 
                 bpl mt_copyregs
                 .ENDIF
 
+				.IF (ZPPLAYSID != 0)		; JP - Optional hit SID with zp regs 
+				jsr mt_playzeropage
+				.ENDIF
+
                 ldx #$00                        ;Channel index
 
         ;Song initialization
@@ -1554,6 +1558,45 @@ mt_execwavetick0jump:
                 jsr mt_tick0_0
                 jmp mt_done
               .ENDIF
+
+
+		.IF (ZPPLAYSID != 0)
+mt_playzeropage:
+			ldx #0
+			jsr mt_playzeropagechannel
+			ldx #7
+			jsr mt_playzeropagechannel
+			ldx #$e
+			jsr mt_playzeropagechannel
+
+			lda ghostfiltcutlow
+			sta SIDBASE+21
+			lda ghostfiltcutoff
+			sta SIDBASE+22
+			lda ghostfiltctrl
+			sta SIDBASE+23
+			lda ghostfilttype
+			sta SIDBASE+24
+			rts
+
+mt_playzeropagechannel:
+				lda ghostwave,x
+				sta SIDBASE+4,x
+				lda ghostfreqlo,x
+				sta SIDBASE+0,x
+				lda ghostfreqhi,x
+				sta SIDBASE+1,x
+				lda ghostpulselo,x
+				sta SIDBASE+2,x
+				lda ghostpulsehi,x
+				sta SIDBASE+3,x
+				lda ghostad,x
+				sta SIDBASE+5,x
+				lda ghostsr,x
+				sta SIDBASE+6,x
+				rts
+		.ENDIF
+
 
               .IF (NOEFFECTS == 0)
               .IF (!.DEFINED(mt_tick0jumptbl))

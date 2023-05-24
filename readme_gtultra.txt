@@ -1,16 +1,25 @@
-GTUltra v1.5.0
-------------------
-Last Update: 21st March 2023
+GTUltra v1.5
+
 Editor and C64 GT player enhancements - Jason Page / MultiStyle Labs
-Charset & additional palettes: LMan
-
+- Charset & additional palettes: LMan
 Initial beta testing:
-Thanks to Shogoon, Russell Hoy, Jani Väisänen and Egon Sander
-
+- Thanks to Shogoon, Russell Hoy, Jani Väisänen and Egon Sander
 Example songs:
-Thanks to MultiStyle Labs (Jammer, Linus, LMan, Mibri and Shogoon, Jason Page)
-
+- Thanks to MultiStyle Labs (Jammer, Linus, LMan, Mibri and Shogoon, Jason Page)
 Special thanks to Muzza / The Codeblasters, Kalle Selin, Jani Vaisanen, tlr and theK and everyone who's helped with bug fixes!
+
+-------------------------------------------------------------------
+Last Update: 24th May 2023
+V1.5.3
+- Added option to still allow SID playback when selecting zeropage mode in the SID export page
+  (Allows coders to still easily access the SID registers from the zp RAM, without needing to write the code to also do playback)
+- Modified SIDTracker64 mode. Now enable with EITHER Shift or Ctrl F12
+
+V1.5.2
+- Removed all warnings from the source code
+
+V1.5.1
+- Fixed build issues with gt2reloc with certain compilers
 
 V 1.5.0
 Drag / Drop to load files
@@ -49,6 +58,8 @@ Optional “Automatically move to next or previous pattern in order list when mo
 - SHIFT+Click on Follow icon to toggle this mode
 Added new .sng file (JasonPage/RType: Amiga2SID.sng)
 - This uses the SIDTracker64 mode
+
+-------------------------------------------------------------------
 
 
 V 1.4.0

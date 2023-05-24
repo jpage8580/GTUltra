@@ -18,7 +18,9 @@ char *playeroptname[] =
   "Store author-info",
   "Use zeropage ghostregs",
   "Disable optimization",
+  "zeropage SID playback",
   "Full SID buffering"
+
 };
 
 char *tableleftname[] = {
@@ -103,8 +105,8 @@ extern char packedsongname[MAX_PATHNAME];
 
 void relocator(GTOBJECT *gt, int gt2relocMode)
 {
-//	char *tempFirstSIDBuffer;		// Used for 9 channel SID creation
-//	int tempSecondSIDOffset;
+	//	char *tempFirstSIDBuffer;		// Used for 9 channel SID creation
+	//	int tempSecondSIDOffset;
 
 #ifndef GT2RELOC
 	char packedsongname[MAX_FILENAME];
@@ -207,7 +209,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 			stopsong(gt);
 		}
 
-
+		playerversion = 0;
 
 		// Select playroutine options
 		clearscreen(getColor(1, 0));
@@ -223,17 +225,18 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 		int maxOptions = MAX_OPTIONS;
 		if (editorInfo.maxSIDChannels != 3)
 		{
-			maxOptions--;
+			maxOptions -= 1;
 			playerversion &= ~PLAYER_FULLBUFFERED;
 		}
 
 		playerversion |= PLAYER_BUFFERED;
 		playerversion &= ~PLAYER_ZPGHOSTREGS;
+		playerversion &= ~PLAYER_ZPPLAYSID;
 
 		selectdone = 0;
 
 
-		int test = 0;
+		//		int test = 0;
 
 		while (!selectdone)
 		{
@@ -268,7 +271,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 				{
 					if ((playerversion & PLAYER_SOUNDEFFECTS) || (playerversion & PLAYER_ZPGHOSTREGS) || (playerversion & PLAYER_FULLBUFFERED))
 					{
-						test++;
+						//						test++;
 						playerversion |= PLAYER_BUFFERED;
 					}
 				}
@@ -278,9 +281,13 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 					{
 						playerversion &= ~PLAYER_SOUNDEFFECTS;
 						playerversion &= ~PLAYER_ZPGHOSTREGS;
-						playerversion &= ~PLAYER_FULLBUFFERED;	// JP
+						playerversion &= ~PLAYER_FULLBUFFERED;
+						playerversion &= ~PLAYER_ZPPLAYSID;
 					}
 				}
+				if (!(playerversion & PLAYER_ZPGHOSTREGS))
+					playerversion &= ~PLAYER_ZPPLAYSID;
+
 				break;
 
 			case KEY_UP:
@@ -306,6 +313,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 			{
 				playerversion |= PLAYER_BUFFERED;
 				playerversion &= ~PLAYER_ZPGHOSTREGS;
+				playerversion &= PLAYER_ZPPLAYSID;
 			}
 		}
 		if (selectdone == -1) goto PRCLEANUP;
@@ -1139,11 +1147,11 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 	for (c = 0; c < MAX_PATT; c++)
 	{
 		int d = patternOrderList[c];
-//		if (pattused[c])
-		if (d!=-1)
+		//		if (pattused[c])
+		if (d != -1)
 		{
 			printf("Packing pattern %x\n", d);
-			
+
 			int result = packpattern(patttemp, pattern[d], pattlen[d]);
 
 			if (result < 0)
@@ -1187,8 +1195,8 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 	for (c = 0; c < MAX_PATT; c++)
 	{
 		int e = patternOrderList[c];
-//		if (pattused[c])
-		if (e!=-1)
+		//		if (pattused[c])
+		if (e != -1)
 		{
 			pattoffset[d] = pattdatasize;
 			pattsize[d] = packpattern(&pattwork[pattdatasize], pattern[e], pattlen[e]);
@@ -1443,6 +1451,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 		insertdefine("PULSEOPTIMIZATION", editorInfo.optimizepulse);
 		insertdefine("REALTIMEOPTIMIZATION", editorInfo.optimizerealtime);
 		insertdefine("NOAUTHORINFO", (playerversion & PLAYER_AUTHORINFO) ? 0 : 1);
+		insertdefine("ZPPLAYSID", (playerversion & PLAYER_ZPPLAYSID) ? 1 : 0);
 		insertdefine("NOEFFECTS", noeffects);
 		insertdefine("NOGATE", nogate);
 		insertdefine("NOFILTER", nofilter);
