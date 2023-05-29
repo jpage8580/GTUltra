@@ -1162,7 +1162,7 @@ void waitkeymouse(GTOBJECT *gt)
 					} while (midiMessage.size);
 				}
 
-				//	int noKeysPressed = handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
+				handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
 
 
 		// Need to change this so that it checks actual keyed on channels, rather than keys pressed
