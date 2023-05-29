@@ -144,7 +144,7 @@ char backupSngFilename[MAX_PATHNAME];
 char fkeysFilename[MAX_PATHNAME];
 
 extern char *notename[];
-char *programname = "$VER: GTUltra V1.5.3";
+char *programname = "$VER: GTUltra V1.5.4";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -1162,7 +1162,7 @@ void waitkeymouse(GTOBJECT *gt)
 					} while (midiMessage.size);
 				}
 
-				//	int noKeysPressed = handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
+				handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
 
 
 		// Need to change this so that it checks actual keyed on channels, rather than keys pressed
