@@ -852,8 +852,13 @@ void orderright(void)
 
 void nextsong(GTOBJECT *gt)
 {
+
 	if (editorInfo.expandOrderListView)
+	{
+		if (validateAllSongs() > 0xff)
+			return;
 		compressSong(editorInfo.esnum);
+	}
 	editorInfo.esnum++;
 	if (editorInfo.esnum >= MAX_SONGS) editorInfo.esnum = MAX_SONGS - 1;
 	songchange(gt, 1);
@@ -865,7 +870,11 @@ void nextsong(GTOBJECT *gt)
 void prevsong(GTOBJECT *gt)
 {
 	if (editorInfo.expandOrderListView)
+	{
+		if (validateAllSongs() > 0xff)
+			return;
 		compressSong(editorInfo.esnum);
+	}
 
 	editorInfo.esnum--;
 	if (editorInfo.esnum < 0) editorInfo.esnum = 0;
@@ -1133,14 +1142,14 @@ int calcStartofInterPatternLoop(int songNum, int channelNum, int startSongPos, G
 
 	} while (gtloop->chn[c3].songptr <= startSongPos);
 
-//	int tempMin = gtloop->timemin;
-//	int tempSec = gtloop->timesec;
-//	int tempFrame = gtloop->timeframe;
+	//	int tempMin = gtloop->timemin;
+	//	int tempSec = gtloop->timesec;
+	//	int tempFrame = gtloop->timeframe;
 
-	// Now get Select Start, Select End and Play Start ..Then get pattern end
+		// Now get Select Start, Select End and Play Start ..Then get pattern end
 
 	int findPatternLoopStart = 0;
-//	int findPatternLoopEnd = 0;
+	//	int findPatternLoopEnd = 0;
 	int loopPatternNum = 0;
 
 	// Now sync to end of pattern (info used for looping)
@@ -1213,18 +1222,18 @@ int calculateLoopInfo2(int songNum, int channelNum, int startSongPos, GTOBJECT *
 	gtPlayer->looptimemin = gtloop->looptimemin;
 	gtPlayer->looptimesec = gtloop->looptimesec;
 	gtPlayer->looptimeframe = gtloop->looptimeframe;
-	
-//	int tempMin = gtloop->timemin;
-//	int tempSec = gtloop->timesec;
-//	int tempFrame = gtloop->timeframe;
 
-	// Now get Select Start, Select End and Play Start ..Then get pattern end
+	//	int tempMin = gtloop->timemin;
+	//	int tempSec = gtloop->timesec;
+	//	int tempFrame = gtloop->timeframe;
 
-//	int findPatternLoopStart = 0;
-//	int findPatternLoopEnd = 0;
-//	int loopPatternNum = 0;
+		// Now get Select Start, Select End and Play Start ..Then get pattern end
 
-	// Now sync to end of pattern (info used for looping)
+	//	int findPatternLoopStart = 0;
+	//	int findPatternLoopEnd = 0;
+	//	int loopPatternNum = 0;
+
+		// Now sync to end of pattern (info used for looping)
 	int sptr = gtloop->chn[c3].songptr;
 
 	int quitloop = 0;
@@ -1287,7 +1296,7 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 
 
 	int c2 = getActualChannel(editorInfo.esnum, focusChannel);
-//	int sng = getActualSongNumber(editorInfo.esnum, c2);
+	//	int sng = getActualSongNumber(editorInfo.esnum, c2);
 
 	if (c2 >= editorInfo.maxSIDChannels)
 		return;
@@ -1305,7 +1314,7 @@ void orderPlayFromPosition(GTOBJECT *gt, int startPatternPos, int startSongPos, 
 	int loopMode = transportLoopPattern;	// gt->loopEnabledFlag;
 
 	int ep = startSongPos;
-//	int ep2;
+	//	int ep2;
 
 	if (editorInfo.expandOrderListView == 0)
 	{
@@ -2000,7 +2009,7 @@ void orderListCopyMarkedArea()
 
 void orderListCopyMarkedArea_Expanded()
 {
-//	int c;
+	//	int c;
 	if (editorInfo.esmarkchn == -1)	// no table selected. copy single row under cursor
 	{
 		editorInfo.esmarkchn = editorInfo.eschn;

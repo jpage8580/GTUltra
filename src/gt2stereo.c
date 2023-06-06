@@ -1588,14 +1588,10 @@ void mousecommands(GTOBJECT *gt)
 		int invalidCompressedDataLength = 0;
 		if (editorInfo.expandOrderListView == 1)
 		{
-			for (int i = 0;i < MAX_CHN;i++)
+			if (validateAllSongs() > 0xff)
 			{
-				if (songCompressedSize[editorInfo.esnum][i] > 0xff)
-				{
-					// at least one channel in expanded view is too large (over 0xff bytes when compressed...)	
-					invalidCompressedDataLength++;
-					break;
-				}
+				// at least one channel in expanded view is too large (over 0xff bytes when compressed...)	
+				invalidCompressedDataLength++;
 			}
 		}
 		if (!invalidCompressedDataLength)	// Only allow view to change to compressed view if expanded view isn't too large
@@ -3664,7 +3660,7 @@ int mouseTransportBar(GTOBJECT *gt)
 		getFreeMem = 1;
 #endif
 		return 1;
-		}
+	}
 
 	if (checkMouseRange(TRANSPORT_BAR_X + 20 - 1, TRANSPORT_BAR_Y, 3, 2))
 	{
@@ -3736,7 +3732,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 	return 0;
 
-	}
+}
 
 void handlePressRewind(int doubleClick, GTOBJECT *gt)
 {
