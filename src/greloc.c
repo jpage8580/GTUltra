@@ -1157,7 +1157,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode)
 			if (result < 0)
 			{
 				clearscreen(getColor(1, 0));
-				sprintf(textbuffer, "PATTERN %02X IS TOO COMPLEX (OVER 256 BYTES PACKED)!", c);
+				sprintf(textbuffer, "PATTERN %02X IS TOO COMPLEX (OVER 256 BYTES PACKED)!", d);
 				printtextc(MAX_ROWS / 2, getColor(15, 0), textbuffer);
 				fliptoscreen();
 				waitkeynoupdate();
