@@ -35,10 +35,11 @@ extern unsigned char tableused[MAX_TABLES][MAX_TABLELEN+1];
 extern unsigned char pattmap[MAX_PATT];
 extern unsigned char instrmap[MAX_INSTR];
 extern unsigned char tablemap[MAX_TABLES][MAX_TABLELEN+1];
+
 extern int tableerror;
 #endif
 
-void relocator(GTOBJECT *gt, int gt2relocMode);
+void relocator(GTOBJECT *gt, int gt2relocMode,int autoSave);
 int testoverlap(int area1start, int area1size, int area2start, int area2size);
 int packpattern(unsigned char *dest, unsigned char *src, int rows);
 unsigned char swapnybbles(unsigned char n);

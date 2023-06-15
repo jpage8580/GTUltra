@@ -69,6 +69,7 @@
 
 #ifndef GOATTRK2_C
 
+ extern char packedsongname[MAX_FILENAME];
 extern int SIDTracker64ForIPadIsAmazing;
 extern int autoNextPattern;
 extern char appFileName[MAX_PATHNAME];
@@ -198,6 +199,12 @@ extern int displayingPanel;
 extern int displayStopped;
 
 extern int useRepeatsWhenCompressing;
+extern int songExported;
+extern int songExportSuccessFlag;
+extern int sidAddr1;
+extern int sidAddr2;
+extern int sidAddr3;
+extern int sidAddr4;
 
 #endif
 

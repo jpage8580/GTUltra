@@ -25,6 +25,8 @@
 #include "goattrk2.h"
 #include "bme.h"
 
+int songExportSuccessFlag = 0;
+int songExported = 0;
 int menu = 0;
 int editmode = EDIT_PATTERN;
 int recordmode = 1;
@@ -110,6 +112,10 @@ WAVEFORM_INFO waveformDisplayInfo;
 int paletteChanged = 0;
 unsigned int editPaletteMode = 0;
 int autoNextPattern = 0;
+int sidAddr1 = 0xd400;
+int sidAddr2 = 0xd420;
+int sidAddr3 = 0xd440;
+int sidAddr4 = 0xd460;
 
 char fkeysFilename[MAX_PATHNAME];
 unsigned char paletteRGB[MAX_PALETTE_PRESETS][3][MAX_PALETTE_ENTRIES];
@@ -453,7 +459,7 @@ int main(int argc, char **argv)
 		calculatefreqtable();
 
 	// perform relocation
-	relocator(&gtObject, 1);
+	relocator(&gtObject, 1,0);
 
 #ifdef __WIN32__
 	// ENTER key down

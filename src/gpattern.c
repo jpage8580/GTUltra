@@ -1851,6 +1851,9 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 					{
 						keyOn(c, newnote, gt);		// for MIDI, just pass newnote to both..
 						keyNoteDown[c]++;
+
+						sprintf(textbuffer, "key on %d", c);	////Alloc 0x%x", newMaxUndoSize);
+						printtext(75, 16, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 					}
 				}
 			}

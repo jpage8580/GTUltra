@@ -153,6 +153,8 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 	unsigned char *pattwork = NULL;
 	unsigned char *instrwork = NULL;
 
+	char temppackedsongname[MAX_FILENAME];
+
 	channels = editorInfo.maxSIDChannels;
 	fixedparams = 1;
 	simplepulse = 1;
@@ -192,16 +194,22 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 
 	// Set default SID chip addresses. SidAddr2 is read from cfg file. By default, put SIDs 3+4 0x20 and 0x40 after this.
 
-	
+
 	initRemapArrays();
 	patternRemapOrderIndex = 0;
 	for (int i = 0;i < MAX_SONGS;i++)
 	{
 		playUntilEnd2(i);	// run through all songs to create pattern map in order of playback
 	}
-	
 
-	songExportSuccessFlag = 0;
+
+	int oldfileformat = fileformat;
+	int	oldplayerversion = playerversion;
+	int oldzeropageadr = zeropageadr;
+	int oldsidAddr1 = sidAddr1;
+	int oldsidAddr2 = sidAddr2;
+	int oldsidAddr3 = sidAddr3;
+	int oldsidAddr4 = sidAddr4;
 
 	if (gt2relocMode == 0)
 	{
@@ -209,6 +217,10 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 		{
 			stopsong(gt);
 		}
+
+
+
+
 
 		if (!autoSave)
 		{
@@ -448,6 +460,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 						goto PRCLEANUP;
 					}
 
+
 					switch (rawkey)
 					{
 					case KEY_LEFT:
@@ -539,6 +552,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 					if (zeropageadr < 0x02) zeropageadr = 0xfe;
 					if (zeropageadr > 0xfe) zeropageadr = 0x02;
 				}
+
 
 				if (!(playerversion & PLAYER_ZPGHOSTREGS))
 				{
@@ -1199,7 +1213,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 	for (c = 0; c < MAX_PATT; c++)
 	{
 		int e = patternOrderList[c];
-//		if (pattused[c])
+		//		if (pattused[c])
 		if (e != -1)
 		{
 			pattoffset[d] = pattdatasize;
@@ -1883,7 +1897,7 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 	{
 		fprintf(STDERR, "error: could not open output file '%s'.\n", packedsongname);
 		goto PRCLEANUP;
-}
+	}
 #else
 	if (!autoSave)
 	{
@@ -1985,45 +1999,50 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 	}
 
 
-	// By default, copy loaded song name up to the extension
-	memset(packedsongname, 0, sizeof packedsongname);
-	for (c = 0; c < strlen(loadedsongfilename); c++)
-	{
-		if (loadedsongfilename[c] == '.') break;
-		packedsongname[c] = loadedsongfilename[c];
-	}
-
-	switch (fileformat)
-	{
-	case FORMAT_PRG:
-		strcat(packedsongname, ".prg");
-		break;
-
-	case FORMAT_BIN:
-		strcat(packedsongname, ".bin");
-		break;
-
-	case FORMAT_SID:
-		strcat(packedsongname, ".sid");
-		break;
-	}
-
 	if (!autoSave)
 	{
+		if (!songExported)
+		{
+			// By default, copy loaded song name up to the extension
+			memset(packedsongname, 0, sizeof packedsongname);
+			for (c = 0; c < strlen(loadedsongfilename); c++)
+			{
+				if (loadedsongfilename[c] == '.') break;
+				packedsongname[c] = loadedsongfilename[c];
+			}
+
+			switch (fileformat)
+			{
+			case FORMAT_PRG:
+				strcat(packedsongname, ".prg");
+				break;
+
+			case FORMAT_BIN:
+				strcat(packedsongname, ".bin");
+				break;
+
+			case FORMAT_SID:
+				strcat(packedsongname, ".sid");
+				break;
+			}
+		}
+
 		// Now ask for filename, retry if unsuccessful
 		while (!songhandle)
 		{
-
+			memcpy(&temppackedsongname, &packedsongname, MAX_FILENAME);
 			if (!fileselector(packedsongname, packedpath, packedfilter, "Save Music+Playroutine", 3, gt, 12, 0))
 			{
-				clearscreen(getColor(1, 0));
-				//	sprintf(textbuffer, "QUITTED JP = %d", jp);
-				printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), textbuffer);
-				fliptoscreen();
-				waitkeynoupdate();
+				memcpy(&packedsongname, &temppackedsongname, MAX_FILENAME);
+				//	clearscreen(getColor(1, 0));
+					//	sprintf(textbuffer, "QUITTED JP = %d", jp);
+				//	printtextc(MAX_ROWS / 2, getColor(CTITLE, 0), textbuffer);
+				//	fliptoscreen();
+				//	waitkeynoupdate();
 
 				goto PRCLEANUP;
 			}
+
 
 
 			if (strlen(packedsongname) < MAX_FILENAME - 4)
@@ -2221,20 +2240,39 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 	fwrite(packeddata, packedsize, 1, songhandle);
 	fclose(songhandle);
 
-	songExportSuccessFlag = 1;
+	songExported = 1;
+	goto PREXPORTCOMPLETE;
 
 PRCLEANUP:
+
+	if (gt2relocMode == 0 && autoSave == 0)
+	{
+		if (oldfileformat != fileformat || oldplayerversion != playerversion || oldzeropageadr != zeropageadr || oldsidAddr1 != sidAddr1 || oldsidAddr2 != sidAddr2 || oldsidAddr3 != sidAddr3 || oldsidAddr4 != sidAddr4)
+		{
+			fileformat = oldfileformat;
+			playerversion = oldplayerversion;
+			zeropageadr = oldzeropageadr;
+			sidAddr1 = oldsidAddr1;
+			sidAddr2 = oldsidAddr2;
+			sidAddr3 = oldsidAddr3;
+			sidAddr4 = oldsidAddr4;
+		}
+	}
+
+PREXPORTCOMPLETE:
+
+
 	membuf_free(&src);
 	membuf_free(&dest);
 
 	if (pattwork) free(pattwork);
 	if (songwork) free(songwork);
 	if (instrwork) free(instrwork);
-	if (gt2relocMode == 0)
-		printmainscreen(gt);
+	//if (gt2relocMode == 0 && autoSave == 0)
+		//printmainscreen(gt);
 	key = 0;
 	rawkey = 0;
-	songExported = songExportSuccessFlag;
+
 }
 
 

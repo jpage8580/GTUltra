@@ -30,6 +30,12 @@
 #include "goattrk2.h"
 #include "bme.h"
 
+int songExportSuccessFlag = 0;
+int sidAddr1 = 0xd400;
+int sidAddr2 = 0xd420;
+int sidAddr3 = 0xd440;
+int sidAddr4 = 0xd460;
+int songExported = 0;
 int doExportToWAV = 0;
 int menu = 0;
 int autoNextPattern = 0;
@@ -62,6 +68,7 @@ int leftKeyTicksDelta = 0;
 int leftKeyTicks = 0;
 
 char appFileName[MAX_PATHNAME];
+char packedsongname[MAX_FILENAME];
 
 
 int SID_StereoPanPositions[4][4] = {
@@ -1911,7 +1918,7 @@ void mousecommands(GTOBJECT *gt)
 			if ((mousex >= 49) && (mousex <= 57))
 			{
 				stopScreenDisplay();
-				relocator(gt, 0);
+				relocator(gt, 0, 0);
 				restartScreenDisplay();
 			}
 			if ((mousex >= 59) && (mousex <= 64))
@@ -2268,17 +2275,27 @@ void generalcommands(GTOBJECT *gt)
 			}
 			if (validSize)
 			{
-
 				stopScreenDisplay();
-				relocator(gt, 0);
+				relocator(gt, 0, 0);
 				restartScreenDisplay();
+				printmainscreen(gt);
+				sprintf(infoTextBuffer, " ");
+
 			}
 		}
-		else
+		else if (shiftpressed)
 		{
 			stereoMode++;
 			stereoMode %= 3;
 			validateStereoMode();
+		}
+		else if (ctrlpressed)
+		{
+			// Fast relocator - No menus. Use last export settings
+			if (songExported)
+				relocator(gt, 0, 1);
+			if (songExported)
+				sprintf(infoTextBuffer, "Song Exported:%s", packedsongname);
 		}
 		break;
 
@@ -3981,6 +3998,8 @@ void previousSongPos(GTOBJECT *gt, int songDffset)
 		if (gt->chn[gt->masterLoopChannel].songptr)
 		{
 			int so = gt->chn[gt->masterLoopChannel].songptr - 1 - songDffset;
+			if (so < 0)
+				so = 0;
 
 			if (songDffset)
 			{
@@ -5179,6 +5198,7 @@ void handleLoad(GTOBJECT *gt, char* dragdropfile)
 	int ok = load(gt, dragdropfile);
 	if (ok)
 	{
+		songExported = 0;
 		forceSave3ChannelSng = 0;
 
 		// Set up song 1 and then 0... This allows editor pattern numbers to be complete, so that F3 works from the very start.
