@@ -410,6 +410,7 @@ void patterncommands(GTOBJECT *gt, int midiNote)
 					}
 				}
 
+				//handlePolyphonicKeyboard(gt);
 				//Removed from here 15/04/23
 				//playtestnote(newnote, editorInfo.einum, getActualChannel(editorInfo.esnum, editorInfo.epchn), gt);
 			}
@@ -1852,8 +1853,8 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 						keyOn(c, newnote, gt);		// for MIDI, just pass newnote to both..
 						keyNoteDown[c]++;
 
-						sprintf(textbuffer, "key on %d", c);	////Alloc 0x%x", newMaxUndoSize);
-						printtext(75, 16, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+						//sprintf(textbuffer, "key on %d", c);	////Alloc 0x%x", newMaxUndoSize);
+						//printtext(75, 16, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
 					}
 				}
 			}
@@ -1871,7 +1872,6 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 		if (!noKeysPressed)
 		{
 			win_disableKeyRepeat();		// key pressed. So disable key repeat for jam mode 
-
 		}
 	}
 

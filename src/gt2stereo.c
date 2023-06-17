@@ -150,8 +150,8 @@ char tempSngFilename[MAX_PATHNAME];
 char backupSngFilename[MAX_PATHNAME];
 char fkeysFilename[MAX_PATHNAME];
 
-extern char *notename[];
-char *programname = "$VER: GTUltra V1.5.4";
+extern char* notename[];
+char* programname = "$VER: GTUltra V1.5.4";
 char specialnotenames[186];
 char scalatuningfilepath[MAX_PATHNAME];
 char tuningname[64];
@@ -205,13 +205,13 @@ int jdebug[16];
 WAVEFORM_INFO waveformDisplayInfo;
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 
 
 	//	char palettename[MAX_PATHNAME];
 
-	FILE *configfile;
+	FILE* configfile;
 	int c, d;
 
 	// JP: SDL2 produces no audio for Windows32 without explicitly setting this (otherwise, it's set to "dummy sound" as the output)
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 
 		int size = io_lseek(handle, 0, SEEK_END);
 		io_lseek(handle, 0, SEEK_SET);
-		char *paletteMem = malloc(size + 1);
+		char* paletteMem = malloc(size + 1);
 		io_read(handle, paletteMem, size);
 		io_close(handle);
 		paletteMem[size] = 0;	// end marker
@@ -296,12 +296,12 @@ int main(int argc, char **argv)
 		getparam(configfile, &hardsid);
 		getparam(configfile, &editorInfo.sidmodel);
 		getparam(configfile, &editorInfo.ntsc);
-		getparam(configfile, (unsigned *)&fileformat);
-		getparam(configfile, (unsigned *)&playeradr);
-		getparam(configfile, (unsigned *)&zeropageadr);
+		getparam(configfile, (unsigned*)&fileformat);
+		getparam(configfile, (unsigned*)&playeradr);
+		getparam(configfile, (unsigned*)&zeropageadr);
 		getparam(configfile, &playerversion);
 		getparam(configfile, &keypreset);
-		getparam(configfile, (unsigned *)&stepsize);
+		getparam(configfile, (unsigned*)&stepsize);
 
 		getparam(configfile, &editorInfo.multiplier);
 		getparam(configfile, &catweasel);
@@ -979,7 +979,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void waitkey(GTOBJECT *gt)
+void waitkey(GTOBJECT* gt)
 {
 	for (;;)
 	{
@@ -1006,7 +1006,7 @@ int forceKeys = 1;
 
 int backupSongTimer = 0;
 
-void waitkeymouse(GTOBJECT *gt)
+void waitkeymouse(GTOBJECT* gt)
 {
 	//int jc = 0;
 	//int rk = 0;
@@ -1105,6 +1105,8 @@ void waitkeymouse(GTOBJECT *gt)
 		}
 		// Debug end
 
+		handlePolyphonicKeyboard(&gtObject);
+
 		if ((rawkey) || (key))
 		{
 			break;
@@ -1117,8 +1119,6 @@ void waitkeymouse(GTOBJECT *gt)
 		//	SDL_Delay(50);
 
 		midiMessage.size = 0;
-
-		//int portOpen = 123;
 
 		/*
 		Allow MIDI Jamming if not editing PATTERN (so also enable if we've got cursor on other areas)
@@ -1137,7 +1137,7 @@ void waitkeymouse(GTOBJECT *gt)
 			{
 				if (midiEnabled)
 				{
-					//int portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
+					checkForMidiInput(&midiMessage, selectedMIDIPort);
 					int i = 0;
 					for (int c = 0;c < midiMessage.size / 3;c++)
 					{
@@ -1151,9 +1151,11 @@ void waitkeymouse(GTOBJECT *gt)
 							gMIDINote = midiNote + FIRSTNOTE;	// editing pattern data and have received keyon from MIDI device
 							key = 0;
 							rawkey = 0;
+							handleMIDIPolykeyboard(&gtObject, midiMessage);
 							return;
-
 						}
+						else
+							handleMIDIPolykeyboard(&gtObject, midiMessage);
 					}
 				}
 			}
@@ -1163,7 +1165,7 @@ void waitkeymouse(GTOBJECT *gt)
 				{
 					do {
 
-						//	int portOpen = checkForMidiInput(&midiMessage, selectedMIDIPort);
+						checkForMidiInput(&midiMessage, selectedMIDIPort);
 						handleMIDIPolykeyboard(&gtObject, midiMessage);
 
 					} while (midiMessage.size);
@@ -1172,7 +1174,7 @@ void waitkeymouse(GTOBJECT *gt)
 				handlePolyphonicKeyboard(&gtObject);	// update for QWERTY too
 
 
-		// Need to change this so that it checks actual keyed on channels, rather than keys pressed
+				// Need to change this so that it checks actual keyed on channels, rather than keys pressed
 
 
 				if (!checkAnyPolyPlaying())
@@ -1267,7 +1269,7 @@ void docommand(void)
 	//	}
 
 	int c2;
-	GTOBJECT *gt;
+	GTOBJECT* gt;
 
 	gt = &gtObject;
 
@@ -1277,7 +1279,7 @@ void docommand(void)
 	if (m)
 		mousebDoubleClick = 0;
 
-	GTUNDO_OBJECT *ed = undoCreateEditorInfo();
+	GTUNDO_OBJECT* ed = undoCreateEditorInfo();
 
 	// Mode-specific commands
 	switch (editorInfo.editmode)
@@ -1292,7 +1294,7 @@ void docommand(void)
 		{
 			for (int i = 0;i < MAX_CHN;i++)
 			{
-				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
+				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST, i + (editorInfo.esnum * MAX_CHN), UNDO_AREA_DIRTY_CHECK);
 			}
 
 			undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_LEN, 0, UNDO_AREA_DIRTY_CHECK);
@@ -1301,8 +1303,8 @@ void docommand(void)
 		{
 			for (int i = 0;i < MAX_CHN;i++)
 			{
-				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_PATTERN_EXPANDED, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
-				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
+				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_PATTERN_EXPANDED, i + (editorInfo.esnum * MAX_CHN), UNDO_AREA_DIRTY_CHECK);
+				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED, i + (editorInfo.esnum * MAX_CHN), UNDO_AREA_DIRTY_CHECK);
 			}
 			undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_LENGTH_EXPANDED, 0, UNDO_AREA_DIRTY_CHECK);
 		}
@@ -1350,7 +1352,7 @@ void docommand(void)
 		{
 			for (int i = 0;i < MAX_CHN;i++)
 			{
-				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
+				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST, i + (editorInfo.esnum * MAX_CHN), UNDO_AREA_DIRTY_CHECK);
 			}
 			undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_LEN, 0, UNDO_AREA_DIRTY_CHECK);
 		}
@@ -1358,8 +1360,8 @@ void docommand(void)
 		{
 			for (int i = 0;i < MAX_CHN;i++)
 			{
-				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_PATTERN_EXPANDED, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
-				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED, i + (editorInfo.esnum*MAX_CHN), UNDO_AREA_DIRTY_CHECK);
+				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_PATTERN_EXPANDED, i + (editorInfo.esnum * MAX_CHN), UNDO_AREA_DIRTY_CHECK);
+				undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_TRANSPOSE_EXPANDED, i + (editorInfo.esnum * MAX_CHN), UNDO_AREA_DIRTY_CHECK);
 			}
 			undoAreaSetCheckForChange(UNDO_AREA_ORDERLIST_LENGTH_EXPANDED, 0, UNDO_AREA_DIRTY_CHECK);
 		}
@@ -1397,12 +1399,12 @@ void docommand(void)
 	generalcommands(gt);
 }
 
-void mousecommands(GTOBJECT *gt)
+void mousecommands(GTOBJECT* gt)
 {
 	int c;
 	int c2 = getActualChannel(editorInfo.esnum, editorInfo.epchn);	// 0-12
-//	int songNum = getActualSongNumber(editorInfo.esnum, c2);
-//	int c3 = c % 6;
+	//	int songNum = getActualSongNumber(editorInfo.esnum, c2);
+	//	int c3 = c % 6;
 
 
 	if (!mouseb)
@@ -1935,7 +1937,7 @@ void mousecommands(GTOBJECT *gt)
 	}
 }
 
-void generalcommands(GTOBJECT *gt)
+void generalcommands(GTOBJECT* gt)
 {
 	int validSize = 1;
 	//	int c;
@@ -2346,7 +2348,7 @@ void generalcommands(GTOBJECT *gt)
 	}
 }
 
-int load(GTOBJECT *gt, char *dragDropFileName)
+int load(GTOBJECT* gt, char* dragDropFileName)
 {
 	win_enableKeyRepeat();
 	int ok = 0;
@@ -2410,7 +2412,7 @@ int quickSave()
 	return loadedSongFlag;
 }
 
-void save(GTOBJECT *gt, int exportWAVFlag)
+void save(GTOBJECT* gt, int exportWAVFlag)
 {
 	win_enableKeyRepeat();
 
@@ -2477,7 +2479,7 @@ void save(GTOBJECT *gt, int exportWAVFlag)
 	rawkey = 0;
 }
 
-void quit(GTOBJECT *gt)
+void quit(GTOBJECT* gt)
 {
 	if ((!shiftOrCtrlPressed) || (mouseb))
 	{
@@ -2492,7 +2494,7 @@ void quit(GTOBJECT *gt)
 	rawkey = 0;
 }
 
-void clear(GTOBJECT *gt)
+void clear(GTOBJECT* gt)
 {
 	int cs = 0;
 	int cp = 0;
@@ -2611,7 +2613,7 @@ void convertInsToPans(int sidChips)
 }
 
 
-void editSIDPan(GTOBJECT *gt)
+void editSIDPan(GTOBJECT* gt)
 {
 	int sidChips = editorInfo.maxSIDChannels / 3;
 
@@ -2679,7 +2681,7 @@ void editSIDPan(GTOBJECT *gt)
 }
 
 
-void editadsr(GTOBJECT *gt)
+void editadsr(GTOBJECT* gt)
 {
 	eamode = 1;
 	editorInfo.eacolumn = 0;
@@ -2767,9 +2769,9 @@ void editadsr(GTOBJECT *gt)
 	}
 }
 
-void getparam(FILE *handle, unsigned int *value)
+void getparam(FILE* handle, unsigned int* value)
 {
-	char *configptr;
+	char* configptr;
 
 	for (;;)
 	{
@@ -2819,9 +2821,9 @@ void getparam(FILE *handle, unsigned int *value)
 	}
 }
 
-void getfloatparam(FILE *handle, float *value)
+void getfloatparam(FILE* handle, float* value)
 {
-	char *configptr;
+	char* configptr;
 
 	for (;;)
 	{
@@ -2835,9 +2837,9 @@ void getfloatparam(FILE *handle, float *value)
 	sscanf(configptr, "%f", value);
 }
 
-void getstringparam(FILE *handle, char *value)
+void getstringparam(FILE* handle, char* value)
 {
-	char *configptr;
+	char* configptr;
 
 	int foundSemi = 0;
 
@@ -2952,7 +2954,7 @@ void setspecialnotenames()
 	int i;
 	int j;
 	int oct;
-	char *name;
+	char* name;
 	char octave[11];
 
 	i = 0;
@@ -2979,8 +2981,8 @@ void setspecialnotenames()
 
 void readscalatuningfile()
 {
-	FILE *scalatuningfile;
-	char *configptr;
+	FILE* scalatuningfile;
+	char* configptr;
 	char strbuf[64];
 	char name[3];
 	int i;
@@ -3031,7 +3033,7 @@ void readscalatuningfile()
 			{
 				if (i == tuningcount - 1)
 				{
-					char *tmp = strdup(specialnotenames);
+					char* tmp = strdup(specialnotenames);
 					strcpy(specialnotenames, name);
 					strcat(specialnotenames, tmp);
 					free(tmp);
@@ -3147,7 +3149,7 @@ void setGFXPaletteRGBFromPaletteRGB(int presetIndex, int paletteIndex)
 }
 
 
-void handlePaletteDisplay(GTOBJECT *gt, int palettePreset)
+void handlePaletteDisplay(GTOBJECT* gt, int palettePreset)
 {
 	if (gt->songinit != PLAY_STOPPED)
 	{
@@ -3323,7 +3325,7 @@ void initRemapArrays()
 
 // JUST NEED TO TEST THIS NOW..
 
-void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT *gt)
+void ExportAsPCM(int songNumber, int doNormalize, GTOBJECT* gt)
 {
 
 
@@ -3422,7 +3424,7 @@ void playUntilEnd(int songNumber)
 void playUntilEnd2(int songNumber)
 {
 	int sng = getActualSongNumber(songNumber, 0);	// editorInfo.esnum
-	GTOBJECT *gte = &gtEditorObject;
+	GTOBJECT* gte = &gtEditorObject;
 
 	initsong(sng, PLAY_BEGINNING, gte);	// JP FEB
 	gte->loopEnabledFlag = 0;
@@ -3464,7 +3466,7 @@ void playUntilEnd2(int songNumber)
 
 }
 
-int mouseTransportBar(GTOBJECT *gt)
+int mouseTransportBar(GTOBJECT* gt)
 {
 	if (!mouseb)
 		return 0;
@@ -3751,7 +3753,7 @@ int mouseTransportBar(GTOBJECT *gt)
 
 }
 
-void handlePressRewind(int doubleClick, GTOBJECT *gt)
+void handlePressRewind(int doubleClick, GTOBJECT* gt)
 {
 	if (doubleClick)
 		previousSongPos(&gtObject, 1);
@@ -3774,7 +3776,7 @@ int checkMouseRange(int x, int y, int w, int h)
 	return 0;
 }
 
-void handleSIDChannelCountChange(GTOBJECT *gt)
+void handleSIDChannelCountChange(GTOBJECT* gt)
 {
 	if (gt->songinit != PLAY_STOPPED)
 	{
@@ -3782,8 +3784,8 @@ void handleSIDChannelCountChange(GTOBJECT *gt)
 	}
 	SDL_Delay(100);	// ensure that GT player has done an update, so that playing channels are now silent prior to setting new channel count
 
-//	if (gt->masterLoopChannel >= editorInfo.maxSIDChannels)
-//		gt->masterLoopChannel = 0;
+	//	if (gt->masterLoopChannel >= editorInfo.maxSIDChannels)
+	//		gt->masterLoopChannel = 0;
 
 
 	if (editorInfo.eschn >= editorInfo.maxSIDChannels)
@@ -3867,7 +3869,7 @@ int oldepPosValue;
 
 
 
-void backupPatternDisplayInfo(GTOBJECT *gt)
+void backupPatternDisplayInfo(GTOBJECT* gt)
 {
 	// JP - orderSelectPatternsFromSelected resets the pattern step position. We need to preserve this when changing subsong
 	oldepViewValue = editorInfo.epview;
@@ -3880,7 +3882,7 @@ void backupPatternDisplayInfo(GTOBJECT *gt)
 	}
 }
 
-void restorePatternDisplayInfo(GTOBJECT *gt)
+void restorePatternDisplayInfo(GTOBJECT* gt)
 {
 	editorInfo.epview = oldepViewValue;
 	editorInfo.eppos = oldepPosValue;
@@ -3907,7 +3909,7 @@ void restorePatternDisplayInfo(GTOBJECT *gt)
 
 int jcc = 0;
 
-void nextSongPos(GTOBJECT *gt)
+void nextSongPos(GTOBJECT* gt)
 {
 	int songNum = getActualSongNumber(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);
 	int ac = getActualChannel(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);	// 0-12
@@ -3951,7 +3953,7 @@ void nextSongPos(GTOBJECT *gt)
 }
 
 
-void previousSongPos(GTOBJECT *gt, int songDffset)
+void previousSongPos(GTOBJECT* gt, int songDffset)
 {
 	int songNum = getActualSongNumber(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);
 	int ac = getActualChannel(editorInfo.esnum, gt->masterLoopChannel);	//editorInfo.epchn);	// 0-12
@@ -4026,7 +4028,7 @@ void previousSongPos(GTOBJECT *gt, int songDffset)
 	}
 }
 
-void setSongToBeginning(GTOBJECT *gt)
+void setSongToBeginning(GTOBJECT* gt)
 {
 	if (editPaletteMode)
 		return;
@@ -4049,7 +4051,7 @@ void setSongToBeginning(GTOBJECT *gt)
 	updateviewtopos(gt);
 }
 
-void playFromCurrentPosition(GTOBJECT *gt, int currentPos)
+void playFromCurrentPosition(GTOBJECT* gt, int currentPos)
 {
 
 	if (editPaletteMode)
@@ -4088,7 +4090,7 @@ void ModifyTrackGetOriginalValue()
 	}
 	if (editorInfo.editmode == EDIT_INSTRUMENT)
 	{
-		unsigned char *ptr = &instr[editorInfo.einum].ad;
+		unsigned char* ptr = &instr[editorInfo.einum].ad;
 		ptr += editorInfo.eipos;
 		editorInfo.mouseTrackOriginalValue = *ptr;
 	}
@@ -4117,7 +4119,7 @@ int mouseTrackModify(int editorWindow)
 	if (editorWindow == EDIT_TABLES)
 	{
 
-		char *dptr = (char*)&ltable[editorInfo.etnum][editorInfo.etpos];
+		char* dptr = (char*)&ltable[editorInfo.etnum][editorInfo.etpos];
 		if (editorInfo.etcolumn > 1)	// columns 0+1 = lefttable value
 			dptr = (char*)&rtable[editorInfo.etnum][editorInfo.etpos];
 
@@ -4140,7 +4142,7 @@ int mouseTrackModify(int editorWindow)
 		{
 			int v = editorInfo.mouseTrackOriginalValue;
 
-			char *dptr = (char*)&instr[editorInfo.einum].ad;
+			char* dptr = (char*)&instr[editorInfo.einum].ad;
 			if (editorInfo.eipos == 1)
 				dptr = (char*)&instr[editorInfo.einum].sr;
 
@@ -4175,7 +4177,7 @@ int mouseTrackModify(int editorWindow)
 		}
 		else
 		{
-			unsigned char *dptr = &instr[editorInfo.einum].ad;
+			unsigned char* dptr = &instr[editorInfo.einum].ad;
 			dptr += editorInfo.eipos;
 
 			int v = editorInfo.mouseTrackOriginalValue << 1;
@@ -4815,7 +4817,7 @@ int HzToSIDFreq(float hz)
 {
 	float phi = 985248;	// PAL
 
-//	phi = 1022727;	//editorInfo.ntsc
+	//	phi = 1022727;	//editorInfo.ntsc
 
 	float freqCons = (256 * 256 * 256) / phi;
 	float sidFreq = freqCons * hz;
@@ -4838,7 +4840,7 @@ void detunePitchTable()
 }
 
 
-void createFilename(char *filePath, char *newfileName, char *filename)
+void createFilename(char* filePath, char* newfileName, char* filename)
 {
 	int d = 0;
 	for (d = strlen(filePath) - 1; d >= 0; d--)
@@ -4853,7 +4855,7 @@ void createFilename(char *filePath, char *newfileName, char *filename)
 }
 
 
-void checkForMouseInOrderList(GTOBJECT *gt, int maxCh)
+void checkForMouseInOrderList(GTOBJECT* gt, int maxCh)
 {
 	// Song editpos & songnumber selection
 	if ((mousey >= 3) && (mousey <= 3 + maxCh) && (mousex >= 40 + 21))
@@ -4956,7 +4958,7 @@ void saveBackupSong()
 	createBackupFolder();
 
 	time_t mytime = time(NULL);
-	char * time_str = ctime(&mytime);
+	char* time_str = ctime(&mytime);
 	time_str[strlen(time_str) - 1] = '\0';
 	replacechar(time_str, ':', '_');
 
@@ -4975,9 +4977,9 @@ void saveBackupSong()
 	strcpy(loadedsongfilename, tempSngFilename);
 }
 
-int replacechar(char *str, char orig, char rep)
+int replacechar(char* str, char orig, char rep)
 {
-	char *ix = str;
+	char* ix = str;
 	int n = 0;
 	while ((ix = strchr(ix, orig)) != NULL) {
 		*ix++ = rep;
@@ -4990,7 +4992,7 @@ int replacechar(char *str, char orig, char rep)
 int createBackupFolder()
 {
 
-	DIR *folder;
+	DIR* folder;
 
 	memset(backupFolderName, '\0', sizeof(backupFolderName));
 
@@ -5019,7 +5021,7 @@ int createBackupFolder()
 
 
 
-void checkForMouseInExtendedOrderList(GTOBJECT *gt, int maxCh)
+void checkForMouseInExtendedOrderList(GTOBJECT* gt, int maxCh)
 {
 
 	// Song editpos & songnumber selection
@@ -5191,7 +5193,7 @@ void restartScreenDisplay()
 }
 
 
-void handleLoad(GTOBJECT *gt, char* dragdropfile)
+void handleLoad(GTOBJECT* gt, char* dragdropfile)
 {
 	stopScreenDisplay();
 
