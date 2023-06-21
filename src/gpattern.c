@@ -1827,8 +1827,6 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 	int newnote = -1;
 	int c = 0;
 
-	//if (recordmode)		// 15/04/23 JP Removed to allow for nicer note off handling 
-		//return noKeysPressed;
 
 	if (shiftOrCtrlPressed)
 		return noKeysPressed;
@@ -1847,18 +1845,25 @@ int handlePolyphonicKeyboard(GTOBJECT *gt)
 				newnote = getNote(c);	// Is user pressing valid QWERTY note key?
 				if (newnote != -1)
 				{
-					noKeysPressed = 0;
-					if (keyNoteDown[c] == 0)
+					if ((!recordmode) || editorInfo.epcolumn == 0)	// Jamming or only editing note column
 					{
-						keyOn(c, newnote, gt);		// for MIDI, just pass newnote to both..
-						keyNoteDown[c]++;
+						noKeysPressed = 0;
+						if (keyNoteDown[c] == 0)	// Initial key press? Play the note
+						{
+							keyOn(c, newnote, gt);		// for MIDI, just pass newnote to both..
+							keyNoteDown[c]++;
 
-						//sprintf(textbuffer, "key on %d", c);	////Alloc 0x%x", newMaxUndoSize);
-						//printtext(75, 16, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+							//sprintf(textbuffer, "key on %d", c);	////Alloc 0x%x", newMaxUndoSize);
+							//printtext(75, 16, getColor(CTITLES_FOREGROUND, CGENERAL_BACKGROUND), textbuffer);
+						}
+						continue;	// skips the keyoff code below
 					}
+
 				}
 			}
-			else if (keyNoteDown[c] != 0)
+
+			// Handle keyoff
+			if (keyNoteDown[c] != 0)
 			{
 				keyNoteDown[c] = 0;
 				newnote = getNoteFromChannel(c);
