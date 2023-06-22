@@ -503,10 +503,22 @@ void tablecommands(GTOBJECT *gt)
 		break;
 
 	case KEY_DEL:
+		// Could be that the table pointers in the patterns are modified when inserting/deleting rows in tables
+		// Need to track these for undo
+		for (int i = 0;i < MAX_PATT;i++)
+		{
+			undoAreaSetCheckForChange(UNDO_AREA_PATTERN, i, UNDO_AREA_DIRTY_CHECK);
+		}
 		deletetable(editorInfo.etnum, editorInfo.etpos);
 		break;
 
 	case KEY_INS:
+		// Could be that the table pointers in the patterns are modified when inserting/deleting rows in tables
+		// Need to track these for undo
+		for (int i = 0;i < MAX_PATT;i++)
+		{
+			undoAreaSetCheckForChange(UNDO_AREA_PATTERN, i, UNDO_AREA_DIRTY_CHECK);
+		}
 		inserttable(editorInfo.etnum, editorInfo.etpos, shiftOrCtrlPressed);
 		break;
 
