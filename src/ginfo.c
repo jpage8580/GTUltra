@@ -466,7 +466,7 @@ void displayPatternInfo(GTOBJECT *gt)
 				sprintf(infoTextBuffer, "Channel Tempo: %02X", (data - 0x80));
 		}
 		else
-			sprintf(infoTextBuffer, patternInstructionInfoString[instr]);
+			sprintf(infoTextBuffer, "%s", patternInstructionInfoString[instr]);
 	}
 	else
 		sprintf(infoTextBuffer, "                                ");
