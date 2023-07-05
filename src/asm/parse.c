@@ -116,8 +116,8 @@ int is_valid_ui16(i32 value)
 
 void dump_sym_entry(int level, struct sym_entry *se)
 {
-    LOG(level, ("sym_entry 0x%08X symbol %s, expr 0x%08X\n",
-                (u32)se, se->symbol, (u32)se->expr));
+    LOG(level, ("sym_entry %p symbol %s, expr %p\n",
+                (void*)se, se->symbol, (void*)se->expr));
 }
 
 struct expr *new_is_defined(const char *symbol)
