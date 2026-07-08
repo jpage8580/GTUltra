@@ -1,0 +1,23 @@
+# Object files
+*.o
+*.d
+
+# Built binaries
+mac/
+linux/
+win32/*.exe
+win32/*.dll
+
+# Generated source
+src/goatdata.c
+src/gt2stereo.dat
+
+# Generated build tools
+src/bme/datafile
+src/bme/dat2inc
+
+# OS artifacts
+.DS_Store
+
+# Debug artifacts
+examples/*/debug_*.s

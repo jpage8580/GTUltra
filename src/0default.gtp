@@ -1,0 +1,53 @@
+;GTUltra Palette: 00_goattracker.gtp
+
+PALETTEDATA:
+00:00,00,00	Pattern: Background 1
+01:95,95,95	Pattern: Foreground 1
+02:00,00,00	Pattern: Background 2
+03:95,95,95	Pattern: Foreground 2
+04:00,00,00	Pattern: Highlight Background
+05:A0,FF,A0	Pattern: Highlight Foreground
+06:CA,CA,CA	Pattern: Note Foreground
+07:CA,CA,CA	Pattern: Command Foreground
+08:00,00,00	Pattern: Vertical Line
+09:00,00,00	Pattern: Playing Line Background
+0A:E5,64,64	Pattern: Playing Line Foreground
+0B:00,00,00	Pattern: Unused Background
+0C:95,95,95	Pattern: Unused Foreground
+0D:30,30,AA	Select: Background
+0E:FF,FF,FF	Select: Foreground
+0F:00,00,00	Table: Background 1
+10:95,95,95	Table: Foreground 1
+11:00,00,00	Table: Background 2
+12:95,95,95	Table: Foreground 2
+13:00,00,00	Table: Unused Background
+14:60,60,60	Table: Unused Foreground
+15:CA,CA,CA	Table: Current Instr. Foreground
+16:00,00,00	Table: Current Instr. Background
+17:00,00,00	General: Background
+18:FF,FF,FF	General: Title
+19:A0,FF,A0	General: Info
+1A:00,00,00	General: Highlight
+1B:00,00,00	TransportBar: Button Background
+1C:00,00,00	TransportBar: Background
+1D:CA,CA,CA	TransportBar: Enabled
+1E:E5,64,64	RED (record / Filter Status)
+1F:A0,FF,A0	Pattern Loop Marker Background
+20:00,00,00	Pattern Loop Marker Foreground
+21:95,95,95	Pattern: Instrument Foreground
+22:00,00,00	Pattern: First Background 1
+23:95,95,95	Pattern: First Foreground 1
+24:00,00,00	Pattern: First Background 2
+25:95,95,95	Pattern: First Foreground 2
+26:FF,FF,FF	Pattern: Index Highlight
+27:00,00,00	TransportBar: Background2
+28:30,30,AA	Top Bar: Background
+29:00,00,00	TransportBar: Between Buttons
+2A:F0,C0,30	Exclamation
+2B:00,00,00	Order/Inst: Background
+2C:95,95,95	Order/Inst: Foreground
+2D:A0,FF,A0	Order/Inst/Table: Edit Foreground
+2E:CA,CA,CA	Orderlist: Transpose/Repeat
+2F:FF,FF,FF	Top Bar: Foreground
+30:50,50,BB	Top Bar: Foreground OFF
+31:95,95,95	TransportBar: Button Foreground

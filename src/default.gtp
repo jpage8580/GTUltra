@@ -1,0 +1,53 @@
+JP123
+
+PALETTEDATA:
+00:10,20,30	Pattern: Background 1
+01:10,20,30	Pattern: Foreground 1
+02:20,30,40	Pattern: Background 2
+03:20,30,40	Pattern: Foreground 2
+04:20,30,40	Pattern: Highlight Background
+05:40,60,80	Pattern: Highlight Foreground
+06:B0,B0,B0	Pattern: Note Foreground
+07:30,E0,D0	Pattern: Command Foreground
+08:10,10,20	Pattern: Vertical Line
+09:D0,D0,D0	Pattern: Playing Line Background
+0A:20,20,20	Pattern: Playing Line Foreground
+0B:10,20,30	Pattern: Unused Background
+0C:10,20,30	Pattern: Unused Foreground
+0D:30,E0,D0	Select: Background
+0E:00,00,30	Select: Foreground
+0F:10,20,30	Table: Background 1
+10:B0,B0,B0	Table: Foreground 1
+11:10,20,30	Table: Background 2
+12:C0,C0,C0	Table: Foreground 2
+13:10,20,30	Table: Unused Background
+14:10,20,30	Table: Unused Foreground
+15:F0,F0,F0	Table: Current Instr. Foreground
+16:30,40,60	Table: Current Instr. Background
+17:30,50,70	General: Background
+18:D0,D0,D0	General: Title
+19:E0,E0,E0	General: Info
+1A:70,80,A0	General: Highlight
+1B:70,80,A0	TransportBar: Button Background
+1C:10,20,30	TransportBar: Background
+1D:E0,80,60	TransportBar: Enabled
+1E:A0,60,50	RED (record / Filter Status)
+1F:E0,C0,30	Pattern Loop Marker Background
+20:00,00,00	Pattern Loop Marker Foreground
+21:40,90,E0	Pattern: Instrument Foreground
+22:10,20,30	Pattern: First Background 1
+23:10,20,30	Pattern: First Foreground 1
+24:20,30,40	Pattern: First Background 2
+25:20,30,40	Pattern: First Foreground 2
+26:E0,80,60	Pattern: Index Highlight
+27:00,00,00	TransportBar: Background2
+28:30,50,70	Top Bar: Background
+29:30,50,70	TransportBar: Between Buttons
+2A:E0,C0,30	Exclamation
+2B:10,20,30	Order/Inst: Background
+2C:B0,B0,B0	Order/Inst: Foreground
+2D:E0,C0,30	Order/Inst/Table: Edit Foreground
+2E:30,E0,D0	Orderlist: Transpose/Repeat
+2F:F0,F0,F0	Top Bar: Foreground
+30:00,00,00	Top Bar: Foreground OFF
+31:00,00,00	TransportBar: Button Foreground
