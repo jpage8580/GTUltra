@@ -15,7 +15,10 @@ The script currently covers:
    `gtultra`, `gt2reloc`, `ins2snd2`, `mod2sng2`, `ss2stereo`.
 2. **Usage smoke tests** — invoke `gt2reloc`, `ins2snd2` and `mod2sng2` without arguments
    and confirm they print usage and exit with the expected non-zero status.
-3. **Functional test** — run `gt2reloc` on a fixture `.sng` to pack/convert it into a
+3. **gtultra startup test** — launch `gtultra -?` with a short timeout to verify it
+   starts without crashing (it is an interactive SDL application, so running it
+   headlessly may fail display init or hang).
+4. **Functional test** — run `gt2reloc` on a fixture `.sng` to pack/convert it into a
    non-empty `.prg`.
 
 ## Known tool limitations
