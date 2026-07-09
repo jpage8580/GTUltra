@@ -38,5 +38,4 @@ jobs:
           ls -la win32/mod2sng2.exe
 
       - name: Run smoke tests
-        continue-on-error: true
         run: bash .github/workflows/smoke-test.sh win32/ .exe

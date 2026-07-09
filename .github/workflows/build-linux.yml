@@ -34,5 +34,4 @@ jobs:
           ls -la linux/mod2sng2
 
       - name: Run smoke tests
-        continue-on-error: true
         run: bash .github/workflows/smoke-test.sh linux/ ""
