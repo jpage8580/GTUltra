@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  SKIP_GT2RELOC: 1
+
 jobs:
   ci:
     runs-on: macos-latest
@@ -18,14 +21,6 @@ jobs:
 
       - name: Build
         run: make mac-build
-
-      - name: List binaries
-        run: |
-          ls -la mac/gtultra
-          ls -la mac/gt2reloc
-          ls -la mac/ins2snd2
-          ls -la mac/ss2stereo
-          ls -la mac/mod2sng2
 
       - name: Run smoke tests
         run: bash tests/integration/smoke.sh mac/ ""

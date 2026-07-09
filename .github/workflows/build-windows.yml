@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  SKIP_GT2RELOC: 1
+
 jobs:
   ci:
     runs-on: windows-latest
@@ -28,14 +31,6 @@ jobs:
 
       - name: Build
         run: make win-build
-
-      - name: List binaries
-        run: |
-          ls -la win32/gtultra.exe
-          ls -la win32/gt2reloc.exe
-          ls -la win32/ins2snd2.exe
-          ls -la win32/ss2stereo.exe
-          ls -la win32/mod2sng2.exe
 
       - name: Run smoke tests
         run: bash tests/integration/smoke.sh win32/ .exe

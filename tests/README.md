@@ -9,6 +9,19 @@ The GitHub Actions workflows run a shared smoke-test script after each build:
 - `.github/workflows/build-windows.yml`
 - `tests/integration/smoke.sh`
 
+Categories can be selectively disabled with environment variables:
+
+```bash
+SKIP_GT2RELOC=1 SKIP_GTULTRA=1 bash tests/integration/smoke.sh mac/ ""
+```
+
+Supported toggles:
+
+- `SKIP_BINARIES=1`
+- `SKIP_USAGE=1`
+- `SKIP_GTULTRA=1`
+- `SKIP_GT2RELOC=1`
+
 The script currently covers:
 
 1. **Binary existence checks** — verify that all five expected binaries are produced:
