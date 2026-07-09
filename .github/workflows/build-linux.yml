@@ -15,11 +15,15 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update
-          sudo apt-get install -y build-essential libsdl2-dev libsdl2-ttf-dev libasound2-dev
+          sudo apt-get install -y build-essential gcc-15 g++-15 libsdl2-dev libsdl2-ttf-dev libasound2-dev
 
       - name: Build
         run: make linux-build
+        env:
+          CC: gcc-15
+          CXX: g++-15
 
       - name: Verify binaries
         run: |
