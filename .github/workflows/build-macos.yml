@@ -1,0 +1,28 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [ci-workflows]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install sdl2 sdl2_ttf
+
+      - name: Build
+        run: make mac-build
+
+      - name: Verify binaries
+        run: |
+          ls -la mac/gtultra
+          ls -la mac/gt2reloc
+          ls -la mac/ins2snd2
+          ls -la mac/ss2stereo
+          ls -la mac/mod2sng2

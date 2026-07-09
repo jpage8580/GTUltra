@@ -1,0 +1,30 @@
+name: Build Linux
+
+on:
+  push:
+    branches: [ci-workflows]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsdl2-dev libsdl2-ttf-dev libasound2-dev
+
+      - name: Build
+        run: make linux-build
+
+      - name: Verify binaries
+        run: |
+          ls -la linux/gtultra
+          ls -la linux/gt2reloc
+          ls -la linux/ins2snd2
+          ls -la linux/ss2stereo
+          ls -la linux/mod2sng2

@@ -1,0 +1,38 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [ci-workflows]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-SDL2
+
+      - name: Build
+        run: make win-build
+
+      - name: Verify binaries
+        run: |
+          ls -la win32/gtultra.exe
+          ls -la win32/gt2reloc.exe
+          ls -la win32/ins2snd2.exe
+          ls -la win32/ss2stereo.exe
+          ls -la win32/mod2sng2.exe
