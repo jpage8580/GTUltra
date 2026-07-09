@@ -19,7 +19,7 @@ jobs:
       - name: Build
         run: make mac-build
 
-      - name: Verify binaries
+      - name: List binaries
         run: |
           ls -la mac/gtultra
           ls -la mac/gt2reloc
@@ -28,4 +28,4 @@ jobs:
           ls -la mac/mod2sng2
 
       - name: Run smoke tests
-        run: bash .github/workflows/smoke-test.sh mac/ ""
+        run: bash tests/integration/smoke.sh mac/ ""

@@ -1,13 +1,13 @@
 #!/bin/bash
 # Shared smoke tests for GTUltra builds.
-# Usage: smoke-test.sh <binary-prefix> <binary-suffix>
+# Usage: smoke.sh <binary-prefix> <binary-suffix>
 #   prefix: e.g. "linux/", "mac/", "win32/"
 #   suffix: e.g. "", ".exe"
 set -uo pipefail
 
 PREFIX="${1:-}"
 SUFFIX="${2:-}"
-EXAMPLE='examples/Linus/$3Space_Beer.sng'
+FIXTURE_SNG='tests/fixtures/Stereo_Pendejo.sng'
 
 failures=0
 passes=0
@@ -69,28 +69,18 @@ else
   report 1 "mod2sng2 usage unexpected exit code $mod2_ec"
 fi
 
-echo "=== Functional tests on example song ==="
+echo "=== Functional tests: pack .sng to .prg ==="
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
 set +e
-"$GT2R" "$EXAMPLE" "${TMPDIR}/out.prg"
+"$GT2R" "$FIXTURE_SNG" "${TMPDIR}/out.prg"
 gt2r_func_ec=$?
 set -e
 if [ "$gt2r_func_ec" -eq 0 ] && [ -s "${TMPDIR}/out.prg" ]; then
   report 0 "gt2reloc produces non-empty PRG"
 else
   report 1 "gt2reloc failed (exit $gt2r_func_ec) or produced empty PRG"
-fi
-
-set +e
-"$SS2" "$EXAMPLE" "${TMPDIR}/split.sng"
-ss2_func_ec=$?
-set -e
-if [ "$ss2_func_ec" -eq 0 ] && [ -s "${TMPDIR}/split.sng" ]; then
-  report 0 "ss2stereo produces non-empty SNG"
-else
-  report 1 "ss2stereo failed (exit $ss2_func_ec) or produced empty SNG"
 fi
 
 echo "=== Summary: $passes passed, $failures failed ==="

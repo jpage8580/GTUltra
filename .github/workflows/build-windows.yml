@@ -29,7 +29,7 @@ jobs:
       - name: Build
         run: make win-build
 
-      - name: Verify binaries
+      - name: List binaries
         run: |
           ls -la win32/gtultra.exe
           ls -la win32/gt2reloc.exe
@@ -38,4 +38,4 @@ jobs:
           ls -la win32/mod2sng2.exe
 
       - name: Run smoke tests
-        run: bash .github/workflows/smoke-test.sh win32/ .exe
+        run: bash tests/integration/smoke.sh win32/ .exe
