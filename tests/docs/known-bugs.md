@@ -10,6 +10,8 @@ fix, so the fix is provably correct and stays fixed.
 
 ## Bug 1 — Buffer overflow in `setPaletteName()` (GitHub issue #76)
 
+> Pick-up plan: [handover-issue-76.md](handover-issue-76.md). Credit: fix by @fgaz (PR #73), reported by @lunadog.
+
 - **Where:** `src/gpaletteeditor.c:616` `setPaletteName()`, defect at line 622.
 - **Defect:**
   ```c

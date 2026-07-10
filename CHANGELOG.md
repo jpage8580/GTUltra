@@ -5,6 +5,19 @@ All notable changes to GTUltra will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Cross-platform `goatdata.c` determinism gate: `tests/integration/check-goatdata.sh` compares the regenerated player data against the committed reference `tests/goatdata.sha256`, wired into all three build workflows (confirmed byte-identical on Linux/macOS/Windows)
+- `.gitattributes` enforcing LF on packed player inputs (`*.s`, `*.seq`, `*.gtp`) and binary handling for packed resources, so generation is identical on every OS
+- `CLAUDE.md` agent guide (index of key files and rules) with `AGENTS.md` as a symlink to it
+- Project knowledge base under `tests/docs/`: `build-determinism.md`, `testing-strategy.md`, `known-bugs.md`, `handover-issue-76.md`
+
+### Fixed
+
+- `src/bme/dat2inc.c` now writes `goatdata.c` in binary mode (`"wt"` → `"wb"`) so the generated file is byte-identical (LF) across Linux, macOS, and Windows
+
 ## [1.5.6] - 2026-07-10
 
 ### Added
