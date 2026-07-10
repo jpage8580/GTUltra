@@ -30,5 +30,8 @@ jobs:
       - name: Build
         run: make win-build
 
+      - name: Verify goatdata.c determinism
+        run: bash tests/integration/check-goatdata.sh
+
       - name: Run smoke tests
         run: bash tests/integration/smoke.sh win32/ .exe

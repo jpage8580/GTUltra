@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
         printf("Datafile open error!\n");
         return 1;
     }
-    out = fopen(argv[2], "wt");
+    out = fopen(argv[2], "wb");  /* binary: keep LF-only output so goatdata.c is byte-identical across platforms (Windows text mode would emit CRLF) */
     if (!out)
     {
         printf("Includefile open error!\n");

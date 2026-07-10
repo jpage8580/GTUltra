@@ -21,3 +21,6 @@ src/bme/dat2inc
 
 # Debug artifacts
 examples/*/debug_*.s
+
+# local ai
+.claude/settings.local.json
