@@ -1,0 +1,34 @@
+name: Build Windows
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  SKIP_GT2RELOC: 1
+
+jobs:
+  ci:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-SDL2
+
+      - name: Build
+        run: make win-build
+
+      - name: Run smoke tests
+        run: bash tests/integration/smoke.sh win32/ .exe

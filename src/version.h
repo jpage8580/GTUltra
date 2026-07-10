@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define GTULTRA_VERSION "1.5.5"
+#define GTULTRA_VERSION "1.5.6"
 #define GTULTRA_VERSION_STRING "$VER: GTUltra V" GTULTRA_VERSION
 
 #endif

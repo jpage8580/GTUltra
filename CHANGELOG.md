@@ -5,7 +5,26 @@ All notable changes to GTUltra will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v1.5.5] - 2026-07-08
+## [1.5.6] - 2026-07-10
+
+### Added
+
+- Cross-platform CI (initial): GitHub Actions workflows building GTUltra on Linux, macOS, and Windows
+- Makefile now covers all platforms
+- Cross-platform CI smoke tests in `tests/integration/smoke.sh`, run after each build
+- Environment-variable toggles to skip smoke-test categories (`SKIP_BINARIES`, `SKIP_USAGE`, `SKIP_GTULTRA`, `SKIP_GT2RELOC`)
+
+### Changed
+
+- Linux CI build now uses GCC 15
+- GitHub Actions pinned to commit SHAs for supply-chain safety
+- `gt2reloc` functional smoke test is skipped in CI until its segfault is fixed
+
+### Fixed
+
+- Incomplete `checkForMouseInDetailed*` prototypes in `src/goattrk2.h` that broke the Linux build under GCC 15. Thanks @IFEware and @jansalleine
+
+## [1.5.5] - 2026-07-08
 
 - booker/MSL becomes new maintainer
 - no functional changes: starting off with a clean slate

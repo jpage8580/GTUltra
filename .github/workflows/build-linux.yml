@@ -1,0 +1,30 @@
+name: Build Linux
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  SKIP_GT2RELOC: 1
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install dependencies
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-15 g++-15 libsdl2-dev libsdl2-ttf-dev libasound2-dev
+
+      - name: Build
+        run: make linux-build
+        env:
+          CC: gcc-15
+          CXX: g++-15
+
+      - name: Run smoke tests
+        run: bash tests/integration/smoke.sh linux/ ""
