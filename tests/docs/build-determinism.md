@@ -80,11 +80,11 @@ committed generated file drifted.
   (`b365a479…`). Wired into all three workflows (`build-{linux,macos,windows}.yml`) as a
   "Verify goatdata.c determinism" step between Build and smoke tests. Catches both
   platform divergence and master-style staleness. Self-tested locally: PASS.
-- [ ] **4. 3-platform confirmation** — the actual cross-platform bytes can only be
-  produced in GitHub Actions (dev machine is macOS-only). Task 3 IS the confirmation;
-  it becomes green/red on the first PR CI run. **If Windows fails here**, the likely
-  cause is a packed input still arriving CRLF despite `.gitattributes` (check `core.autocrlf`
-  interaction) — investigate before relaxing the gate.
+- [x] **4. 3-platform confirmation** — PR #83 CI: all three platforms regenerated
+  `goatdata.c` and the determinism step logged the same hash (`b365a479…`) on Linux,
+  macOS, and Windows. Cross-platform determinism confirmed; the gate now guards it on
+  every PR. (If Windows ever fails here, suspect a packed input arriving CRLF despite
+  `.gitattributes` / a `core.autocrlf` interaction — investigate before relaxing the gate.)
 
 ## Reference-update procedure (when player sources legitimately change)
 ```
@@ -92,6 +92,28 @@ make build-tools
 shasum -a 256 src/goatdata.c | awk '{print $1}' > tests/goatdata.sha256
 ```
 Commit the new `tests/goatdata.sha256` alongside the source change.
+
+## Design notes / limitations
+- **The gate is a change-detector, not an independent oracle.** `tests/goatdata.sha256` is
+  a committed baseline (lockfile-style). It reliably catches *accidental* drift and
+  platform divergence, because all platforms compare to the same pinned value. It can be
+  defeated only by regenerating the reference on a non-deterministic platform and
+  committing that — but then the other two platforms fail against it on the next run, so
+  even that surfaces quickly. When player sources change legitimately, the reference MUST
+  be updated in the same commit (see procedure above) or CI correctly fails.
+- **Alternative considered and rejected:** each OS uploads its generated `goatdata.c` as a
+  CI artifact and a final job cross-diffs all three (no committed hash). This needs no
+  human-maintained reference but does NOT catch staleness (drift from sources), which is
+  the master-style failure we most want to prevent. The committed-hash approach catches
+  both, so we kept it.
+- **The build hard-depends on the generation pipeline; there is no committed fallback.**
+  On `main`, `goatdata.c` is gitignored, so a fresh clone must regenerate it. If
+  `datafile`/`dat2inc` ever fail to build on a platform, the whole build breaks (master
+  carried the committed artifact as a fallback; main traded that for reproducibility).
+  Keep the packer tools building on all three platforms.
+- **Determinism is proven for the current GitHub Actions toolchains**, not guaranteed for
+  every compiler/OS forever. The per-PR gate re-checks it, so a future toolchain change
+  that breaks reproducibility fails on the offending platform rather than sneaking in.
 
 ## Suggested landing
 Small self-contained change on a dedicated branch (e.g. `build-hardening`), separate from
