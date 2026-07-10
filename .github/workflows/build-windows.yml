@@ -1,8 +1,6 @@
 name: Build Windows
 
 on:
-  push:
-    branches: [ci-workflows]
   pull_request:
     branches: [main]
 
