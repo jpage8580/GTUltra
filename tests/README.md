@@ -9,6 +9,12 @@ The GitHub Actions workflows run a shared smoke-test script after each build:
 - `.github/workflows/build-windows.yml`
 - `tests/integration/smoke.sh`
 
+Each build workflow also runs a **goatdata.c determinism check**
+(`tests/integration/check-goatdata.sh`) between the build and the smoke tests. It
+regenerates the embedded player data and compares its hash against the committed
+reference `tests/goatdata.sha256`, catching non-deterministic/platform-divergent
+generation and stale player data. See `tests/docs/build-determinism.md`.
+
 Categories can be selectively disabled with environment variables:
 
 ```bash

@@ -26,5 +26,8 @@ jobs:
           CC: gcc-15
           CXX: g++-15
 
+      - name: Verify goatdata.c determinism
+        run: bash tests/integration/check-goatdata.sh
+
       - name: Run smoke tests
         run: bash tests/integration/smoke.sh linux/ ""

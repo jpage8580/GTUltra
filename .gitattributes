@@ -1,0 +1,20 @@
+# Build determinism ---------------------------------------------------------
+# The datafile packer (src/bme/datafile.c) reads these inputs in BINARY mode,
+# so their bytes must be identical on every OS. Force LF regardless of the
+# contributor's platform or core.autocrlf setting; otherwise a Windows checkout
+# would pack CRLF and change the generated src/goatdata.c (and thus the embedded
+# player). See tests/docs/build-determinism.md.
+*.s     text eol=lf
+*.seq   text eol=lf
+*.gtp   text eol=lf
+
+# Packed binary resources: never apply text/EOL conversion.
+*.bin   binary
+*.bmp   binary
+*.png   binary
+
+# Binary fixtures / tool outputs.
+*.sng   binary
+*.prg   binary
+*.sid   binary
+*.dat   binary

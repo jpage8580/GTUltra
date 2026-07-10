@@ -20,5 +20,8 @@ jobs:
       - name: Build
         run: make mac-build
 
+      - name: Verify goatdata.c determinism
+        run: bash tests/integration/check-goatdata.sh
+
       - name: Run smoke tests
         run: bash tests/integration/smoke.sh mac/ ""
