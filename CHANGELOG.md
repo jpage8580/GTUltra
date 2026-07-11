@@ -7,16 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Linux CI build now uses GCC 16 (via `ubuntu-toolchain-r/test` PPA), superseding GCC 15
-
 ### Added
 
+- GitHub Actions release workflow (`workflow_dispatch`) with version/overwrite/prerelease inputs, per-platform builds, Windows runtime DLL bundling, source archive, and SHA256 checksums
 - Cross-platform `goatdata.c` determinism gate: `tests/integration/check-goatdata.sh` compares the regenerated player data against the committed reference `tests/goatdata.sha256`, wired into all three build workflows (confirmed byte-identical on Linux/macOS/Windows)
 - `.gitattributes` enforcing LF on packed player inputs (`*.s`, `*.seq`, `*.gtp`) and binary handling for packed resources, so generation is identical on every OS
 - `CLAUDE.md` agent guide (index of key files and rules) with `AGENTS.md` as a symlink to it
 - Project knowledge base under `tests/docs/`: `build-determinism.md`, `testing-strategy.md`, `known-bugs.md`, `handover-issue-76.md`
+
+### Changed
+
+- Linux CI build now uses GCC 16 (via `ubuntu-toolchain-r/test` PPA), superseding GCC 15
 
 ### Fixed
 
