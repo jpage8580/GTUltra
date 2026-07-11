@@ -12,11 +12,6 @@ on:
         required: false
         type: boolean
         default: false
-      prerelease:
-        description: 'Mark as pre-release'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -248,5 +243,5 @@ jobs:
           name: GTUltra ${{ inputs.version }}
           body_path: release-notes.md
           files: dist/*
-          prerelease: ${{ inputs.prerelease }}
-          make_latest: ${{ inputs.prerelease && 'false' || 'true' }}
+          prerelease: ${{ contains(inputs.version, '-') }}
+          make_latest: ${{ contains(inputs.version, '-') && 'false' || 'true' }}
