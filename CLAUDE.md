@@ -15,7 +15,7 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 ## Rules
 - `src/goatdata.c` is generated: never commit/edit; change packed inputs → follow `tests/docs/build-determinism.md`.
 - Do not modify vendored: `src/resid/`, `src/resid-fp/`, `src/asm/`, `src/RtMidi.*`, `src/bme/SDL/`.
-- Commits: single-line message; CHANGELOG carries the detail, updated only **after** the PR is ready to merge.
+- Commits: single-line message; CHANGELOG carries the detail, updated only **after** the PR is ready to merge. New entries go under `[Unreleased]` — do not assign a version number until release.
 - Merge to `main` by **squash** only: `gh pr merge {PR} --squash --delete-branch`; commit body is `refer to CHANGELOG for details` (no duplication).
 - Do not bloat this file, leverage `## Index` above
 
