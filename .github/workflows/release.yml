@@ -1,6 +1,8 @@
 name: Release
 
 on:
+  push:
+    branches: [distrib] #remove on-push before merge
   workflow_dispatch:
     inputs:
       version:
@@ -243,5 +245,5 @@ jobs:
           name: GTUltra ${{ inputs.version }}
           body_path: release-notes.md
           files: dist/*
-          prerelease: ${{ contains(inputs.version, '-') }}
-          make_latest: ${{ contains(inputs.version, '-') && 'false' || 'true' }}
+          prerelease: ${{ contains(inputs.version, '-rc') }}
+          make_latest: ${{ contains(inputs.version, '-rc') && 'false' || 'true' }}
