@@ -8,7 +8,7 @@
 - [x] Task 4: Add 'Back to index' footer to each section file
 - [ ] Task 5: Improve image alt text and verify placement
 - [x] Task 6: Restructure manual so pages are joined into correct sections
-- [ ] Task 7: Stage/commit working tree changes
+- [x] Task 7: Stage/commit working tree changes
 
 ## Naming Requirements
 
@@ -98,7 +98,7 @@ Level 4 `####` subheadings under `5. Transport bar` are nested inside `feature-5
 
 ## Next Immediate Task
 
-Task 5: Improve image alt text and verify placement (pending).
+Task 5: Improve image alt text and verify placement (in_progress).
 
 ## Later Steps
 
