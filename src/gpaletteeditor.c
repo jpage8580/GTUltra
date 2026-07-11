@@ -619,8 +619,7 @@ void setPaletteName(char* paletteName, int index)
 	{
 		free(paletteNames[index]);
 	}
-	paletteNames[index] = malloc(strlen(paletteName));
-	strcpy(paletteNames[index], paletteName);	// copy filename. This is saved in the cfg file as the one to start up with
+	paletteNames[index] = strdup(paletteName);	// copy filename. This is saved in the cfg file as the one to start up with
 }
 
 int readPaletteData(char *paletteMem, char *paletteName)

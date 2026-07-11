@@ -1195,14 +1195,14 @@ void waitkeymouse(GTOBJECT* gt)
 						else
 						{
 							sprintf(&keyOffsetText[0], "                        ");
-							sprintf(infoTextBuffer, keyOffsetText);
+							sprintf(infoTextBuffer, "%s", keyOffsetText);
 						}
 					}
 				}
 				else
 				{
 					calculateNoteOffsets();
-					sprintf(infoTextBuffer, keyOffsetText);
+					sprintf(infoTextBuffer, "%s", keyOffsetText);
 				}
 			}
 		}

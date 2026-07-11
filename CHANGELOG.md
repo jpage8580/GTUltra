@@ -7,21 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.7] - 2026-07-13
+
 ### Added
 
 - GitHub Actions release workflow (`workflow_dispatch`) with version/overwrite inputs, per-platform builds (Linux x86_64 + aarch64, macOS arm64, Windows x86_64), Windows runtime DLL bundling, source archive, and SHA256 checksums; pre-releases are auto-detected from a `-rc` tag suffix (no separate input)
 - Linux `aarch64` build leg in CI (`build-linux.yml`), matrixed alongside `x86_64` on native ARM runners
+- `SANITIZE=1` build switch in `src/makefile.common` (`make <plat>-build SANITIZE=1`): adds `-fsanitize=address,undefined` to compile and link, disables `_FORTIFY_SOURCE`, and skips `strip` for symbolized reports
+- Linux ASan/UBSan CI job (`.github/workflows/build-linux.yml`) that builds with `SANITIZE=1` and runs the startup smoke test; a regression gate for the issue #76 class of memory bug (Linux only: MinGW GCC has no libasan and macOS does not exercise the startup path)
 - Cross-platform `goatdata.c` determinism gate: `tests/integration/check-goatdata.sh` compares the regenerated player data against the committed reference `tests/goatdata.sha256`, wired into all three build workflows (confirmed byte-identical on Linux/macOS/Windows)
 - `.gitattributes` enforcing LF on packed player inputs (`*.s`, `*.seq`, `*.gtp`) and binary handling for packed resources, so generation is identical on every OS
 - `CLAUDE.md` agent guide (index of key files and rules) with `AGENTS.md` as a symlink to it
-- Project knowledge base under `tests/docs/`: `build-determinism.md`, `testing-strategy.md`, `known-bugs.md`, `handover-issue-76.md`
+- Project knowledge base under `tests/docs/`: `build-determinism.md`, `testing-strategy.md`, `known-bugs.md`, `handover-issue-76.md`, and follow-up pick-up docs `handover-unused-result.md`, `handover-gt2reloc-bug2.md`, `handover-unit-tests.md`
 
 ### Changed
 
 - Linux CI build now uses GCC 16 (via `ubuntu-toolchain-r/test` PPA), superseding GCC 15
+- `tests/integration/smoke.sh` now treats a startup `SIGABRT` (exit 134) and any ASan/UBSan/FORTIFY diagnostic as a crash (previously only `139`/`138`), closing the gap that let issue #76 pass CI
 
 ### Fixed
 
+- Heap buffer overflow in `setPaletteName()` (`src/gpaletteeditor.c`) that crashed GTUltra at startup under glibc FORTIFY (`*** buffer overflow detected ***`, issue #76): `malloc(strlen(...))` + `strcpy` (one byte short of the NUL) replaced with `strdup`. Fix by @fgaz (PR #73); reported and root-caused by @lunadog (#76)
+- `-Wformat-security` warnings from non-literal `sprintf` format strings at `src/gt2stereo.c:1198`, `:1205` and `src/ginfo.c:469`, now `sprintf(buf, "%s", ...)`. Thanks @OPNA2608 (PR #22)
 - `src/bme/dat2inc.c` now writes `goatdata.c` in binary mode (`"wt"` → `"wb"`) so the generated file is byte-identical (LF) across Linux, macOS, and Windows
 
 ## [1.5.6] - 2026-07-10

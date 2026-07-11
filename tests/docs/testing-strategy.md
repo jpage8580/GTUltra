@@ -24,8 +24,9 @@ does NOT mean a rewrite.
 
 ## Priority ladder (highest ROI first)
 1. **ASan/UBSan CI build** running `smoke.sh`. Compile with
-   `-fsanitize=address,undefined`. Would have caught issue #76 automatically with a stack
-   trace. ~1h of Makefile/CI work; do this first.
+   `-fsanitize=address,undefined`. **DONE** (issue #76): `make <plat>-build SANITIZE=1`
+   (`src/makefile.common`) + a Linux job in `build-linux.yml`. Caught #76 with a symbolized
+   trace. See [handover-issue-76.md](handover-issue-76.md) and the coverage note below.
 2. **Golden-file / round-trip tests** on the non-interactive CLI tools
    (`gt2reloc`, `mod2sng2`, `ins2snd2`): feed a fixture, assert stable output
    (hash/size). Add a `.sng` load->save->load byte-stability check. No refactor needed.
@@ -33,6 +34,30 @@ does NOT mean a rewrite.
    `known-bugs.md`.
 4. **Extract pure domain functions** (reloc math in `greloc.c`, table-index/undo logic,
    packing helpers) out of the god-modules via sprout/wrap, and unit-test those.
+
+## Sanitizer platform coverage (Linux-only gate, and why)
+The ASan/UBSan gate runs on **Linux only**. This was decided from evidence, not
+convenience; do not "add the other platforms" without re-reading this.
+- **Linux (gcc):** full ASan+UBSan, and it reproduces #76 exactly (glibc FORTIFY abort +
+  symbolized ASan trace, headless). This is the real gate.
+- **macOS (Apple clang):** ASan+UBSan exist and a standalone control catches the exact
+  `malloc(strlen)+strcpy` pattern, BUT the instrumented `gtultra` reaches the Cocoa event
+  loop without firing (startup overflow path not exercised the way Linux does; root cause
+  undetermined — likely the SDL/Cocoa `main` shim or allocator path). Also no FORTIFY and a
+  16-byte min malloc bucket, so a normal build never crashes. **A mac ASan job would be
+  GREEN with the bug present → not a valid gate.** macOS stays normal build+smoke.
+- **Windows:** MinGW-w64 GCC (current CI) ships **no libasan** (`--disable-libsanitizer`;
+  `cannot find -lasan`); UBSan only in diagnostic-less trap mode. MSVC has ASan but **never
+  UBSan**, and needs a full Makefile→MSBuild + source port. MSYS2 CLANG64 has both but
+  forces a whole-toolchain migration (libc++/UCRT ABI rebuild of all C++, fix
+  `-fpermissive`-masked code, drop `-static`+`strip`, PATH the asan runtime DLL). All are
+  costly/lower-coverage. Windows stays normal build+smoke.
+- Cheap optional extra (not done): `-fsanitize=undefined -fsanitize-trap=undefined
+  -fno-sanitize-recover=all` on the existing MinGW job gives diagnostic-less UB-crash
+  coverage with no runtime.
+
+Bottom line: ASan/UBSan catch language-level, platform-independent defects, so one Linux
+build catches the overwhelming majority. Spend effort on Linux depth, not OS breadth.
 
 ## Framework
 Single-header C harness (**Unity** or **greatest**). Add `tests/unit/` + a `make test`
