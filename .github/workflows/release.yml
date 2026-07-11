@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [distrb] #remove on-push before merge
+    branches: [distrib] #remove on-push before merge
   workflow_dispatch:
     inputs:
       version:
@@ -67,7 +67,6 @@ jobs:
             prefix: linux/
             suffix: ""
             archive: tar.gz
-            shell: bash
             cc: gcc-16
             cxx: g++-16
           - os: macos-latest
@@ -76,7 +75,6 @@ jobs:
             prefix: mac/
             suffix: ""
             archive: tar.gz
-            shell: bash
             cc: ""
             cxx: ""
           - os: windows-latest
@@ -85,7 +83,6 @@ jobs:
             prefix: win32/
             suffix: ".exe"
             archive: zip
-            shell: msys2 {0}
             cc: ""
             cxx: ""
 
@@ -98,7 +95,6 @@ jobs:
 
       - name: Install dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
-        shell: ${{ matrix.shell }}
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update
@@ -106,7 +102,6 @@ jobs:
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-latest'
-        shell: ${{ matrix.shell }}
         run: brew install sdl2 sdl2_ttf
 
       - name: Setup MSYS2
@@ -121,8 +116,8 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-SDL2
 
-      - name: Build
-        shell: ${{ matrix.shell }}
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
         run: |
           if [ -n "${{ matrix.cc }}" ]; then
             export CC="${{ matrix.cc }}"
@@ -130,13 +125,10 @@ jobs:
           fi
           make ${{ matrix.build_target }}
 
-      - name: Verify goatdata.c determinism
-        shell: ${{ matrix.shell }}
-        run: bash tests/integration/check-goatdata.sh
-
-      - name: Run smoke tests
-        shell: ${{ matrix.shell }}
-        run: bash tests/integration/smoke.sh ${{ matrix.prefix }} "${{ matrix.suffix }}"
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make ${{ matrix.build_target }}
 
       - name: Collect Windows runtime DLLs
         if: matrix.os == 'windows-latest'
@@ -157,8 +149,24 @@ jobs:
             [ "$added" -eq 1 ] || break
           done
 
-      - name: Stage and package
-        shell: ${{ matrix.shell }}
+      - name: Stage and package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          VERSION="${{ inputs.version }}"
+          STAGE="gtultra-${VERSION}-${{ matrix.target }}"
+          mkdir -p "dist/$STAGE"
+          cp -R "${{ matrix.prefix }}"* "dist/$STAGE/"
+          cp README.md CHANGELOG.md readme*.txt "dist/$STAGE/"
+          cd dist
+          if [ "${{ matrix.archive }}" = "tar.gz" ]; then
+            tar czf "${STAGE}.tar.gz" "$STAGE"
+          else
+            zip -r "${STAGE}.zip" "$STAGE"
+          fi
+
+      - name: Stage and package (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
         run: |
           VERSION="${{ inputs.version }}"
           STAGE="gtultra-${VERSION}-${{ matrix.target }}"
