@@ -6,7 +6,6 @@
 - [x] Task 2: Fix nested list indentation (`a.`, `b.`, `i.`, `ii.`, etc.)
 - [x] Task 3: Clean extraction artifacts (merged blocks, empty marker lines, split sentences)
 - [x] Task 4: Add 'Back to index' footer to each section file
-- [ ] Task 5: Improve image alt text and verify placement
 - [x] Task 6: Restructure manual so pages are joined into correct sections
 - [x] Task 7: Stage/commit working tree changes
 
@@ -98,9 +97,9 @@ Level 4 `####` subheadings under `5. Transport bar` are nested inside `feature-5
 
 ## Next Immediate Task
 
-Task 5: Improve image alt text and verify placement (in_progress).
+All tracked tasks completed.
 
 ## Later Steps
 
-1. Task 5: Improve image alt text and rename images to `{section-name}-img-{N}.png`.
+No remaining tracked tasks.
 
