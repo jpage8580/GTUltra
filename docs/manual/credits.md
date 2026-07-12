@@ -23,5 +23,4 @@ acrouzet, JCH, spider-j, TheRyk, DeMOSic, Groepaz, Youth, zzarko, theK
 
 And, of course, thanks to Emma. x
 
-
-[Back to index](README.md)
+[<<<](whats-new-130.md) | [index](README.md) | [>>>](features-compared.md)

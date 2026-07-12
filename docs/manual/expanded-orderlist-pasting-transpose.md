@@ -2,4 +2,4 @@
 
 a. If the cursor position is in the transpose column when pasting, only the transpose values are set
 
-[Back to index](README.md)
+[<<<](expanded-orderlist-copy-cut-paste.md) | [index](README.md) | [>>>](expanded-orderlist-setting-transpose.md)

@@ -1,4 +1,4 @@
 ### 20. Quick Save
 a. Ctrl-S at any time to save song using current file name
 
-[Back to index](README.md)
+[<<<](song-overall-time.md) | [index](README.md) | [>>>](info-line.md)

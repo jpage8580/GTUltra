@@ -2,4 +2,4 @@
 
 a. These key combinations emulate clicking on the previous / next icons in the transport bar.
 
-[Back to index](README.md)
+[<<<](midi-port-select.md) | [index](README.md) | [>>>](sid-export.md)

@@ -17,5 +17,4 @@ e. If 4 SID chips are selected for playback, the view shows 4 values:
     i. As you can see, panning is set to Left,Right,Left,Right for each SID chip
 f. This panning information (a set of 4 values for SIDs 1-4) is saved in the GTUltra.cfg file
 
-
-[Back to index](README.md)
+[<<<](true-stereo.md) | [index](README.md) | [>>>](multi-channel-playback.md)

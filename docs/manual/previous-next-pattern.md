@@ -3,4 +3,4 @@
 a. Scrolling to top or bottom of a pattern will automatically move to the previous / next song position, displaying correct patterns. This can be disabled by
     editing the GTUltra.CFG file
 
-[Back to index](README.md)
+[<<<](load-save-screen.md) | [index](README.md) | [>>>](tables-by-colour.md)

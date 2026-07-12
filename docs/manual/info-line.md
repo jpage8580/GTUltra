@@ -8,5 +8,4 @@ c. Example2: Displaying the filter table information:
 
     ![image](../images/manual/info-line-img-2.png)
 
-
-[Back to index](README.md)
+[<<<](quick-save.md) | [index](README.md) | [>>>](master-channel.md)

@@ -4,4 +4,4 @@
 
 a. See True Stereo section
 
-[Back to index](README.md)
+[<<<](instrument-use-count.md) | [index](README.md) | [>>>](transport-bar.md)

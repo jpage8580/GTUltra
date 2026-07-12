@@ -5,4 +5,4 @@ a. Up to 3 channels can be played for every enabled SID chip
         ![image](../images/manual/jam-mode-img-1.png)
     ii. KeyOff (release) is automatically performed when releasing keys
 
-[Back to index](README.md)
+[<<<](f3-shift-space.md) | [index](README.md) | [>>>](jam-mode-notes.md)

@@ -12,5 +12,4 @@ a. The following information is saved within the GTUltra .sng file
     ix. Stereo mode (mono, stereo or TrueStereo panning)
 b. On loading a .sng, the editor settings will then be set accordingly.
 
-
-[Back to index](README.md)
+[<<<](automatic-sng-backup.md) | [index](README.md) | [>>>](expanded-orderlist-view.md)

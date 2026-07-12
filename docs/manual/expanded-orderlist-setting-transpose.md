@@ -5,4 +5,4 @@ b. When the cursor is in the transpose value column, use keys 0-F (or 0-E for po
 c. If you change the transpose value of a currently playing pattern within the orderlist, you will hear the difference in pitch instantly (in  Classic  view, the
     transpose value is only refreshed when playback starts a new pattern)
 
-[Back to index](README.md)
+[<<<](expanded-orderlist-pasting-transpose.md) | [index](README.md) | [>>>](expanded-orderlist-compressed-size.md)

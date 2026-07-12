@@ -5,4 +5,4 @@ a. There are now 3 different auto-advance modes (SHIFT-Z) when entering data, de
     ii. All (Advance when entering notes or values)
     iii. OFF (no auto advance)
 
-[Back to index](README.md)
+[<<<](pattern-order-change.md) | [index](README.md) | [>>>](mouse-wheel.md)

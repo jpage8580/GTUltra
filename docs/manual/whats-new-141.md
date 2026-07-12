@@ -9,5 +9,4 @@
 - MIDI (general) fixed (hasn’t worked since 1.3.0. Sorry)
 - 4SID export fix (GTUltra quits when exporting, due to 6510 BCS being out of range)
 
-
-[Back to index](README.md)
+[<<<](whats-new-150.md) | [index](README.md) | [>>>](whats-new-130.md)

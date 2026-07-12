@@ -15,4 +15,4 @@ d. The  **  shows that the size of the channel is invalid  (over 256 bytes). As 
     saved or exported  -  until the data in this channel  has been reduced to a valid
     size.
 
-[Back to index](README.md)
+[<<<](expanded-orderlist-setting-transpose.md) | [index](README.md) | [>>>](expanded-orderlist-repeat-end-markers.md)

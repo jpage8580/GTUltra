@@ -2,4 +2,4 @@
 
 a. Colour changed to GREEN (load) or RED (save) so that it’s easier to realise that you’re about to accidentally wipe over your work, rather than load it!
 
-[Back to index](README.md)
+[<<<](midi-note-input.md) | [index](README.md) | [>>>](previous-next-pattern.md)

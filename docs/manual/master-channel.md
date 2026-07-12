@@ -12,5 +12,4 @@ c. This then takes into consideration the different pattern lengths, pattern rep
     in the order list or channel-specific tempo changes, life would have been far
     simpler!)
 
-
-[Back to index](README.md)
+[<<<](info-line.md) | [index](README.md) | [>>>](f8-edit-tables.md)

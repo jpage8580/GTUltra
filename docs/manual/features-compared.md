@@ -1,4 +1,3 @@
 ## Features compared to GTStereo
 
-
-[Back to index](README.md)
+[<<<](credits.md) | [index](README.md) | [>>>](updated-display.md)

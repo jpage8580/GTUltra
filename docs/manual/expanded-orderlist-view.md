@@ -23,4 +23,4 @@ d. Compressing using the repeat command can be disabled by editing an entry in t
     views. However, it is still recommended to enable this setting when you want
     to export to .SID, so that the file size is as small as possible.
 
-[Back to index](README.md)
+[<<<](editor-info-sng.md) | [index](README.md) | [>>>](expanded-orderlist-copy-cut-paste.md)

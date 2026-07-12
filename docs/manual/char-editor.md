@@ -16,4 +16,4 @@ g. Largely untested and not exactly Photoshop - But it did the job.
 h. Charset 1 / 2
     i. A second charset is used for specific purposes. Charsets can be selected by clicking on the 1 / 2 text next to the char set.
 
-[Back to index](README.md)
+[<<<](palette-editor.md) | [index](README.md) | [>>>](f2-changed-function.md)

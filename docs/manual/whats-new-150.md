@@ -37,4 +37,4 @@
 - Added new .sng file (JasonPage/RType: Amiga2SID.sng)
   - This uses the SIDTracker64 mode
 
-[Back to index](README.md)
+[<<<](what-is-it.md) | [index](README.md) | [>>>](whats-new-141.md)

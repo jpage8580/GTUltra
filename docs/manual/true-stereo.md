@@ -33,5 +33,4 @@ f. Stereo SID emulation trivia:
     i. Stereo SID emulation uses the unused 4 bits of the Pulse Width High byte ($D403, $D40A, $D411). Therefore keeping somewhat to the possibility of reality in what a stereo SID could have achieved.
 g. Panning information is ignored if True Stereo is not enabled
 
-
-[Back to index](README.md)
+[<<<](transport-bar.md) | [index](README.md) | [>>>](stereo-panning.md)

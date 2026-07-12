@@ -4,4 +4,4 @@ a. When pattern looping  AND Selected Area looping is  also enabled , if a highl
     area), playback will loop within this area. As with pattern looping, all channels
     will loop correctly, using the highlighted channel as the Master Channel
 
-[Back to index](README.md)
+[<<<](copy-changes.md) | [index](README.md) | [>>>](improved-enter-key.md)

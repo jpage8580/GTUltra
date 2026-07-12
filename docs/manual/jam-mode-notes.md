@@ -8,5 +8,4 @@ b. Holding a single note will display the number
 
     ![image](../images/manual/jam-mode-notes-img-2.png)
 
-
-[Back to index](README.md)
+[<<<](jam-mode.md) | [index](README.md) | [>>>](midi-note-input.md)

@@ -8,4 +8,4 @@ c. 3 channel SID option only.
 
     ![image](../images/manual/zeropage-sid-playback-img-1.png)
 
-[Back to index](README.md)
+[<<<](drag-and-drop.md) | [index](README.md) | >>>

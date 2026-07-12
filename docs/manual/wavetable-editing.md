@@ -26,4 +26,4 @@ e. For Relative notes, you can also click on the + or - to swap between positive
 f. Pressing ENTER when the cursor is on a command value will move the cursor to the correct entry within the speed table (if applicable)
 g. Remember that the combination of CTRL-C / CTRL-V can be used to quickly copy & paste single entries
 
-[Back to index](README.md)
+[<<<](improved-enter-key.md) | [index](README.md) | [>>>](pulse-table-editing.md)

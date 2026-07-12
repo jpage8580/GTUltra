@@ -2,5 +2,4 @@
 
 GTUltra is an enhanced version of GoatTracker editor.
 
-
-[Back to index](README.md)
+<<< | [index](README.md) | [>>>](whats-new-150.md)

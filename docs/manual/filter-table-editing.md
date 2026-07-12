@@ -29,4 +29,4 @@ d. When modifying filter cutoff, the right column (speed can be changed from + t
     ![image](../images/manual/filter-table-editing-img-4.png)
 e. Remember that the combination of CTRL-C / CTRL-V can be used to quickly copy & paste single entries
 
-[Back to index](README.md)
+[<<<](pulse-table-editing.md) | [index](README.md) | [>>>](waveform-editor.md)

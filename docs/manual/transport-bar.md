@@ -87,5 +87,4 @@ iv. This allows for testbit effects to be tuned to the music
 
     ![image](../images/manual/transport-bar-img-6.png)
 
-
-[Back to index](README.md)
+[<<<](instrument-true-stereo-panning.md) | [index](README.md) | [>>>](true-stereo.md)

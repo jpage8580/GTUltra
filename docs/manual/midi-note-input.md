@@ -6,5 +6,4 @@ b. Connecting a MIDI keyboard  BEFORE STARTING GT-ULTRA  allows for MIDI keyboar
     i. MIDI keyboard input works in jam mode when also editing tables / instruments
 c. Shift-click on the keyboard button in the transport bar to go to Midi Settings panel
 
-
-[Back to index](README.md)
+[<<<](jam-mode-notes.md) | [index](README.md) | [>>>](load-save-screen.md)

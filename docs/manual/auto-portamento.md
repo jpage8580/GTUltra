@@ -9,6 +9,4 @@ d. Idea taken from the BRILLIANT SIDTracker 64 by Daniel Larsson
 
     ![image](../images/manual/auto-portamento-img-2.png)
 
-
-
-[Back to index](README.md)
+[<<<](tables-by-colour.md) | [index](README.md) | [>>>](song-overall-time.md)

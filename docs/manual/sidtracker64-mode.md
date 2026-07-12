@@ -19,4 +19,4 @@ e. Multiple KeyOn commands are now also compressed when exporting to .SID file i
     note and note length is stored. Now, the keyon and keyon length is stored if
     necessary)
 
-[Back to index](README.md)
+[<<<](mouse-wheel.md) | [index](README.md) | [>>>](drag-and-drop.md)

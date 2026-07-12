@@ -16,4 +16,4 @@ c. When modifying pulse width, the right column (speed can be changed from + to 
     ![image](../images/manual/pulse-table-editing-img-3.png)
 d. Remember that the combination of CTRL-C / CTRL-V can be used to quickly copy & paste single entries
 
-[Back to index](README.md)
+[<<<](wavetable-editing.md) | [index](README.md) | [>>>](filter-table-editing.md)
