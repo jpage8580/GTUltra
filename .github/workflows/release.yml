@@ -114,7 +114,11 @@ jobs:
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-latest'
-        run: brew install sdl2 sdl2_ttf
+        run: |
+          # Drop the runner's pre-installed, untrusted aws/tap (unrelated to us) so its
+          # tap-trust warning doesn't spam the build. Best-effort; may not exist.
+          brew untap aws/tap || true
+          brew install sdl2 sdl2_ttf
 
       - name: Setup MSYS2
         if: matrix.os == 'windows-latest'
