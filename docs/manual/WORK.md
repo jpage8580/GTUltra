@@ -8,6 +8,7 @@
 - [x] Task 4: Add 'Back to index' footer to each section file
 - [x] Task 6: Restructure manual so pages are joined into correct sections
 - [x] Task 7: Stage/commit working tree changes
+- [ ] Task 8: Review PDF vs converted docs
 
 ## Naming Requirements
 
@@ -97,9 +98,9 @@ Level 4 `####` subheadings under `5. Transport bar` are nested inside `feature-5
 
 ## Next Immediate Task
 
-All tracked tasks completed.
+Task 8: Review PDF vs converted docs (pending).
 
 ## Later Steps
 
-No remaining tracked tasks.
+1. Task 8: Review PDF vs converted docs.
 
