@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- GitHub Actions release workflow (`workflow_dispatch`) with version/overwrite/prerelease inputs, per-platform builds, Windows runtime DLL bundling, source archive, and SHA256 checksums
+- GitHub Actions release workflow (`workflow_dispatch`) with version/overwrite inputs, per-platform builds (Linux x86_64 + aarch64, macOS arm64, Windows x86_64), Windows runtime DLL bundling, source archive, and SHA256 checksums; pre-releases are auto-detected from a `-rc` tag suffix (no separate input)
+- Linux `aarch64` build leg in CI (`build-linux.yml`), matrixed alongside `x86_64` on native ARM runners
 - Cross-platform `goatdata.c` determinism gate: `tests/integration/check-goatdata.sh` compares the regenerated player data against the committed reference `tests/goatdata.sha256`, wired into all three build workflows (confirmed byte-identical on Linux/macOS/Windows)
 - `.gitattributes` enforcing LF on packed player inputs (`*.s`, `*.seq`, `*.gtp`) and binary handling for packed resources, so generation is identical on every OS
 - `CLAUDE.md` agent guide (index of key files and rules) with `AGENTS.md` as a symlink to it

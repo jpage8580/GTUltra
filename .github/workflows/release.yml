@@ -1,8 +1,6 @@
 name: Release
 
 on:
-  push:
-    branches: [distrib] #remove on-push before merge
   workflow_dispatch:
     inputs:
       version:
