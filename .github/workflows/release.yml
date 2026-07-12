@@ -1,0 +1,247 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to release'
+        required: true
+        type: string
+      overwrite:
+        description: 'Overwrite an existing release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate release inputs
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: refs/tags/${{ inputs.version }}
+          fetch-depth: 0
+
+      - name: Validate tag exists
+        run: git rev-parse "refs/tags/${{ inputs.version }}" >/dev/null
+
+      - name: Check release does not already exist
+        if: ${{ !inputs.overwrite }}
+        run: |
+          if gh release view "${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "Release ${{ inputs.version }} already exists. Set overwrite=true to replace it."
+            exit 1
+          fi
+
+      - name: Check changelog section exists
+        run: |
+          VERSION_NO_V="${{ inputs.version }}"
+          VERSION_NO_V="${VERSION_NO_V#v}"
+          grep -q "^## \\[${VERSION_NO_V}\\] - " CHANGELOG.md
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: validate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x86_64
+            build_target: linux-build
+            prefix: linux/
+            suffix: ""
+            archive: tar.gz
+            cc: gcc-16
+            cxx: g++-16
+          - os: ubuntu-24.04-arm
+            target: linux-aarch64
+            build_target: linux-build
+            prefix: linux/
+            suffix: ""
+            archive: tar.gz
+            cc: gcc-16
+            cxx: g++-16
+          - os: macos-latest
+            target: macos-arm64
+            build_target: mac-build
+            prefix: mac/
+            suffix: ""
+            archive: tar.gz
+            cc: ""
+            cxx: ""
+          - os: windows-latest
+            target: windows-x86_64
+            build_target: win-build
+            prefix: win32/
+            suffix: ".exe"
+            archive: zip
+            cc: ""
+            cxx: ""
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: refs/tags/${{ inputs.version }}
+          fetch-depth: 0
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-16 g++-16 libsdl2-dev libsdl2-ttf-dev libasound2-dev
+
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install sdl2 sdl2_ttf
+
+      - name: Setup MSYS2
+        if: matrix.os == 'windows-latest'
+        uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make
+            zip
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-SDL2
+
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          if [ -n "${{ matrix.cc }}" ]; then
+            export CC="${{ matrix.cc }}"
+            export CXX="${{ matrix.cxx }}"
+          fi
+          make ${{ matrix.build_target }}
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make ${{ matrix.build_target }}
+
+      - name: Collect Windows runtime DLLs
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          cd "${{ matrix.prefix }}"
+          while true; do
+            added=0
+            for pe in *.exe *.dll; do
+              [ -e "$pe" ] || continue
+              for dll in $(objdump -p "$pe" | awk '/DLL Name:/{print $3}'); do
+                if [ -f "/mingw64/bin/$dll" ] && [ ! -f "$dll" ]; then
+                  cp -n "/mingw64/bin/$dll" .
+                  added=1
+                fi
+              done
+            done
+            [ "$added" -eq 1 ] || break
+          done
+
+      - name: Stage and package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          VERSION="${{ inputs.version }}"
+          STAGE="gtultra-${VERSION}-${{ matrix.target }}"
+          mkdir -p "dist/$STAGE"
+          cp -R "${{ matrix.prefix }}"* "dist/$STAGE/"
+          cp README.md CHANGELOG.md readme*.txt "dist/$STAGE/"
+          cd dist
+          if [ "${{ matrix.archive }}" = "tar.gz" ]; then
+            tar czf "${STAGE}.tar.gz" "$STAGE"
+          else
+            zip -r "${STAGE}.zip" "$STAGE"
+          fi
+
+      - name: Stage and package (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          VERSION="${{ inputs.version }}"
+          STAGE="gtultra-${VERSION}-${{ matrix.target }}"
+          mkdir -p "dist/$STAGE"
+          cp -R "${{ matrix.prefix }}"* "dist/$STAGE/"
+          cp README.md CHANGELOG.md readme*.txt "dist/$STAGE/"
+          cd dist
+          if [ "${{ matrix.archive }}" = "tar.gz" ]; then
+            tar czf "${STAGE}.tar.gz" "$STAGE"
+          else
+            zip -r "${STAGE}.zip" "$STAGE"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/gtultra-${{ inputs.version }}-${{ matrix.target }}.${{ matrix.archive }}
+
+  release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: refs/tags/${{ inputs.version }}
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          path: dist
+          pattern: release-*
+          merge-multiple: true
+
+      - name: Create source archive
+        run: |
+          VERSION="${{ inputs.version }}"
+          mkdir -p dist
+          git archive --format=tar.gz --prefix="gtultra-${VERSION}/" -o "dist/gtultra-${VERSION}-src.tar.gz" "refs/tags/${VERSION}"
+
+      - name: Generate SHA256 checksums
+        run: |
+          VERSION="${{ inputs.version }}"
+          cd dist
+          shopt -s nullglob
+          for f in gtultra-*.{tar.gz,zip}; do
+            sha256sum "$f" > "$f.sha256"
+          done
+          sha256sum gtultra-*.{tar.gz,zip} > "gtultra-${VERSION}-checksums.sha256"
+
+      - name: Extract release notes
+        run: |
+          VERSION_NO_V="${{ inputs.version }}"
+          VERSION_NO_V="${VERSION_NO_V#v}"
+          awk -v ver="${VERSION_NO_V}" '
+            /^## \[/ { if (found) exit; if ($0 ~ "^## \\[" ver "\\] - ") found=1 }
+            found
+          ' CHANGELOG.md > release-notes.md
+
+      - name: Delete existing release (overwrite)
+        if: ${{ inputs.overwrite }}
+        run: gh release delete --yes "${{ inputs.version }}" || true
+
+      - name: Publish release
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        with:
+          tag_name: ${{ inputs.version }}
+          name: GTUltra ${{ inputs.version }}
+          body_path: release-notes.md
+          files: dist/*
+          prerelease: ${{ contains(inputs.version, '-rc') }}
+          make_latest: ${{ contains(inputs.version, '-rc') && 'false' || 'true' }}
