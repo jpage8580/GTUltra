@@ -28,10 +28,11 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: refs/tags/${{ inputs.version }}
-          fetch-depth: 0
-          # Only the explicit tag ref above is needed; skip the bulk tag fetch, which
-          # collides on case-insensitive runners (macOS/Windows) over the legacy
-          # mixed-case tags (e.g. v1.4.2.2 vs V1.4.2.2).
+          # Shallow, single-ref checkout of just the release tag. fetch-depth: 0 would pull
+          # ALL tags (fetch-tags is ignored at depth 0), which collide on case-insensitive
+          # runners over the legacy mixed-case tags (e.g. v1.4.2.2 vs V1.4.2.2). No job here
+          # needs full history (rev-parse the tag, grep CHANGELOG, git archive the tag, build).
+          fetch-depth: 1
           fetch-tags: false
 
       - name: Validate tag exists
@@ -97,10 +98,11 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: refs/tags/${{ inputs.version }}
-          fetch-depth: 0
-          # Only the explicit tag ref above is needed; skip the bulk tag fetch, which
-          # collides on case-insensitive runners (macOS/Windows) over the legacy
-          # mixed-case tags (e.g. v1.4.2.2 vs V1.4.2.2).
+          # Shallow, single-ref checkout of just the release tag. fetch-depth: 0 would pull
+          # ALL tags (fetch-tags is ignored at depth 0), which collide on case-insensitive
+          # runners over the legacy mixed-case tags (e.g. v1.4.2.2 vs V1.4.2.2). No job here
+          # needs full history (rev-parse the tag, grep CHANGELOG, git archive the tag, build).
+          fetch-depth: 1
           fetch-tags: false
 
       - name: Install dependencies (Linux)
@@ -207,10 +209,11 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: refs/tags/${{ inputs.version }}
-          fetch-depth: 0
-          # Only the explicit tag ref above is needed; skip the bulk tag fetch, which
-          # collides on case-insensitive runners (macOS/Windows) over the legacy
-          # mixed-case tags (e.g. v1.4.2.2 vs V1.4.2.2).
+          # Shallow, single-ref checkout of just the release tag. fetch-depth: 0 would pull
+          # ALL tags (fetch-tags is ignored at depth 0), which collide on case-insensitive
+          # runners over the legacy mixed-case tags (e.g. v1.4.2.2 vs V1.4.2.2). No job here
+          # needs full history (rev-parse the tag, grep CHANGELOG, git archive the tag, build).
+          fetch-depth: 1
           fetch-tags: false
 
       - name: Download build artifacts

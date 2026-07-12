@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Release workflow: node24 artifact actions, `fetch-tags: false` on checkouts (avoids legacy mixed-case tag collision on case-insensitive runners)
+- Release workflow: node24 artifact actions, shallow single-tag release checkouts (avoids legacy mixed-case tag collision on case-insensitive runners)
 
 ## [1.5.7] - 2026-07-13
 
