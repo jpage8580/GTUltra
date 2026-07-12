@@ -15,4 +15,4 @@ d. The  **  shows that the size of the channel is invalid  (over 256 bytes). As 
     saved or exported  -  until the data in this channel  has been reduced to a valid
     size.
 
-[Back to index](index.md)
+[Back to index](README.md)

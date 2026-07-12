@@ -9,4 +9,4 @@ c. Example2: Displaying the filter table information:
     ![image](../images/manual/info-line-img-2.png)
 
 
-[Back to index](index.md)
+[Back to index](README.md)

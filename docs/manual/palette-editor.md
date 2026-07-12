@@ -18,4 +18,4 @@ h. Click on COPY ALL to copy all RGBs for this preset
 i. Press Ctrl-V or click PASTE to paste either current RGB or ALL (overwrites all RGBs for palette), depending on what was last copied.
 j. WARNING: NO UNDO.
 
-[Back to index](index.md)
+[Back to index](README.md)

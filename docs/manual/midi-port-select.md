@@ -7,4 +7,4 @@ b. This opens the MIDI Port Select Panel.
 c. Use up/down to select MIDI port
 d. Exit and restart GTUltra for the newly selected MIDI port to take effect.
 
-[Back to index](index.md)
+[Back to index](README.md)

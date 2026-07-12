@@ -93,7 +93,7 @@ Level 4 `####` subheadings under `5. Transport bar` are nested inside `feature-5
 1. **Parent / child structure**: `features-compared.md` is the parent file with the `## Features compared to GTStereo` heading. Each `### 1.` – `### 57.` feature becomes its own file.
 2. **`5. Transport bar` subsections**: The `a.` – `p.` (including `i. Record ON / OFF`) `####` subheadings stay inside `feature-5-transport-bar.md`.
 3. **Sections that span multiple source pages**: `5. Transport bar`, `7. Stereo Panning`, `10. Song playback from anywhere`, `25. Palette Editor`, `26. Char Editor`, `35. Detailed Table Editing: Filter Table`, `42. Expanded OrderList View`, `47. Expanded OrderList - Repeat / End Markers`, `51. GT2Reloc.exe`, `55. SIDTracker64 Mode`, and `What’s new for 1.5.0?` (pages 3–4).
-4. **Index (`docs/manual/index.md`)**: The TOC links will need to point to the new section files. `features-compared.md` can link or list its child feature files.
+4. **Index (`docs/manual/README.md`)**: The TOC links will need to point to the new section files. `features-compared.md` can link or list its child feature files.
 5. **Images**: Image files are named `page-NN-img-N.png` and referenced with `../images/manual/...`. Relative paths stay valid as long as section files are in `docs/manual/` (or a subdirectory) and image references are updated only if needed.
 
 ## Next Immediate Task

@@ -3,4 +3,4 @@
 a. Drag .sng files and drop them into the GTUltra editor window to automatically load them
 b. No need to use F10 to find / load a .sng now
 
-[Back to index](index.md)
+[Back to index](README.md)

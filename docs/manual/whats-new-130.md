@@ -12,4 +12,4 @@
 - Editor settings are now saved in .sng files:
   - FV, PO, RO, NTSC/PAL, SID Type, HR Value, Speed,  # SIDs, Stereo mode
 
-[Back to index](index.md)
+[Back to index](README.md)

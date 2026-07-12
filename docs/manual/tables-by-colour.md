@@ -7,4 +7,4 @@ c. Unused entries (00 00) are shown as muted (grey, in this screenshot)
     ![image](../images/manual/tables-by-colour-img-1.png)
 
 
-[Back to index](index.md)
+[Back to index](README.md)

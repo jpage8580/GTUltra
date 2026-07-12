@@ -7,4 +7,4 @@ b. All patterns are synced correctly (taking into consideration channel tempo an
 c. Using F3 means that it’s possible to play whilst also modifying instrument or table values
 d. Disabling FOLLOW allows for quick playing from a specific pattern position, whilst allowing you to edit instrument or table information.
 
-[Back to index](index.md)
+[Back to index](README.md)

@@ -6,4 +6,4 @@ c. In 1.5.0 update, the order is based on when the pattern is played within the 
     first in the .SID file.
 d. Why? This makes it easier to track and reuse memory if a pattern is no longer going to play again, if used in a game or demo with tight memory restrictions
 
-[Back to index](index.md)
+[Back to index](README.md)

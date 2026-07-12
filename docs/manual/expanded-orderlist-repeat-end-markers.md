@@ -10,4 +10,4 @@ d. Other than this, the same rules apply:
     i. A value that is lower than the FF position will cause the channel to loop to the position specified
     ii. A value that is higher or equal to the FF position will cause the song to stop.
 
-[Back to index](index.md)
+[Back to index](README.md)

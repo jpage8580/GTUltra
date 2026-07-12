@@ -9,4 +9,4 @@ b. Holding a single note will display the number
     ![image](../images/manual/jam-mode-notes-img-2.png)
 
 
-[Back to index](index.md)
+[Back to index](README.md)

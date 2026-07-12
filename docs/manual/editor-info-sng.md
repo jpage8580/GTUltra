@@ -13,4 +13,4 @@ a. The following information is saved within the GTUltra .sng file
 b. On loading a .sng, the editor settings will then be set accordingly.
 
 
-[Back to index](index.md)
+[Back to index](README.md)

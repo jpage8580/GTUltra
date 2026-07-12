@@ -5,4 +5,4 @@ b. When Ctrl-C is used to copy a single entry within the pattern view, the curre
     quick selecting of instruments.
 c. The functionality to copy the whole of a pattern row is still available via Shift-C
 
-[Back to index](index.md)
+[Back to index](README.md)

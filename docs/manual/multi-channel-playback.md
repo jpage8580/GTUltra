@@ -9,4 +9,4 @@ b. Example: 9 channel (3 SID) song shows SUBTUNE 01 as only 3 channels
     ![image](../images/manual/multi-channel-playback-img-1.png)
 
 
-[Back to index](index.md)
+[Back to index](README.md)

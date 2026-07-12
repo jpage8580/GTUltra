@@ -7,4 +7,4 @@ b. CTRL_C / CTRL_V / CTRL_X to copy/paste/cut
 c. Unlike the classic view, CTRL_V (paste) will  not  insert  new rows prior to pasting.
 d. To insert copied data in expanded view, use CTRL_I to insert the clipboard
 
-[Back to index](index.md)
+[Back to index](README.md)

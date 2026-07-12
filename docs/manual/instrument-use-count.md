@@ -3,4 +3,4 @@
 a. Displays how many times an instrument has been used in all patterns
 b. Allows you to quickly find unused instruments
 
-[Back to index](index.md)
+[Back to index](README.md)

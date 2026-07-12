@@ -11,4 +11,4 @@ b. Click on the numbers next to FILE (above the order list view) to select a son
     iv. You can copy from one song and paste into another
     v. Song playback will stop when changing the FILE value
 
-[Back to index](index.md)
+[Back to index](README.md)

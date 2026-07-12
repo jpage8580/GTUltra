@@ -7,4 +7,4 @@ b. Connecting a MIDI keyboard  BEFORE STARTING GT-ULTRA  allows for MIDI keyboar
 c. Shift-click on the keyboard button in the transport bar to go to Midi Settings panel
 
 
-[Back to index](index.md)
+[Back to index](README.md)

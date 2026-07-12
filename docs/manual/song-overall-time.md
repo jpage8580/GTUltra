@@ -6,4 +6,4 @@ b. Time is either the length for the last channel to loop, or the first channel 
     ![image](../images/manual/song-overall-time-img-1.png)
 
 
-[Back to index](index.md)
+[Back to index](README.md)

@@ -34,4 +34,4 @@ f. Stereo SID emulation trivia:
 g. Panning information is ignored if True Stereo is not enabled
 
 
-[Back to index](index.md)
+[Back to index](README.md)

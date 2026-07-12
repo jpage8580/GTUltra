@@ -8,4 +8,4 @@ b. Also highlights when a channel has filter enabled (red dot)
     ![image](../images/manual/filter-information-img-2.png)
 
 
-[Back to index](index.md)
+[Back to index](README.md)
