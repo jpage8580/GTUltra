@@ -40,3 +40,42 @@ jobs:
 
       - name: Run smoke tests
         run: bash tests/integration/smoke.sh linux/ ""
+
+  # ASan/UBSan gate. Reproduces the class of bug behind issue #76 (heap buffer
+  # overflow in setPaletteName) with a symbolized report and fails the build on it.
+  # Linux only: MinGW GCC ships no libasan, and macOS does not exercise the startup
+  # overflow path (see tests/docs/handover-issue-76.md). Builds with SANITIZE=1
+  # (adds -fsanitize=address,undefined, disables FORTIFY, skips strip).
+  asan:
+    name: Linux ASan/UBSan
+    runs-on: ubuntu-latest
+    env:
+      SDL_VIDEODRIVER: dummy
+      # detect_leaks=0: the editor/tools never free globals -> LSan would flood the run
+      # with benign leaks and break the CLI usage exit-code checks. abort_on_error=1 so a
+      # real error aborts (smoke.sh flags exit 134 and greps the sanitizer output).
+      ASAN_OPTIONS: detect_leaks=0:abort_on_error=1
+      UBSAN_OPTIONS: print_stacktrace=1
+      # Scope this gate to the gtultra startup path (where #76 lives). SKIP_USAGE avoids
+      # the CLI usage checks, which under ASan trip a *separate* pre-existing bug
+      # (global-buffer-overflow in clearsong, gsong.c:1703 - see tests/docs/known-bugs.md).
+      # Widen coverage in the follow-up that fixes that bug.
+      SKIP_USAGE: 1
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install dependencies
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-16 g++-16 libsdl2-dev libsdl2-ttf-dev libasound2-dev
+
+      - name: Build (ASan/UBSan)
+        run: make linux-rebuild SANITIZE=1
+        env:
+          CC: gcc-16
+          CXX: g++-16
+
+      - name: Run smoke tests (sanitized)
+        run: bash tests/integration/smoke.sh linux/ ""

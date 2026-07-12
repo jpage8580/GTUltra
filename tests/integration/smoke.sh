@@ -100,15 +100,33 @@ fi
 
 if [ "$SKIP_GTULTRA" -eq 0 ]; then
   echo -e "\n=== gtultra startup smoke test ==="
+  gtultra_err=$(mktemp)
   set +e
-  run_with_timeout 5 "$GTULTRA" -? >/dev/null 2>&1
+  run_with_timeout 5 "$GTULTRA" -? >/dev/null 2>"$gtultra_err"
   gtultra_ec=$?
   set -e
-  if [ "$gtultra_ec" -eq 139 ] || [ "$gtultra_ec" -eq 138 ]; then
+  # A healthy headless startup runs until the timeout kills it (124 from `timeout`,
+  # 143 from the SIGTERM fallback) or exits cleanly (0). Fatal-signal exit codes (128+N)
+  # mean a real crash: 134=SIGABRT (glibc FORTIFY / ASan abort), 139=SIGSEGV, 138=SIGBUS,
+  # 136=SIGFPE, 132=SIGILL (e.g. UBSan trap). (137=SIGKILL is intentionally NOT treated as
+  # a crash: no timeout path here produces it, but --kill-after/OOM could -> avoid false
+  # fails.) Also scan stderr for sanitizer / FORTIFY diagnostics, which can print without a
+  # fatal exit code (Linux ASan defaults to exit 1, not abort). This is what catches #76.
+  gtultra_crash=0
+  case "$gtultra_ec" in
+    132|134|135|136|138|139) gtultra_crash=1 ;;
+  esac
+  if grep -qiE 'AddressSanitizer|UndefinedBehaviorSanitizer|runtime error:|buffer overflow detected|stack smashing detected' "$gtultra_err"; then
+    gtultra_crash=1
+  fi
+  if [ "$gtultra_crash" -ne 0 ]; then
     report 1 "gtultra crashed on startup (exit $gtultra_ec)"
+    echo "--- gtultra stderr (first 25 lines) ---" >&2
+    sed -n '1,25p' "$gtultra_err" >&2
   else
     report 0 "gtultra starts without crashing (exit $gtultra_ec)"
   fi
+  rm -f "$gtultra_err"
 else
   echo -e "\n=== Skipping gtultra startup smoke test ==="
 fi

@@ -8,6 +8,8 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 - Build determinism + `goatdata.c` rules: `tests/docs/build-determinism.md`
 - Known bugs / fixes: `tests/docs/known-bugs.md`
 - Testing strategy: `tests/docs/testing-strategy.md`
+- Handover / follow-ups: `tests/docs/handover-*.md` (issue-76, unused-result, gt2reloc-bug2, unit-tests, asm-pointer-cast)
+- Compiler warnings inventory: `tests/docs/warnings-tracking.md`
 - Main app (`gtultra`): `src/gt2stereo.c`; app logic: `src/g*.c`
 - CLI tools: `src/{gt2reloc,ins2snd2,mod2sng2,ss2stereo}.c`
 - 6510 player: `src/player*.s`, `src/altplayer*.s` (assembler: `src/asm/`)
@@ -16,8 +18,11 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 - `src/goatdata.c` is generated: never commit/edit; change packed inputs → follow `tests/docs/build-determinism.md`.
 - Do not modify vendored: `src/resid/`, `src/resid-fp/`, `src/asm/`, `src/RtMidi.*`, `src/bme/SDL/`.
 - Commits: single-line message; CHANGELOG carries the detail, updated only **after** the PR is ready to merge. New entries go under `[Unreleased]` — do not assign a version number until release.
-- Merge to `main` by **squash** only: `gh pr merge {PR} --squash --delete-branch`.
-- Both the **PR body** and the **squash merge commit body** must be exactly the single line `refer to CHANGELOG for details` — never duplicate CHANGELOG content in either.
-- No `Co-Authored-By` trailer on commits; no generated-by footer on PRs.
 - Do not bloat this file, leverage `## Index` above
+
+## Merge rules
+- Merge to `main` by **squash** only: `gh pr merge {PR} --squash --delete-branch`.
+- By default the **PR body** and the **squash merge commit body** are exactly the single line `refer to CHANGELOG for details` — never duplicate CHANGELOG content in either.
+- No `Co-Authored-By` trailer on commits; no generated-by footer on PRs.
+- **Exception — bulk-included contributions:** when a squash folds other contributors' work into a larger change (e.g. adopting or superseding their PRs), the squash-merge commit body extends beyond that single line to add (a) a concise one-line note of what was included, and (b) correct attribution — the commit `Author` for the primary contributor and/or `Co-authored-by:` trailers for each. Trailers are used only in this case.
 
