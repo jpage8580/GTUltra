@@ -25,14 +25,14 @@ void initpaths(void)
 	memset(songpath, 0, sizeof songpath);
 	memset(instrpath, 0, sizeof instrpath);
 	memset(packedpath, 0, sizeof packedpath);
-	strcpy(songfilter, "*.sng");
-	strcpy(wavfilter, "*.wav");
-	strcpy(instrfilter, "*.ins");
-	strcpy(palettefilter, "*.gtp");
+	snprintf(songfilter, MAX_FILENAME, "%s", "*.sng");
+	snprintf(wavfilter, MAX_FILENAME, "%s", "*.wav");
+	snprintf(instrfilter, MAX_FILENAME, "%s", "*.ins");
+	snprintf(palettefilter, MAX_FILENAME, "%s", "*.gtp");
 
 	getcwd(songpath, MAX_PATHNAME);
-	strcpy(instrpath, songpath);
-	strcpy(packedpath, songpath);
+	snprintf(instrpath, MAX_PATHNAME, "%s", songpath);
+	snprintf(packedpath, MAX_PATHNAME, "%s", songpath);
 
 
 
@@ -139,7 +139,7 @@ NEWPATH:
 				{
 					int c;
 					// If a file, must match filter
-					strcpy(cmpbuf, de->d_name);
+					snprintf(cmpbuf, sizeof(cmpbuf), "%s", de->d_name);
 					if ((!strcmp(filtptr, "*")) || (!strcmp(filtptr, ".*")))
 						files++;
 					else
@@ -286,7 +286,7 @@ NEWPATH:
 					if (filepos > files - 1) filepos = files - 1;
 
 					if (!direntry[filepos].attribute)
-						strcpy(name, direntry[filepos].name);
+						snprintf(name, MAX_FILENAME, "%s", direntry[filepos].name);
 
 
 					if (direntry[filepos].attribute)
@@ -315,7 +315,7 @@ NEWPATH:
 							if (tolower(direntry[filepos].name[0]) == k) break;
 					}
 
-					if (!direntry[filepos].attribute) strcpy(name, direntry[filepos].name);
+					if (!direntry[filepos].attribute) snprintf(name, MAX_FILENAME, "%s", direntry[filepos].name);
 				}
 			}
 
@@ -342,7 +342,7 @@ NEWPATH:
 				if (!filemode)
 				{
 					filepos = 0;
-					if (!direntry[filepos].attribute) strcpy(name, direntry[filepos].name);
+					if (!direntry[filepos].attribute) snprintf(name, MAX_FILENAME, "%s", direntry[filepos].name);
 				}
 				break;
 
@@ -350,7 +350,7 @@ NEWPATH:
 				if (!filemode)
 				{
 					filepos = files - 1;
-					if (!direntry[filepos].attribute) strcpy(name, direntry[filepos].name);
+					if (!direntry[filepos].attribute) snprintf(name, MAX_FILENAME, "%s", direntry[filepos].name);
 				}
 				break;
 
@@ -360,7 +360,7 @@ NEWPATH:
 					if ((!filemode) && (filepos > 0))
 					{
 						filepos--;
-						if (!direntry[filepos].attribute) strcpy(name, direntry[filepos].name);
+						if (!direntry[filepos].attribute) snprintf(name, MAX_FILENAME, "%s", direntry[filepos].name);
 					}
 				}
 				break;
@@ -369,7 +369,7 @@ NEWPATH:
 				if ((!filemode) && (filepos > 0))
 				{
 					filepos--;
-					if (!direntry[filepos].attribute) strcpy(name, direntry[filepos].name);
+					if (!direntry[filepos].attribute) snprintf(name, MAX_FILENAME, "%s", direntry[filepos].name);
 				}
 				break;
 
@@ -379,7 +379,7 @@ NEWPATH:
 					if ((!filemode) && (filepos < files - 1))
 					{
 						filepos++;
-						if (!direntry[filepos].attribute) strcpy(name, direntry[filepos].name);
+						if (!direntry[filepos].attribute) snprintf(name, MAX_FILENAME, "%s", direntry[filepos].name);
 					}
 				}
 				break;
