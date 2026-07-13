@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `gt2reloc` segfault when packing a song (issue #71): the relocation-time playback runs on `gtEditorObject`, whose `sidreg[]` pointers are intentionally never wired via `initSID` (only `gtObject` is). The main app marks that object silent (`noSIDWrites = 1`) so `playroutine` skips SID register writes; `gt2reloc` omitted the flag, so it dereferenced NULL `sidreg[i]` (`gplay.c:435`). Now sets `gtEditorObject.noSIDWrites = 1`, matching `gt2stereo.c`. Also fixes an ASan `global-buffer-overflow`: `loadedsongfilename` was declared `[MAX_FILENAME]` (60) in `gt2reloc.c` vs the `[MAX_PATHNAME]` (256) extern, overflowed by `clearsong`'s memset. Re-enables the `gt2reloc` functional smoke test (packs the fixture to both `.prg` and `.sid`) and the Linux ASan usage checks. Reported by @moraff.
 - `-Wpointer-to-int-cast` (11 warnings) in the vendored Exomizer assembler `src/asm/{expr,parse}.c`: debug `LOG()` dump helpers truncated 64-bit pointers via `(u32)` casts. Backported the `%p`/`(void*)` formatting from current Exomizer upstream (each site license-marked). Supersedes PR #13; thanks @drfiemost for the report.
 
 ### Changed

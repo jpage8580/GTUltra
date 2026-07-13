@@ -132,19 +132,23 @@ else
 fi
 
 if [ "$SKIP_GT2RELOC" -eq 0 ]; then
-  echo -e "\n=== Functional tests: pack .sng to .prg ==="
+  echo -e "\n=== Functional tests: pack .sng to .prg and .sid ==="
   TMPDIR=$(mktemp -d)
   trap 'rm -rf "$TMPDIR"' EXIT
 
-  set +e
-  "$GT2R" "$FIXTURE_SNG" "${TMPDIR}/out.prg"
-  gt2r_func_ec=$?
-  set -e
-  if [ "$gt2r_func_ec" -eq 0 ] && [ -s "${TMPDIR}/out.prg" ]; then
-    report 0 "gt2reloc produces non-empty PRG"
-  else
-    report 1 "gt2reloc failed (exit $gt2r_func_ec) or produced empty PRG"
-  fi
+  # Output format is chosen by the destination extension; exercise both writers.
+  # Bare invocation reproduces the Bug 2 / issue #71 relocation-playback crash path.
+  for fmt in prg sid; do
+    set +e
+    "$GT2R" "$FIXTURE_SNG" "${TMPDIR}/out.${fmt}"
+    gt2r_func_ec=$?
+    set -e
+    if [ "$gt2r_func_ec" -eq 0 ] && [ -s "${TMPDIR}/out.${fmt}" ]; then
+      report 0 "gt2reloc produces non-empty ${fmt} output"
+    else
+      report 1 "gt2reloc ${fmt} pack failed (exit $gt2r_func_ec) or produced empty file"
+    fi
+  done
 else
   echo -e "\n=== Skipping gt2reloc functional smoke test ==="
 fi

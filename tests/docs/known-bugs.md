@@ -11,30 +11,15 @@ fix, so the fix is provably correct and stays fixed.
   Fixed (`strdup`) + Linux ASan/UBSan CI gate. Details/credit: `CHANGELOG.md` and
   [handover-issue-76.md](handover-issue-76.md). The same PR fixed 3 `-Wformat-security`
   sites; the `-Wunused-result` sweep was deferred → [handover-unused-result.md](handover-unused-result.md).
-
----
-
-## Bug 2 — `gt2reloc` segfaults when packing a `.sng`
-
-- **Where:** `gt2reloc` CLI tool (command-line packer/relocator).
-- **Symptom:** on the fixture `tests/fixtures/Stereo_Pendejo.sng` it segfaults during
-  packing (`EXIT: 139` on macOS). Documented in `tests/README.md`.
-- **Status:** the functional smoke test is **kept blocking** so the regression stays
-  visible in CI. Reproduced under ASan on Linux (Lima VM): still segfaults (exit 139).
-- **ASan finding (partial, does NOT fix the segfault):** `clearsong` (`src/gsong.c:1703`)
-  does `memset(loadedsongfilename, 0, sizeof loadedsongfilename)`. The header extern
-  (`goattrk2.h:117`) and `gt2stereo.c:136` declare `loadedsongfilename[MAX_PATHNAME]`
-  (256), but **`gt2reloc.c:84` declares it `[MAX_FILENAME]` (60)** — so in the gt2reloc
-  build `clearsong` memsets 256 bytes into a 60-byte global → ASan `global-buffer-overflow`
-  (`WRITE of size 256 ... 0 bytes after 'loadedsongfilename'`, via `gt2reloc.c:221`).
-  **Verified:** changing `gt2reloc.c:84` to `MAX_PATHNAME` silences this overflow but the
-  gt2reloc pack **still segfaults (139)** — so this is a real, separate defect but NOT the
-  segfault root cause. Deferred to the Bug-2 / unused-result follow-up.
-- **Next step:** get a full stack trace at the actual fault (build `-g -O0` +ASan), locate
-  it, pin with a characterization test on the fixture (assert exit 0 + non-empty `.prg`),
-  then fix. Also apply the `gt2reloc.c:84` size fix and re-widen the ASan job to the CLI
-  usage checks (currently `SKIP_USAGE=1` there to avoid this pre-existing overflow).
-  Full pick-up plan: [handover-gt2reloc-bug2.md](handover-gt2reloc-bug2.md).
+- **Bug 2 / issue #71** — `gt2reloc` segfault when packing a song (NULL `sidreg[i]` in
+  `playroutine`, `gplay.c:435`) plus a `loadedsongfilename` `global-buffer-overflow`. Fixed
+  by marking `gtEditorObject.noSIDWrites = 1` in `gt2reloc` and widening the declaration to
+  `MAX_PATHNAME`. Functional smoke (`.prg` + `.sid`) and Linux ASan usage checks re-enabled.
+  Details: `CHANGELOG.md`, [handover-gt2reloc-bug2.md](handover-gt2reloc-bug2.md).
+  Note: fully verified on Linux (VM, ASan-clean, both formats). `SKIP_GT2RELOC` was removed
+  from all three build workflows to check mac/Windows on CI; smoke steps are capped at
+  `timeout-minutes: 1` so a possible headless-SDL hang on those runners fails fast rather
+  than stalling. If mac/Windows misbehave, re-skip there and open the headless-SDL follow-up.
 
 ---
 
@@ -80,8 +65,8 @@ fix, so the fix is provably correct and stays fixed.
 
 ---
 
-## Highest-leverage cross-cutting move
+## Highest-leverage cross-cutting move — DONE
 
-Add **ASan/UBSan** to a CI build running the existing `tests/integration/smoke.sh`.
-It would have caught Bug 1 automatically with a stack trace, and will help localize
-Bug 2. See also the sanitizer recommendation referenced from the testing strategy.
+The Linux **ASan/UBSan** CI job (`asan:` in `.github/workflows/build-linux.yml`, added with
+the issue #76 fix) runs `tests/integration/smoke.sh` under `-fsanitize=address,undefined`.
+It gated #76 and is what localized Bug 2 (the symbolized `playroutine` NULL-write trace).

@@ -1,4 +1,33 @@
-# Handover: `gt2reloc` segfault (Bug 2) + `loadedsongfilename` overflow
+# RESOLVED: `gt2reloc` segfault (Bug 2 / issue #71) + `loadedsongfilename` overflow
+
+**Status: RESOLVED** (branch `fix/gt2reloc-segfault-bug2`; closes issue #71).
+
+**Root cause (Defect B, the segfault):** relocation-time playback runs on `gtEditorObject`
+(`gt2reloc.c:653` `gte = &gtEditorObject` → `playroutine`). Its `sidreg[]` pointers are
+never wired via `initSID` (only `gtObject` is). The main app tolerates this by setting
+`gtEditorObject.noSIDWrites = 1` (`gt2stereo.c:723`), and `gplay.c:433` guards the SID write
+with `if (!gt->noSIDWrites)`. `gt2reloc` omitted the flag → wrote through NULL `sidreg[i]`
+at `gplay.c:435` (SEGV, addr 0x15). **Fix:** set `gtEditorObject.noSIDWrites = 1` in
+`gt2reloc`'s setup.
+
+**Defect A (overflow):** `loadedsongfilename` was `[MAX_FILENAME]` (60) in `gt2reloc.c:84`
+vs the `[MAX_PATHNAME]` (256) extern; `clearsong`'s memset overflowed it. **Fix:** widened
+to `MAX_PATHNAME`.
+
+**Verified (Lima Linux VM, ASan/UBSan, `SANITIZE=1`):** fixture packs to both `.prg` and
+`.sid` at exit 0, no sanitizer diagnostics; usage path (no args) clean (Defect A gone);
+issue #71's exact command (`.sid` + `-EEnable -HEnable -S1 -W10`) also exit 0. Pack ~0.11s.
+
+**CI:** re-enabled the `gt2reloc` functional smoke (both formats) by removing
+`SKIP_GT2RELOC` from all three build workflows, and removed `SKIP_USAGE` from the Linux ASan
+job. Smoke steps capped at `timeout-minutes: 1`. **Open item:** mac/Windows CI is unverified
+locally (only the Linux VM was available); if the CLI tools hit a headless-SDL startup hang
+there (a mac `NSAlert` dialog was seen locally), re-skip on those OSes and open a separate
+"CLI tools: headless SDL init on mac/Windows" issue.
+
+Original pick-up notes below, retained for context.
+
+---
 
 Pick-up doc. Bug 2 background in [known-bugs.md](known-bugs.md). Partly investigated while
 adding the ASan gate for issue #76 ([handover-issue-76.md](handover-issue-76.md)). Fresh

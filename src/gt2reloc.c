@@ -81,7 +81,7 @@ int patternOrderList[256];
 int patternRemapOrderIndex;
 
 char configbuf[MAX_PATHNAME];
-char loadedsongfilename[MAX_FILENAME];
+char loadedsongfilename[MAX_PATHNAME];
 char wavfilename[MAX_PATHNAME];
 char songfilename[MAX_FILENAME];
 char songfilter[MAX_FILENAME];
@@ -219,6 +219,12 @@ int main(int argc, char **argv)
 	gtObject.songinit = PLAY_STOPPED;
 	initchannels(&gtObject);
 	clearsong(1, 1, 1, 1, 1, &gtObject);
+
+	// gtEditorObject drives the relocation-time playback (playUntilEnd2) but, unlike
+	// gtObject, its sidreg[] pointers are never wired via initSID (mirrors gt2stereo.c).
+	// Mark it silent so playroutine skips SID register writes; otherwise it dereferences
+	// NULL sidreg[i] and segfaults (gplay.c:435).
+	gtEditorObject.noSIDWrites = 1;
 
 	// get input- and output file names
 	if (argc >= 3) {
