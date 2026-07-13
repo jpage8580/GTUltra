@@ -18,7 +18,7 @@ Snapshot below is from the GCC-16 CI build (one leg): ~159 `warning:` lines.
 | warning | count | notes |
 |---------|-------|-------|
 | `-Wunused-result` | 83 | `fread`/`fgets`/`write`/`chdir`/`getcwd` return values ignored. Dedicated sweep: [handover-unused-result.md](handover-unused-result.md) |
-| `-Wpointer-to-int-cast` | 11 | vendored `src/asm/` (`expr.c` ×9, `parse.c` ×2). Existing fix: **PR #13** — see [handover-asm-pointer-cast.md](handover-asm-pointer-cast.md) |
+| `-Wpointer-to-int-cast` | 0 | **Fixed** in `src/asm/{expr,parse}.c` — backported Exomizer upstream `%p`/`(void*)` formatting (was `(u32)` truncating 64-bit pointers). See [handover-asm-pointer-cast.md](handover-asm-pointer-cast.md) (supersedes PR #13, @drfiemost) |
 | `-Wparentheses` | 6 | vendored |
 | `-Wunused-function` | 3 | vendored |
 | `-Wmaybe-uninitialized` | 2 | vendored (`resid`/`bme`) |
@@ -30,8 +30,9 @@ Snapshot below is from the GCC-16 CI build (one leg): ~159 `warning:` lines.
 ## Own-code vs vendored
 Vendored (**do NOT modify** per `CLAUDE.md`: `src/asm/`, `src/resid/`, `src/resid-fp/`,
 `src/bme/`, `src/RtMidi.*`) accounts for **every** potentially-serious class
-(`pointer-to-int-cast`, `uninitialized`, `maybe-uninitialized`, `parentheses`,
+(`uninitialized`, `maybe-uninitialized`, `parentheses`,
 `unused-function`, `unused-value`). Those are upstream engine/parser warnings; leave them.
+(`pointer-to-int-cast` was in this set but is now fixed via an Exomizer-upstream backport.)
 
 **Own code** (`src/g*.c`, CLI tools) warnings are almost entirely `-Wunused-result`
 (deferred sweep). The only two own-code, non-`unused-result` warnings are:

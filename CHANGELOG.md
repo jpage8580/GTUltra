@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `-Wpointer-to-int-cast` (11 warnings) in the vendored Exomizer assembler `src/asm/{expr,parse}.c`: debug `LOG()` dump helpers truncated 64-bit pointers via `(u32)` casts. Backported the `%p`/`(void*)` formatting from current Exomizer upstream (each site license-marked). Supersedes PR #13; thanks @drfiemost for the report.
+
 ### Changed
 
 - Release workflow: node24 artifact actions, shallow single-tag release checkouts (avoids legacy mixed-case tag collision on case-insensitive runners)
