@@ -57,9 +57,10 @@ Vendored (**do NOT modify** per `CLAUDE.md`: `src/asm/`, `src/resid/`, `src/resi
    (potential heap overflow, same class as issue #76).
 2. `-Wunused-result` sweep — [handover-unused-result.md](handover-unused-result.md).
 3. `src/greloc.c:156` — delete the unused variable (cosmetic).
-4. Vendored warnings — out of scope (do not modify vendored trees), EXCEPT the 11
-   `-Wpointer-to-int-cast` in `src/asm/`, which have a ready fix in PR #13 pending a
-   vendored-policy call → [handover-asm-pointer-cast.md](handover-asm-pointer-cast.md).
+4. Vendored warnings — out of scope (do not modify vendored trees). The 11
+   `-Wpointer-to-int-cast` in `src/asm/` are **DONE** (backported from Exomizer upstream;
+   `src/asm/` is Exomizer's embedded assembler) →
+   [handover-asm-pointer-cast.md](handover-asm-pointer-cast.md).
 
 ## Note on this iteration
 The issue-#76 PR **removed** 3 `-Wformat-security` warnings and **adds none**; the counts
