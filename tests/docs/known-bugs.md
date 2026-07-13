@@ -56,6 +56,20 @@ fix, so the fix is provably correct and stays fixed.
 
 ---
 
+## Bug 4 — potential heap overflow in the special-note-name loop (`gt2stereo.c:2972`)
+
+- **Where:** special-note-name build loop (`gt2stereo.c` ~2958-2980).
+- **Symptom (latent):** `name = malloc(4)` holds 2 note chars + octave digits + NUL. Fits a
+  single-digit octave (2 + 1 + 1 = 4), but a **two-digit `oct` (>= 10) overflows** via
+  `strcpy(name + 2, octave)` (2 + 2 + 1 = 5 > 4). Same class as issue #76.
+- **Status:** OPEN. Surfaced by `-Wstringop-truncation` at `:2972`, **kept loud on purpose**
+  (not silenced) so the signal stays visible — see [warnings-tracking.md](warnings-tracking.md).
+- **Next step (own PR, ASan-verified):** determine whether `oct` can reach 10 (outer
+  `while (i < 93)` loop, `specialnotenames` size, custom tunings / `equaldivisionsperoctave`);
+  if reachable, size the allocation with `snprintf`/proper bound and fix the copy; if provably
+  unreachable, document the bound then silence. Verify under the Linux `SANITIZE=1` ASan job.
+  Full pick-up: [handover-owncode-warnings.md](handover-owncode-warnings.md).
+
 ## Note (not scheduled) — `ss2stereo` legacy limitation
 
 - `ss2stereo` (original GoatTracker v2.76 stereo splitter) has a hardcoded

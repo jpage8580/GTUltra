@@ -8,7 +8,7 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 - Build determinism + `goatdata.c` rules: `tests/docs/build-determinism.md`
 - Known bugs / fixes: `tests/docs/known-bugs.md`
 - Testing strategy: `tests/docs/testing-strategy.md`
-- Handover / follow-ups: `tests/docs/handover-*.md` (issue-76, unused-result, gt2reloc-bug2, unit-tests, asm-pointer-cast)
+- Handover / follow-ups: `tests/docs/handover-*.md` (issue-76, unused-result, gt2reloc-bug2, unit-tests, asm-pointer-cast, owncode-warnings)
 - Compiler warnings inventory: `tests/docs/warnings-tracking.md`
 - Main app (`gtultra`): `src/gt2stereo.c`; app logic: `src/g*.c`
 - CLI tools: `src/{gt2reloc,ins2snd2,mod2sng2,ss2stereo}.c`
