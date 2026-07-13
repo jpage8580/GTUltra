@@ -160,7 +160,14 @@ FILE *STDOUT, *STDERR;
 
 void Log(void *userdata, int category, SDL_LogPriority priority, const char *message)
 {
-	SDL_Log("[Log] %s", message);
+	// Uniform cross-platform log line. Without a custom output function, macOS SDL_Log
+	// routes to NSLog and prepends a "timestamp process[pid:tid]" prefix, differing from
+	// the plain "INFO: <msg>" that Linux/Windows produce. (Do NOT call SDL_Log here - that
+	// recurses through this callback.)
+	size_t n = strlen(message);
+	if (n && message[n - 1] == '\n') n--;   // normalize a trailing newline
+	fprintf(STDERR, "INFO: %.*s\n", (int)n, message);
+	fflush(STDERR);
 }
 
 void usage(void)
@@ -207,7 +214,7 @@ int main(int argc, char **argv)
 
 #endif
 
-	//SDL_LogSetOutputFunction(&Log, NULL);
+	SDL_LogSetOutputFunction(&Log, NULL);
 
 
 	programname += sizeof "$VER:";

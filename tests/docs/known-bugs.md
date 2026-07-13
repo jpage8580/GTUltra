@@ -55,6 +55,22 @@ fix, so the fix is provably correct and stays fixed.
   unreachable, document the bound then silence. Verify under the Linux `SANITIZE=1` ASan job.
   Full pick-up: [handover-owncode-warnings.md](handover-owncode-warnings.md).
 
+---
+
+## Bug 5 — macOS `SDL_Log` output prefix differs from Linux/Windows (all apps except `gt2reloc`)
+
+- **Where:** every `SDL_Log` caller — the `gtultra` editor (`gt2stereo.c`) and the other CLI
+  tools (`ins2snd2`, `mod2sng2`, `ss2stereo`). `gt2reloc` is **already fixed** (installs a
+  custom `SDL_LogSetOutputFunction`).
+- **Symptom:** on macOS, `SDL_Log` routes to `NSLog`, prepending
+  `YYYY-MM-DD HH:MM:SS.mmm proc[pid:tid] ` and dropping the `INFO:` prefix; Linux/Windows
+  print a plain `INFO: <msg>`. Cosmetic, but noisy and inconsistent (visible in macOS CI
+  smoke logs).
+- **Fix (pattern already in `gt2reloc.c`):** install a non-recursing
+  `SDL_LogSetOutputFunction` that writes a uniform `INFO: <msg>` line to stderr. Best done
+  once in a shared helper so every tool/app gets it. Do NOT call `SDL_Log` inside the
+  callback (infinite recursion — the reason the original hook was left disabled).
+
 ## Note (not scheduled) — `ss2stereo` legacy limitation
 
 - `ss2stereo` (original GoatTracker v2.76 stereo splitter) has a hardcoded
