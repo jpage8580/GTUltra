@@ -7,7 +7,7 @@ MAC_DIR := mac
 LINUX_DIR := linux
 WIN_DIR := win32
 
-.PHONY: all clean mac-build mac-rebuild mac-run linux-build linux-rebuild win-build win-rebuild
+.PHONY: all clean mac-build mac-rebuild mac-run linux-build linux-rebuild win-build win-rebuild test
 
 all: mac-build
 
@@ -48,6 +48,21 @@ linux-build: build-tools
 	@echo "=== Done: $(LINUX_DIR)/gtultra ==="
 
 linux-rebuild: clean linux-build
+
+# --- Unit tests (greatest single-header harness) ---
+# Standalone: compiles only the pure sprouted helper(s) + the test TU, so it does not
+# need a full app build or SDL. Sanitizers on by default (strategy ladder #1); override
+# with `make test TEST_SAN=` on toolchains without libasan (e.g. MinGW).
+TEST_DIR  := $(SRC_DIR)/../tests/unit
+TEST_CC   ?= cc
+TEST_SAN  ?= -fsanitize=address,undefined -fno-omit-frame-pointer
+TEST_SRCS := $(TEST_DIR)/test_palette_name.c $(SRC_DIR)/palette_name.c
+
+test:
+	@echo "=== Building + running unit tests (greatest) ==="
+	$(TEST_CC) -I$(SRC_DIR) -I$(TEST_DIR) $(TEST_SAN) -g -O1 -Wall -Wextra \
+	  -o $(TEST_DIR)/run_tests $(TEST_SRCS)
+	$(TEST_DIR)/run_tests $(GREATEST_ARGS)
 
 # --- Windows (cross-compile or MSYS2) ---
 win-build: build-tools

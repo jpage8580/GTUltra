@@ -42,6 +42,11 @@ jobs:
         timeout-minutes: 1
         run: bash tests/integration/smoke.sh linux/ ""
 
+      - name: Run unit tests (ASan/UBSan/LSan)
+        run: make test
+        env:
+          TEST_CC: gcc-16
+
   # ASan/UBSan gate. Reproduces the class of bug behind issue #76 (heap buffer
   # overflow in setPaletteName) with a symbolized report and fails the build on it.
   # Linux only: MinGW GCC ships no libasan, and macOS does not exercise the startup

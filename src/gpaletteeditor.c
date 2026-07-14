@@ -6,6 +6,7 @@
 
 #include "goattrk2.h"
 #include "gpaletteeditor.h"
+#include "palette_name.h"
 #include <stdio.h>
 #include <dirent.h>
 
@@ -615,11 +616,9 @@ int loadPalette(char *palettePath,char *paletteFileName)
 
 void setPaletteName(char* paletteName, int index)
 {
-	if (paletteNames[index] != NULL)
-	{
-		free(paletteNames[index]);
-	}
-	paletteNames[index] = strdup(paletteName);	// copy filename. This is saved in the cfg file as the one to start up with
+	// Storage logic sprouted into the pure, unit-tested helper palette_name_dup().
+	// This saved value is written to the cfg file as the palette to start up with.
+	palette_name_dup(paletteNames, index, paletteName);
 }
 
 int readPaletteData(char *paletteMem, char *paletteName)

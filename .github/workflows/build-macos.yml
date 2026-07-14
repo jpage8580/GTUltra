@@ -26,3 +26,6 @@ jobs:
       - name: Run smoke tests
         timeout-minutes: 1
         run: bash tests/integration/smoke.sh mac/ ""
+
+      - name: Run unit tests (ASan/UBSan)
+        run: make test

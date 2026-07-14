@@ -31,6 +31,11 @@ tests/fixtures/*.prg
 tests/fixtures/*.wav
 tests/fixtures/golden/
 
+# Unit-test build artifacts (harness header tests/unit/greatest.h stays tracked)
+tests/unit/run_tests
+tests/unit/run_tests.exe
+tests/unit/*.dSYM/
+
 # local ai
 .claude/settings.local.json
 .devin/

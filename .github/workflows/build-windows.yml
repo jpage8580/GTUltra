@@ -36,3 +36,8 @@ jobs:
       - name: Run smoke tests
         timeout-minutes: 1
         run: bash tests/integration/smoke.sh win32/ .exe
+
+      # MinGW GCC ships no libasan, so build the unit suite without sanitizers here
+      # (Linux/macOS jobs provide the ASan/UBSan coverage). Still validates the logic.
+      - name: Run unit tests
+        run: make test TEST_SAN= TEST_CC=gcc
