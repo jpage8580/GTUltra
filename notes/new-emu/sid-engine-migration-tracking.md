@@ -29,9 +29,17 @@ Done + committed:
 Next up (finish M0): pick the golden corpus, capture golden WAVs, stand up `tests/unit/` +
 `make test`. Then M1 (`ISidEngine` wrapper).
 
+**CI policy for this branch (decided 2026-07-14):** keep firing CI **on push** to
+`new-emulators` for the whole migration - the 3 workflows carry `push: [new-emulators]` +
+`workflow_dispatch:` (added alongside the existing `pull_request:[main]`). **Defer the PR to
+`main` until the very end.** At that final PR: strip the branch-specific `push` trigger (and any
+other branch-only scaffolding) so `main`'s workflows stay PR-only, and squash-merge per the
+CLAUDE.md rules. (`workflow_dispatch` only becomes dispatchable once it reaches `main`.)
+
 Loose ends to handle at PR time:
 - **CHANGELOG** `[Unreleased]` entries not yet written: gt2reloc headless-SDL fix, songfilename
   overflow/truncation fix, sng2wav tool. (Project rule: CHANGELOG updated when PR is ready.)
+- **Remove the `push: [new-emulators]` CI trigger** from the 3 workflows before the final merge.
 - **Determinism check DONE (2026-07-14)** - `sng2wav` is fully reproducible on the legacy
   engines, so the M1 bit-identical strategy is sound. (Ad-hoc `/tmp` run, not yet a committed
   test.) Results (10s renders):

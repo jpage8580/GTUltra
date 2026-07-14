@@ -33,6 +33,9 @@ this file is the "where do I start / what will bite me" summary.
   Building on mac is fine; *running* SDL binaries from an agent shell can hang on a dialog.
 - **macOS warnings are pre-existing/vendored** - the table in `warnings-tracking.md` says which;
   the new engine/tool code is clean. Don't chase them as regressions.
+- **CI runs on push to `new-emulators`** (workflows carry `push:[new-emulators]` + `workflow_dispatch:`);
+  **the PR to `main` is deferred to the very end**. At that final PR: strip the `push` trigger and
+  write the CHANGELOG entries. (Policy in the tracker's Status snapshot.)
 - **Merge rules** (CLAUDE.md): squash only; PR body = `refer to CHANGELOG for details`; and
   **write CHANGELOG `[Unreleased]` entries at PR time** (gt2reloc fix, songfilename fix,
   sng2wav) - not yet written.
