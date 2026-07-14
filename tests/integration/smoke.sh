@@ -137,10 +137,14 @@ if [ "$SKIP_GT2RELOC" -eq 0 ]; then
   trap 'rm -rf "$TMPDIR"' EXIT
 
   # Output format is chosen by the destination extension; exercise both writers.
-  # Bare invocation reproduces the Bug 2 / issue #71 relocation-playback crash path.
+  # Flags are the canonical pack settings for this stereo fixture: -AFF00 (ADSR hard-restart),
+  # -B2 (buffered SID writes), -H1 (store author info), -U6 (stereo / 2 SIDs, 6 channels).
+  # This still drives the Bug 2 / issue #71 relocation-playback crash path, and additionally
+  # covers the 6-channel/2-SID player and the buffered-write path.
+  GT2R_FLAGS="-AFF00 -B2 -H1 -U6"
   for fmt in prg sid; do
     set +e
-    "$GT2R" "$FIXTURE_SNG" "${TMPDIR}/out.${fmt}"
+    "$GT2R" "$FIXTURE_SNG" "${TMPDIR}/out.${fmt}" $GT2R_FLAGS
     gt2r_func_ec=$?
     set -e
     if [ "$gt2r_func_ec" -eq 0 ] && [ -s "${TMPDIR}/out.${fmt}" ]; then
