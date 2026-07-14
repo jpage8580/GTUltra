@@ -22,8 +22,9 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 - Do not bloat this file, leverage `## Index` above
 
 ## Running SDL tools headless (agents/CI)
-- `gtultra` and the CLI tools (`gt2reloc`, ...) link SDL. From a **non-GUI shell on macOS** they hang on an SDL startup dialog — `SDL_VIDEODRIVER=dummy` does **not** fix it there; don't run the mac build from an agent shell. (A real mac Terminal / GUI session runs them fine.)
-- To run/verify headless, use a **Linux** build (CI, or a local Linux VM): `make linux-build [SANITIZE=1]`, then run with `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ASAN_OPTIONS=detect_leaks=0`. Fixture: `tests/fixtures/Stereo_Pendejo.sng`.
+- `gtultra` and most CLI tools (`gt2reloc`, ...) link SDL and open a window. From a **non-GUI shell on macOS** they hang on an SDL startup dialog — `SDL_VIDEODRIVER=dummy` does **not** fix it there; don't run those mac builds from an agent shell. (A real mac Terminal / GUI session runs them fine.)
+- **Exception — `sng2wav` is windowless by design** (offline `sound_init_offline` path, no editor/device) and **runs fine locally on macOS from an agent shell** — no hang. Prefer the local `mac/sng2wav` (build `make mac-build`) over Lima/Linux for `.sng`→WAV renders and `--scan`; it operates on the working tree directly (no file sync). Verified via `--scan`; the render path uses the same windowless code.
+- To run/verify the *windowed* tools headless, use a **Linux** build (CI, or a local Linux VM): `make linux-build [SANITIZE=1]`, then run with `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ASAN_OPTIONS=detect_leaks=0`. Fixture: `tests/fixtures/Stereo_Pendejo.sng`.
 
 ## Merge rules
 - Merge to `main` by **squash** only: `gh pr merge {PR} --squash --delete-branch`.
