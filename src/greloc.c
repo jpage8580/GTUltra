@@ -1818,12 +1818,6 @@ void relocator(GTOBJECT *gt, int gt2relocMode, int autoSave)
 			inserttext(textbuffer);
 		}
 
-		sprintf(textbuffer, "debug_0.s");
-
-		FILE *handle = fopen(textbuffer, "wt");
-		fwrite(membuf_get(&src), membuf_memlen(&src), 1, handle);
-		fclose(handle);
-
 		// Assemble; on error fail in a rude way (the parser does so too)
 
 

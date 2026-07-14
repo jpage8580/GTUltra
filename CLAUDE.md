@@ -18,7 +18,12 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 - `src/goatdata.c` is generated: never commit/edit; change packed inputs → follow `tests/docs/build-determinism.md`.
 - Do not modify vendored: `src/resid/`, `src/resid-fp/`, `src/asm/`, `src/RtMidi.*`, `src/bme/SDL/`.
 - Commits: single-line message; CHANGELOG carries the detail, updated only **after** the PR is ready to merge. New entries go under `[Unreleased]` — do not assign a version number until release.
+- Version bump (at release): update **both** together, `CHANGELOG.md` (promote `[Unreleased]` → `[X.Y.Z] - DATE`) **and** `src/version.h` (`GTULTRA_VERSION`). They must stay in sync.
 - Do not bloat this file, leverage `## Index` above
+
+## Running SDL tools headless (agents/CI)
+- `gtultra` and the CLI tools (`gt2reloc`, ...) link SDL. From a **non-GUI shell on macOS** they hang on an SDL startup dialog — `SDL_VIDEODRIVER=dummy` does **not** fix it there; don't run the mac build from an agent shell. (A real mac Terminal / GUI session runs them fine.)
+- To run/verify headless, use a **Linux** build (CI, or a local Linux VM): `make linux-build [SANITIZE=1]`, then run with `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ASAN_OPTIONS=detect_leaks=0`. Fixture: `tests/fixtures/Stereo_Pendejo.sng`.
 
 ## Merge rules
 - Merge to `main` by **squash** only: `gh pr merge {PR} --squash --delete-branch`.

@@ -81,7 +81,7 @@ int patternOrderList[256];
 int patternRemapOrderIndex;
 
 char configbuf[MAX_PATHNAME];
-char loadedsongfilename[MAX_FILENAME];
+char loadedsongfilename[MAX_PATHNAME];
 char wavfilename[MAX_PATHNAME];
 char songfilename[MAX_FILENAME];
 char songfilter[MAX_FILENAME];
@@ -160,7 +160,17 @@ FILE *STDOUT, *STDERR;
 
 void Log(void *userdata, int category, SDL_LogPriority priority, const char *message)
 {
-	SDL_Log("[Log] %s", message);
+	// Uniform cross-platform log line. Without a custom output function, macOS SDL_Log
+	// routes to NSLog and prepends a "timestamp process[pid:tid]" prefix, differing from
+	// the plain "INFO: <msg>" that Linux/Windows produce. (Do NOT call SDL_Log here - that
+	// recurses through this callback.)
+	// On Windows STDERR is a global reopened via fopen("CON") which can be NULL in a
+	// headless/CI shell; fall back to the real stderr so we never fprintf(NULL) -> crash.
+	FILE *out = STDERR ? STDERR : stderr;
+	size_t n = strlen(message);
+	if (n && message[n - 1] == '\n') n--;   // normalize a trailing newline
+	fprintf(out, "INFO: %.*s\n", (int)n, message);
+	fflush(out);
 }
 
 void usage(void)
@@ -207,7 +217,7 @@ int main(int argc, char **argv)
 
 #endif
 
-	//SDL_LogSetOutputFunction(&Log, NULL);
+	SDL_LogSetOutputFunction(&Log, NULL);
 
 
 	programname += sizeof "$VER:";
@@ -219,6 +229,12 @@ int main(int argc, char **argv)
 	gtObject.songinit = PLAY_STOPPED;
 	initchannels(&gtObject);
 	clearsong(1, 1, 1, 1, 1, &gtObject);
+
+	// gtEditorObject drives the relocation-time playback (playUntilEnd2) but, unlike
+	// gtObject, its sidreg[] pointers are never wired via initSID (mirrors gt2stereo.c).
+	// Mark it silent so playroutine skips SID register writes; otherwise it dereferences
+	// NULL sidreg[i] and segfaults (gplay.c:435).
+	gtEditorObject.noSIDWrites = 1;
 
 	// get input- and output file names
 	if (argc >= 3) {

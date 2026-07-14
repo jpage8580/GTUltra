@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  SKIP_GT2RELOC: 1
-
 jobs:
   ci:
     name: Build ${{ matrix.arch }}
@@ -39,6 +36,7 @@ jobs:
         run: bash tests/integration/check-goatdata.sh
 
       - name: Run smoke tests
+        timeout-minutes: 1
         run: bash tests/integration/smoke.sh linux/ ""
 
   # ASan/UBSan gate. Reproduces the class of bug behind issue #76 (heap buffer
@@ -56,11 +54,6 @@ jobs:
       # real error aborts (smoke.sh flags exit 134 and greps the sanitizer output).
       ASAN_OPTIONS: detect_leaks=0:abort_on_error=1
       UBSAN_OPTIONS: print_stacktrace=1
-      # Scope this gate to the gtultra startup path (where #76 lives). SKIP_USAGE avoids
-      # the CLI usage checks, which under ASan trip a *separate* pre-existing bug
-      # (global-buffer-overflow in clearsong, gsong.c:1703 - see tests/docs/known-bugs.md).
-      # Widen coverage in the follow-up that fixes that bug.
-      SKIP_USAGE: 1
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -78,4 +71,5 @@ jobs:
           CXX: g++-16
 
       - name: Run smoke tests (sanitized)
+        timeout-minutes: 1
         run: bash tests/integration/smoke.sh linux/ ""

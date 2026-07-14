@@ -132,19 +132,27 @@ else
 fi
 
 if [ "$SKIP_GT2RELOC" -eq 0 ]; then
-  echo -e "\n=== Functional tests: pack .sng to .prg ==="
+  echo -e "\n=== Functional tests: pack .sng to .prg and .sid ==="
   TMPDIR=$(mktemp -d)
   trap 'rm -rf "$TMPDIR"' EXIT
 
-  set +e
-  "$GT2R" "$FIXTURE_SNG" "${TMPDIR}/out.prg"
-  gt2r_func_ec=$?
-  set -e
-  if [ "$gt2r_func_ec" -eq 0 ] && [ -s "${TMPDIR}/out.prg" ]; then
-    report 0 "gt2reloc produces non-empty PRG"
-  else
-    report 1 "gt2reloc failed (exit $gt2r_func_ec) or produced empty PRG"
-  fi
+  # Output format is chosen by the destination extension; exercise both writers.
+  # Flags are the canonical pack settings for this stereo fixture: -AFF00 (ADSR hard-restart),
+  # -B2 (buffered SID writes), -H1 (store author info), -U6 (stereo / 2 SIDs, 6 channels).
+  # This still drives the Bug 2 / issue #71 relocation-playback crash path, and additionally
+  # covers the 6-channel/2-SID player and the buffered-write path.
+  GT2R_FLAGS="-AFF00 -B2 -H1 -U6"
+  for fmt in prg sid; do
+    set +e
+    "$GT2R" "$FIXTURE_SNG" "${TMPDIR}/out.${fmt}" $GT2R_FLAGS
+    gt2r_func_ec=$?
+    set -e
+    if [ "$gt2r_func_ec" -eq 0 ] && [ -s "${TMPDIR}/out.${fmt}" ]; then
+      report 0 "gt2reloc produces non-empty ${fmt} output"
+    else
+      report 1 "gt2reloc ${fmt} pack failed (exit $gt2r_func_ec) or produced empty file"
+    fi
+  done
 else
   echo -e "\n=== Skipping gt2reloc functional smoke test ==="
 fi

@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  SKIP_GT2RELOC: 1
-
 jobs:
   ci:
     runs-on: windows-latest
@@ -34,4 +31,5 @@ jobs:
         run: bash tests/integration/check-goatdata.sh
 
       - name: Run smoke tests
+        timeout-minutes: 1
         run: bash tests/integration/smoke.sh win32/ .exe
