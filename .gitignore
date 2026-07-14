@@ -26,6 +26,11 @@ examples/*/debug_*.s
 tests/fixtures/*.sid
 tests/fixtures/*.prg
 
+# Golden-reference audio: rendered locally by sng2wav, NOT committed (large binaries +
+# examples/ tunes are third-party). Track hashes/metrics (e.g. golden-*.sha256) instead.
+tests/fixtures/*.wav
+tests/fixtures/golden/
+
 # local ai
 .claude/settings.local.json
 .devin/

@@ -26,9 +26,10 @@ Have `setPaletteName` call it. The helper links standalone into a unit test.
 
 ## Steps
 1. Branch from `main`.
-2. Add a single-header harness (**Unity** or **greatest** — minimal deps, matches project
-   ethos; avoid GoogleTest/Criterion). Create `tests/unit/` + a `make test` target; wire
-   into the three build workflows.
+2. Add the harness: **`greatest`** (single vendored ISC header `tests/unit/greatest.h`) -
+   decided in [testing-strategy.md](testing-strategy.md#framework) (C-dominant codebase;
+   `doctest` reserved for the future C++/GUI layer). Create `tests/unit/` + a `make test`
+   target; wire into the three build workflows.
 3. Sprout `palette_name_dup` (or similar) out of `setPaletteName`; keep `setPaletteName`
    as a thin caller so production behaviour is unchanged.
 4. Unit test: call the helper with a known string; assert result is non-NULL, `strcmp`

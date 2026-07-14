@@ -60,9 +60,56 @@ Bottom line: ASan/UBSan catch language-level, platform-independent defects, so o
 build catches the overwhelming majority. Spend effort on Linux depth, not OS breadth.
 
 ## Framework
-Single-header C harness (**Unity** or **greatest**). Add `tests/unit/` + a `make test`
-target, wire into the existing workflows. Avoid heavy deps (GoogleTest/Criterion) — the
-project prizes minimal dependencies.
+
+**Decision (2026-07-14): `greatest` (single vendored header) for the C core now; `doctest`
+reserved for the C++ layer if/when the Renoise-style GUI revamp lands.** Rationale recorded
+here because this is a foundational, hard-to-reverse choice for the whole test scope.
+
+### Language split that drives the choice (measured, own code only)
+- **C: 26 `.c` files, ~30k LOC** - all domain/editor/IO/CLI logic (`gsong, gorder, gpattern,
+  ginstr, gtable, gplay, greloc, gsound, gdisplay, gchareditor, gconsole, ginfo, gfile,
+  gfkeys, ghelp, gundo, gpaletteeditor, gtabledisplay, gmidiselect`, the CLI tools,
+  `cli_common`). This is the bulk of what is unit-testable. (`goatdata.c` ~49k is generated -
+  never tested.)
+- **C++: 2 files, 559 LOC** - `gsid.cpp` (438, SID glue) + `gmidi.cpp` (121). Tiny today.
+- **Vendored (never test):** C++ `resid/` (16), `resid-fp/` (8), `RtMidi.cpp`; C `bme/` (10),
+  `asm/` (11); 6510 `.s` player.
+- Build already links mixed C/C++ via `g++` (reSID is C++); 3 pure-C CLI tools link with `cc`.
+- **Ratio today ≈ 98% C / 2% C++** in own code.
+
+### Why `greatest` now (not Unity / Criterion / GoogleTest / doctest)
+- Codebase is **C-dominant**, so a C++-only framework (GoogleTest / Catch2 / doctest) is the
+  wrong spine now - it would force C++ wrappers around every C function under test.
+- `greatest` is **one ISC-licensed header, C *and* C++ from the same file, zero link step,
+  no install** - so it works identically on Linux/macOS/Windows with none of the toolchain
+  tax that a linked lib (Criterion) or an MSVC/MinGW C++ framework would add (cf. the
+  sanitizer-coverage section above on how painful Windows toolchains already are).
+- Features that scale to a large suite: test filtering (`-t`), suites, `SKIP`, TAP output,
+  `ASSERT_EQ_FMT`, `ASSERT_STR_EQ`, `ASSERT_IN_RANGE` (covers the pan-gain/filter float
+  tolerances in the SID unit tests #1/#3).
+- **Unity** was the runner-up (nicer typed float asserts) but ships a separate `unity.c` TU
+  and leans on a Ruby generator for ergonomic discovery - more wiring, a dependency smell.
+- The one-time network fetch is not a recurring dep: `tests/unit/greatest.h` is **vendored
+  once and committed**, offline forever after (same posture as `src/` vendored code).
+
+### Future: the Renoise-style GUI revamp
+A Renoise-like revamp is a large **new C++** surface, so the C++ share will grow. But:
+- GUI render/event code stays **integration-only, never unit** (see next section). What
+  becomes unit-testable is any **carved-out C++ core** (view-models, command/undo, selection
+  state) if the revamp is architected MVVM-style.
+- At that point add **`doctest`** (single MIT header, C++-native, fastest-compiling, no link
+  step - same zero-friction posture as greatest) **for the C++ side only**.
+- greatest and doctest coexist cleanly because they compile into **disjoint translation
+  units** (C tests vs C++ tests), each linked into its own `make test` sub-binary - no
+  shared-runner conflict. This is the *only* sanctioned "two harnesses" split: partition by
+  language, never overlap on the same code.
+- **Do not** stand up doctest until there is real unit-testable C++ to point it at
+  (scaffolding-ahead-of-code is waste).
+
+### Mechanics
+Add `tests/unit/` (`greatest.h` + `test_*.c`) + a `make test` target, built under
+`-fsanitize=address,undefined` (ladder #1), wired into the CI workflows. Avoid heavy deps
+(GoogleTest/Criterion) - the project prizes minimal dependencies.
 
 ## Testable seams vs integration-only
 - **Unit-testable:** CLI tools (`file -> file`), reloc math, data conversion, table/undo
