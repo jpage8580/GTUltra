@@ -27,9 +27,12 @@ tests/fixtures/*.sid
 tests/fixtures/*.prg
 
 # Golden-reference audio: rendered locally by sng2wav, NOT committed (large binaries +
-# examples/ tunes are third-party). Track hashes/metrics (e.g. golden-*.sha256) instead.
+# examples/ tunes are third-party). Track the corpus list + hashes/metrics instead.
 tests/fixtures/*.wav
 tests/fixtures/golden/
+# Golden manifest is per-build/per-arch (reSID float output), so it is an M1 same-env
+# gate, not a committed cross-platform reference. tests/golden/corpus.txt IS tracked.
+tests/golden/manifest.sha256
 
 # Unit-test build artifacts (harness header tests/unit/greatest.h stays tracked)
 tests/unit/run_tests
