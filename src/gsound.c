@@ -240,6 +240,44 @@ SOUNDOK:
 	return 1;
 }
 
+// Headless/offline render init. Allocates the mix buffers and the SID engines exactly like
+// sound_init()'s software path, but does NOT open an SDL audio device (snd_init ->
+// SDL_OpenAudio) or install the realtime mixer. A CLI tool can then drive playroutine +
+// ExportSIDToPCMFile manually with no SDL audio subsystem (so no GUI/Aqua session needed).
+// bypassPlayRoutine is set so no realtime callback path is expected. Returns 1 on success.
+int sound_init_offline(unsigned rate, unsigned m, unsigned ntsc, unsigned multiplier, unsigned interpolate, unsigned customclockrate)
+{
+	sound_uninit();
+
+	if (multiplier)
+	{
+		if (ntsc) { framerate = NTSCFRAMERATE * multiplier; snd_bpmtempo = 150 * multiplier; }
+		else      { framerate = PALFRAMERATE  * multiplier; snd_bpmtempo = 125 * multiplier; }
+	}
+	else
+	{
+		if (ntsc) { framerate = NTSCFRAMERATE / 2; snd_bpmtempo = 150 / 2; }
+		else      { framerate = PALFRAMERATE  / 2; snd_bpmtempo = 125 / 2; }
+	}
+
+	if (!tempbuffer) tempbuffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
+	if (!sid0buffer) sid0buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
+	if (!sid1buffer) sid1buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
+	if (!sid2buffer) sid2buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
+	if (!sid3buffer) sid3buffer = malloc(MIXBUFFERSIZE * 2 * sizeof(Sint16));
+	if ((!tempbuffer) || (!sid0buffer) || (!sid1buffer) || (!sid2buffer) || (!sid3buffer)) return 0;
+
+	playspeed = rate;
+	if (playspeed < MINMIXRATE) playspeed = MINMIXRATE;
+	if (playspeed > MAXMIXRATE) playspeed = MAXMIXRATE;
+
+	sid_init(playspeed, m, ntsc, interpolate & 1, customclockrate, interpolate >> 1);
+
+	bypassPlayRoutine = 1;	// no realtime mixer path in offline mode
+	initted = 1;
+	return 1;
+}
+
 void sound_uninit(void)
 {
 	int c;

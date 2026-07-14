@@ -72,6 +72,35 @@ Vendored (**do NOT modify** per `CLAUDE.md`: `src/asm/`, `src/resid/`, `src/resi
    `src/asm/` is Exomizer's embedded assembler) →
    [handover-asm-pointer-cast.md](handover-asm-pointer-cast.md).
 
+## macOS / clang rebuild, and the SID-migration work (branch `new-emulators`, 2026-07-14)
+
+The snapshot above is the **GCC-16 / Linux** build. A **macOS `make mac-rebuild`** (Apple
+clang) is clean (exit 0, all binaries) but clang emits some **extra warning classes GCC does
+not** - all in **pre-existing / vendored** code, none from the migration work. Listed here so a
+next agent does not mistake them for new regressions:
+
+| Where | clang warning | own/vendored |
+|---|---|---|
+| `src/resid/wave.cpp` (71/76/81/86), `resid/filter.cpp` (229/235) | `-Wbitwise-op-parentheses` (`&` within `|`) | vendored (do not touch) |
+| `src/resid/sid.cpp:128/134` | `-Wtautological-constant-out-of-range-compare` | vendored |
+| `src/RtMidi.cpp:1576` | `-Wvla-cxx-extension` | vendored |
+| `src/asm/lexyy.c` (1715/1761/2139) | `-Wunused-function` / `-Wunneeded-internal-declaration` | generated/vendored |
+| `src/gdisplay.c:700/1143` | `-Wtautological-constant-out-of-range-compare` | own/editor, pre-existing |
+| `src/gt2stereo.c:3282/3284` | `-Wparentheses-equality` | own/editor, pre-existing |
+| `src/greloc.c:156` | `-Wunused-variable` (`temppackedsongname`) | own, pre-existing (see above) |
+
+**The SID-migration additions are warning-free.** `src/sng2wav.c` and `src/cli_common.c`
+compile with **zero warnings under `-Wall`** (verified on clang; the only things `-Wextra`
+surfaces are `-Wunused-parameter` in the intentional editor **stubs** in `cli_common.c`, which
+`-Wall` does not enable). Extracting `cli_common.c` out of `gt2reloc.c` added **no new
+warnings** to `gt2reloc` - its lone warning (`greloc.c:156`) predates this work and lives in
+`greloc.c`, not the tool. `src/gsound.c` (`sound_init_offline`) and the `songfilename`
+`MAX_PATHNAME` fix add none.
+
+Bottom line for a picker-upper: if you build on macOS and see warnings, they are the
+vendored/editor ones in the table above (or the GCC list earlier) - **not** from the new
+`engines/`, `sng2wav`, or `cli_common` code.
+
 ## Note on this iteration
 The issue-#76 PR **removed** 3 `-Wformat-security` warnings and **adds none**; the counts
 above are pre-existing on `main` (not introduced here).

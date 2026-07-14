@@ -11,7 +11,7 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 - Handover / follow-ups: `tests/docs/handover-*.md` (issue-76, unused-result, gt2reloc-bug2, unit-tests, asm-pointer-cast, owncode-warnings)
 - Compiler warnings inventory: `tests/docs/warnings-tracking.md`
 - Main app (`gtultra`): `src/gt2stereo.c`; app logic: `src/g*.c`
-- CLI tools: `src/{gt2reloc,ins2snd2,mod2sng2,ss2stereo}.c`
+- CLI tools: `src/{gt2reloc,ins2snd2,mod2sng2,ss2stereo,sng2wav}.c` (headless `.sng`->WAV + `--scan`: `docs/sng2wav.md`); shared headless boilerplate `src/cli_common.c`
 - 6510 player: `src/player*.s`, `src/altplayer*.s` (assembler: `src/asm/`)
 
 ## Rules

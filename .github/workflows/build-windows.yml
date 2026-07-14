@@ -1,8 +1,11 @@
 name: Build Windows
 
 on:
+  push:
+    branches: [new-emulators]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   ci:

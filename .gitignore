@@ -29,3 +29,6 @@ tests/fixtures/*.prg
 # local ai
 .claude/settings.local.json
 .devin/
+
+# upstream SID engine sources cloned for reference during migration (not vendored)
+_upstream/
