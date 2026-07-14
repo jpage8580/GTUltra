@@ -164,10 +164,13 @@ void Log(void *userdata, int category, SDL_LogPriority priority, const char *mes
 	// routes to NSLog and prepends a "timestamp process[pid:tid]" prefix, differing from
 	// the plain "INFO: <msg>" that Linux/Windows produce. (Do NOT call SDL_Log here - that
 	// recurses through this callback.)
+	// On Windows STDERR is a global reopened via fopen("CON") which can be NULL in a
+	// headless/CI shell; fall back to the real stderr so we never fprintf(NULL) -> crash.
+	FILE *out = STDERR ? STDERR : stderr;
 	size_t n = strlen(message);
 	if (n && message[n - 1] == '\n') n--;   // normalize a trailing newline
-	fprintf(STDERR, "INFO: %.*s\n", (int)n, message);
-	fflush(STDERR);
+	fprintf(out, "INFO: %.*s\n", (int)n, message);
+	fflush(out);
 }
 
 void usage(void)
