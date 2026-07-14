@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Editor window title attribution: "Enhanced GoatTracker Stereo V2.76 - Jason Page & booker / MSL"
 - Release workflow: node24 artifact actions, shallow single-tag release checkouts (avoids legacy mixed-case tag collision on case-insensitive runners)
 
 ## [1.5.7] - 2026-07-13
