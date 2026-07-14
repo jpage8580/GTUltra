@@ -74,7 +74,7 @@ int initscreen(void)
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0)
 		return 0;
-	win_openwindow(xsize, ysize, "GoatTracker Ultra - (Enhanced GoatTracker Stereo V2.76 - Jason Page / MSL)", NULL, enableAntiAlias);
+	win_openwindow(xsize, ysize, "GoatTracker Ultra - (Enhanced GoatTracker Stereo V2.76 - Jason Page & booker / MSL)", NULL, enableAntiAlias);
 	win_setmousemode(MOUSE_ALWAYS_HIDDEN);
 	initicon();
 
