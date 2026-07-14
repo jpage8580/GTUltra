@@ -20,6 +20,10 @@ C64 SID tracker (GoatTracker Stereo fork). ~32k LOC own logic; rest vendored/gen
 - Commits: single-line message; CHANGELOG carries the detail, updated only **after** the PR is ready to merge. New entries go under `[Unreleased]` — do not assign a version number until release.
 - Do not bloat this file, leverage `## Index` above
 
+## Running SDL tools headless (agents/CI)
+- `gtultra` and the CLI tools (`gt2reloc`, ...) link SDL. From a **non-GUI shell on macOS** they hang on an SDL startup dialog — `SDL_VIDEODRIVER=dummy` does **not** fix it there; don't run the mac build from an agent shell. (A real mac Terminal / GUI session runs them fine.)
+- To run/verify headless, use a **Linux** build (CI, or a local Linux VM): `make linux-build [SANITIZE=1]`, then run with `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ASAN_OPTIONS=detect_leaks=0`. Fixture: `tests/fixtures/Stereo_Pendejo.sng`.
+
 ## Merge rules
 - Merge to `main` by **squash** only: `gh pr merge {PR} --squash --delete-branch`.
 - By default the **PR body** and the **squash merge commit body** are exactly the single line `refer to CHANGELOG for details` — never duplicate CHANGELOG content in either.
