@@ -179,7 +179,8 @@ sng2wav <in.sng> <out.wav>
 - [x] Wrote `src/sng2wav.c` (arg parse, load, `initSID`, offline init, render loop, WAV out,
       plus `--scan` survey with recursive dir walk + box-table renderer).
 - [x] Added `sng2wav` to `makefile.common` (EXE list + link rule, gt2reloc object set minus greloc.o).
-- [x] Smoke: renders `Stereo_Pendejo.sng` -> valid non-silent stereo WAV (L!=R confirms TrueStereo).
+- [x] Smoke: renders `Stereo_Pendejo.sng` -> valid non-silent WAV. (NOTE 2026-07-15: this tune is
+      **mono** -> L==R; the old "L!=R confirms TrueStereo" claim was wrong, its `st=2` flag was bogus.)
       NOTE: the `--seed` byte-identical before/after check was implemented but not formally run to
       completion - do this before trusting goldens.
 - [ ] Wire into `tests/integration` on **Linux** (dummy drivers); mac headless is out (§3a). (future CI)
