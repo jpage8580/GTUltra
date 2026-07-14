@@ -91,13 +91,25 @@ Loose ends to handle at PR time:
 - [x] Headless render mode: `sng2wav` (commit `1647356`) drives `sid_fillbuffer`/
       `ExportSIDToPCMFile` via `sound_init_offline`, no editor/SDL device. Song-derived settings
       + CLI overrides; recursive `--scan` box table. Scope: `headless-render-scope.md`; manual: `docs/sng2wav.md`.
-- [ ] Stand up `tests/unit/` + single-header harness (Unity or greatest) + `make test`.
+- [x] Stand up `tests/unit/` + single-header harness + `make test` (commit `d8661f7`).
+      Harness = **greatest** (vendored `tests/unit/greatest.h`, ISC; decision + rationale in
+      `testing-strategy.md#framework`). First suite `test_palette_name.c` (4 tests/11 asserts)
+      regresses the `setPaletteName` alloc contract via a pure sprout `src/palette_name.{c,h}`
+      (issue-#76 bug class). `make test` builds standalone under ASan/UBSan (`TEST_SAN=`/`TEST_CC=`
+      overridable); green on Linux (LSan on) + macOS; wired into all 3 CI `ci` jobs
+      (Windows/MinGW runs without libasan). Full app still builds+links clean with the sprout.
 - [~] Pick golden corpus `.sng` set (6581/8580 x sync/ring-mod/filter-sweep; mono/SID-stereo/TrueStereo).
       Candidates surveyed + shortlist recommended: `golden-corpus-candidates.md` (maintainer pick pending).
-- [ ] Capture golden WAVs/metrics for the CURRENT build, both legacy backends -> `tests/fixtures/golden-*`.
-- [~] Verify: headless render reproducible - `--seed` byte-identical CONFIRMED (2026-07-14,
-      md5 match; see Status snapshot). Still TODO: `make test` green (empty/placeholder ok);
-      goldens committed.
+- [~] Capture golden WAVs/metrics for the CURRENT build, both legacy backends. **Tooling DONE**
+      (commit `cc7909f`): `tests/integration/golden.sh capture|check` + `tests/golden/corpus.txt`
+      (seeded with the tracked fixture x both legacy backends; extend on corpus pick). Renders to
+      a temp dir (no WAVs in repo); writes a sha256 manifest. Verified in Lima: capture->check
+      round-trips green, tampered hash -> exit 1. Manifest is **per-build/per-arch** (reSID float),
+      so gitignored + used as the M1 same-env gate (capture pre-refactor, check post), NOT a
+      cross-platform CI check. **Remaining:** the actual reference capture, done at M1 start.
+- [x] Verify: headless render reproducible - `--seed` byte-identical CONFIRMED (2026-07-14; see
+      Status snapshot + "What `--seed` actually controls"). `make test` green in CI-equivalent
+      (Lima) + local.
 
 ## M1 - Introduce `ISidEngine` wrapper (NOT gated; must be bit-identical)
 - [ ] Create `src/engines/isid_engine.h` (neutral enums; NO engine headers included).
