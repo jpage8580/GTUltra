@@ -7,15 +7,48 @@
 # - song.sng: path relative to the repo root.
 # - args: passed verbatim to sng2wav. ALWAYS pin length (--frames) + --seed for
 #   reproducibility, and set --backend explicitly so both legacy engines are covered.
+#   Stereo/model come from each tune's stored settings block (no override here).
 #
-# Rendered WAVs are transient (never committed; see .gitignore). The reference is the
-# sha256 manifest produced by `tests/integration/golden.sh capture`, which is
-# per-build/per-arch (reSID float output differs across compilers/arch) and therefore
-# NOT committed and NOT a cross-platform CI gate -- it is the M1 same-environment
-# bit-identical check (capture before the refactor, check after, on one build).
+# CORPUS (locked 2026-07-15), 5 tunes under tests/fixtures/corpus/ (frozen copies, decoupled
+# from examples/ churn). corpus/ is the AUTHORITATIVE source (not examples/booker):
+#   - Stereo_Pendejo, hz-jazz, icu, t_jazz : maintainer-authored (booker); intended sound known.
+#   - In-clouds : Shogoon (third-party, HVSC) - approved for use by the maintainer.
 #
-# Maintainer: extend this list with the chosen corpus (6581/8580 x sync/ring-mod/
-# filter-sweep x mono/SID-stereo/TrueStereo). Shortlist: notes/new-emu/golden-corpus-candidates.md
+# t_jazz : the VERIFIED TrueStereo case (real per-voice panning; L!=R confirmed). M3 pan-split
+#   fixture. Replaces the earlier x_jazz_/x_jazz files. Its .sid reference is PENDING (maintainer
+#   will add later); the other four have their original .sid alongside.
+#
+# In-clouds : hard-sync + ring-mod stress (sync 24, ring 24). It came from the earlier .sid->.sng
+#   RE conversion, so its SID config is UNVERIFIED -> valid for M1 bit-identical + sync/ring path
+#   coverage now; re-verify config against In-clouds.sid before relying on it for M2+ fidelity.
+#
+# NOT included: the other RE-converted examples/*.sng (RType, jammar-akhbar, sys64738-days,
+# Psychic Carpet Bombing) - untrusted SID config; excluded until verified. See
+# golden-corpus-candidates.md.
+#
+# PENDING: hz-jazz / icu in corpus/ currently have NO settings block (render at defaults). The
+# maintainer will add their settings; recapture the baseline after that update. (OK to commit
+# now: fine for M1 bit-identical, which only needs stable input.)
+#
+# ORIGINAL .sid alongside each .sng (fidelity reference: A/B the port vs the original), from
+# HVSC (~/Downloads/C64MUSIC/MUSICIANS):
+#   B/Booker/Stereo_Pendejo_2SID.sid -> Stereo_Pendejo.sid   (Booker = maintainer)
+#   B/Booker/Hz_Jazz.sid             -> hz-jazz.sid           (Booker = maintainer)
+#   B/Booker/Icu_2SID.sid            -> icu.sid               (Booker = maintainer)
+#   S/Shogoon/In_Clouds.sid          -> In-clouds.sid         (Shogoon, third-party, approved)
+#   (t_jazz.sid: pending - maintainer to add)
+#
+# Rendered WAVs are transient (never committed; see .gitignore). The manifest is per-build/
+# per-arch (reSID float), so it is the M1 SAME-ENVIRONMENT gate (capture pre-refactor on the
+# reference mac, check post-refactor there), NOT a committed cross-platform CI check.
 
-pendejo_residfp | tests/fixtures/Stereo_Pendejo.sng | --frames 1000 --backend legacy-residfp --seed 1
-pendejo_resid   | tests/fixtures/Stereo_Pendejo.sng | --frames 1000 --backend legacy-resid   --seed 1
+pendejo_residfp  | tests/fixtures/corpus/Stereo_Pendejo.sng | --frames 1000 --backend legacy-residfp --seed 1
+pendejo_resid    | tests/fixtures/corpus/Stereo_Pendejo.sng | --frames 1000 --backend legacy-resid   --seed 1
+hzjazz_residfp   | tests/fixtures/corpus/hz-jazz.sng        | --frames 1000 --backend legacy-residfp --seed 1
+hzjazz_resid     | tests/fixtures/corpus/hz-jazz.sng        | --frames 1000 --backend legacy-resid   --seed 1
+icu_residfp      | tests/fixtures/corpus/icu.sng            | --frames 1000 --backend legacy-residfp --seed 1
+icu_resid        | tests/fixtures/corpus/icu.sng            | --frames 1000 --backend legacy-resid   --seed 1
+inclouds_residfp | tests/fixtures/corpus/In-clouds.sng      | --frames 1000 --backend legacy-residfp --seed 1
+inclouds_resid   | tests/fixtures/corpus/In-clouds.sng      | --frames 1000 --backend legacy-resid   --seed 1
+tjazzTS_residfp  | tests/fixtures/corpus/t_jazz.sng         | --frames 1000 --backend legacy-residfp --seed 1
+tjazzTS_resid    | tests/fixtures/corpus/t_jazz.sng         | --frames 1000 --backend legacy-resid   --seed 1
