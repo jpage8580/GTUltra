@@ -133,6 +133,20 @@ Loose ends to handle at PR time:
 - [ ] Factory: reSID-vice branch under `#ifdef`; fallback+warn if requested but not compiled.
 - [ ] Verify: `make linux-build WITH_RESID_VICE=1` links & plays; default build unchanged (byte-identical).
 - [ ] Verify: `make ... WITH_RESID_VICE=1 SANITIZE=1` clean; 8580 tunes improve vs golden (tolerance).
+- [ ] **OPEN DECISION (when building the gated CI job):** for the *legacy* golden compare in the
+      gated Linux job, decide **committed reference hash** vs **captured-in-run**. Context: the
+      sha strategy is already fixed (legacy engines = exact byte hash, per the "What `--seed`
+      controls" + plan "Determinism caveat"; new engines = tolerance/statistical, never a hash).
+      What's undecided is only the *reference source* for the CI job:
+      - **committed hash** = real fixed-golden regression gate, but per-(runner OS/arch/compiler)
+        and drifts when the runner image updates -> needs a documented re-capture step;
+      - **captured-in-run** = no drift, but only catches within-run A/B (old-vs-wrapped), not
+        drift from a historical baseline.
+      The golden compare lives in **one** gated Linux job (single env), so cross-platform hash
+      divergence is moot there; the **mac laptop** is the separate bit-identical dev oracle
+      (mac-only, re-capture on toolchain/OS change). Integer `legacy-resid` *may* be
+      cross-platform-stable (no float) -> optional committed cross-platform gate, but likely
+      unnecessary given the single-env gated job. See `golden-corpus-candidates.md` caveats.
 
 ## M3 - reSID-vice, TrueStereo (two-filter patch)
 - [ ] Patch `wave.h/.cc`: add `pan` + `getPan()`; `writePW_HI` sets pan; `reset()` zeros it.
